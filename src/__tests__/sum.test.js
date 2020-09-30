@@ -16,8 +16,6 @@ describe("Sum -> Monoid of number over addition",() => {
         it("monoid -> isEmpty true only if Zero",() => {
             expect(isEmpty(Sum.from(42))).toBeFalsy();
             expect(isEmpty(Sum.from(0))).toBeTruthy();
-            expect(Sum.from(42).isEmpty()).toBeFalsy();
-            expect(Sum.from(0).isEmpty()).toBeTruthy();
         })
     })
     describe("constructors", () => {

@@ -1,8 +1,23 @@
+import { prop, propOr } from "ramda";
 import { currySetTypeclass as setTypeclass } from "../_internals";
 
 const mark = setTypeclass("Bifunctor")
 
-const Bifunctor = ({ first, second, overrides }) => mark((cases) => {
+/**
+ * Adds bimap method to proto
+ * @param {{ 
+ *  first: string, 
+ *  second: string,
+ *  overrides?: {
+ *      bimap?: any
+ *  }
+ * }} defs 
+ * @returns {(cases: any) => void}
+ */
+const Bifunctor = (defs) => mark((cases) => {
+    const first = prop("first",defs);
+    const second = prop("second",defs);
+    const overrides = propOr({},"overrides",defs);
     function trivialFirst(f,g){
         return new cases[first](f(this.get()))
     }
@@ -15,4 +30,6 @@ const Bifunctor = ({ first, second, overrides }) => mark((cases) => {
     cases[second].prototype.bimap = secondMap;
 })
 
-export default mark(Bifunctor)
+mark(Bifunctor)
+
+export default Bifunctor

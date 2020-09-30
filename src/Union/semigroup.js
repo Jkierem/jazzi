@@ -1,6 +1,21 @@
+import { propOr } from "ramda"
 import { setTypeclass } from "../_internals"
 
-const Semigroup = ({ trivials, identities, overrides }) => setTypeclass("Semigroup",(cases) => {
+/**
+ * Adds concat method to proto
+ * @param {{ 
+ *  trivials: string[], 
+ *  identities: string[],
+ *  overrides?: {
+ *      concat?: any
+ *  }
+ * }} defs 
+ * @returns {(cases: any) => void}
+ */
+const Semigroup = (defs) => setTypeclass("Semigroup",(cases) => {
+    const trivials = propOr([],"trivials",defs);
+    const identities = propOr([],"identities",defs);
+    const overrides = propOr({},"overrides",defs);
     trivials.forEach(trivial => {
         function trivialConcat(m){
             return m.match({

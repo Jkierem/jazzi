@@ -1,6 +1,6 @@
 {
-    "name": "@juan-utils/ramda-structures",
-    "version": "4.2.1",
+    "name": "jazzi",
+    "version": "1.0.0",
     "main": "./dist/cjs/juan-utils-ramda-structs.cjs.js",
     "module": "./dist/esm/juan-utils-ramda-structs.esm.js",
     "browser": "./dist/umd/juan-utils-ramda-structs.umd.js",

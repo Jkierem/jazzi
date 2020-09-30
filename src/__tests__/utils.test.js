@@ -19,7 +19,7 @@ describe("Utils", () => {
         })
     })
     describe("hasInstance", () => {
-        const Box = NewType("Box");
+        const Box = NewType("Box",[ Functor({trivials: ["Box"], identities: [] }) ]);
         const Boxed42 = Box.from(42)
         it("should return true for implementors, false otherwise", () => {
             expect(hasInstance(Boxed42,"Functor")).toBeTruthy()
@@ -34,7 +34,7 @@ describe("Utils", () => {
     describe("newType", () => {
         const Box = NewType("Box");
         const Boxed42 = Box.from(42)
-        it("should create a trivial functor boxed type", () => {
+        it("should create a trivial boxed type", () => {
             expect(Boxed42).toTypeMatch("Box")
             expect(Boxed42.toString()).toEqual("[NewType => Box 42]")
             expect(Boxed42.get()).toEqual(42)

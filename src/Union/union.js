@@ -1,11 +1,10 @@
-import { fromPairs, toPairs } from 'ramda'
-import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass } from '../_internals'
-import Functor from './functor'
+import { fromPairs, is, toPairs } from 'ramda'
+import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass, setTypeName } from '../_internals'
 import Show from './show'
 
 const mapObj = fn => obj => fromPairs(toPairs(obj).map(fn))
 
-const Box = (cases) => {
+const Box = (config) => (cases) => {
     Object.keys(cases).forEach((trivial,idx,keys) => {
         cases[trivial].prototype.unwrap = function(){
             let inner = this.get();
@@ -20,44 +19,49 @@ const Box = (cases) => {
         cases[trivial].prototype.match = function(patterns){
             return extractWith([this.get()])(getCase(getVariant(this),patterns));
         }
-        cases[trivial].prototype[`on${trivial}`] = function(fn){
-            return extractWith([this.get()])(fn)
-        }
-        cases[trivial].prototype[`is${trivial}`] = function(){
-            return true
-        }
-        keys.filter(x => x !== trivial).forEach( key => {
-            cases[trivial].prototype[`is${key}`] = function(){
-                return false
+        if( !config?.noHelpers && Object.keys(cases).length > 1 ){
+            cases[trivial].prototype[`on${trivial}`] = function(fn){
+                return extractWith([this.get()])(fn)
             }
-            cases[trivial].prototype[`on${key}`] = function(fn) {
-                return this.get()
+            cases[trivial].prototype[`is${trivial}`] = function(){
+                return true
             }
-        })
+            keys.filter(x => x !== trivial).forEach( key => {
+                cases[trivial].prototype[`is${key}`] = function(){
+                    return false
+                }
+                cases[trivial].prototype[`on${key}`] = function(fn) {
+                    return this.get()
+                }
+            })
+        }
     })
 }
 
-const Union = (name, cases, exts) => {
-    const extensions = [ Box, ...exts ]
+const Union = (name, cases, exts, config) => {
+    const extensions = [ Box(config), ...exts ]
     const tcs =  extensions.map(tc => getTypeclass(tc)).filter(Boolean)
+    let typeRep = {}
     const mappedCases = mapObj(([key,val]) => {
         return [key , function(...args){
-            setType(this,name)
-            setVariant(this,key)
-            setInnerValue(this,val(...args))
-            setTypeclasses(this,() => tcs)
+            setTypeName(name,this)
+            setVariant(key,this)
+            setInnerValue(val(...args),this)
+            setTypeclasses(() => tcs,this)
+            setType(() => typeRep,this);
         }]
     })(cases)
     const globals = {}
     extensions.forEach(fn => fn(mappedCases,globals))
-    const trueCases = mapObj(([key,value]) => [key, (...args) => new value(...args)])(mappedCases)
     return {
         constructors(cons){
-            return {
+            const trueCases = mapObj(([key,value]) => [key, (...args) => new value(...args)])(mappedCases)
+            typeRep = {
                 ...trueCases,
                 ...globals,
                 ...mapObj(([key,fn]) => [key,fn.bind(trueCases)])(cons),
             }
+            return typeRep
         }
     }
 }
@@ -65,7 +69,6 @@ const Union = (name, cases, exts) => {
 export const NewType = (name,exts=[]) => Union(name,
     { [name]: x => x },
     [
-        Functor({ trivials: [ name ], identities:[] }),
         Show({ overrides:{
                 show: { 
                     [name](){ 

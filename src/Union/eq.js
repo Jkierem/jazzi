@@ -1,9 +1,23 @@
-import { equals as eq } from "ramda"
+import { equals as eq, propOr } from "ramda"
 import { currySetTypeclass, getVariant } from "../_internals"
 
 const mark = currySetTypeclass("Eq")
 
-const Eq = ({ trivials, empties, overrides }) => mark((cases) => {
+/**
+ * Adds equals method to proto
+ * @param {{ 
+*  trivials: string[], 
+*  empties: string[],
+*  overrides?: {
+*      equals?: any
+*  }
+* }} defs 
+* @returns {(cases: any) => void}
+*/
+const Eq = (defs) => mark((cases,globals) => {
+    const trivials = propOr([],"trivials",defs)
+    const empties = propOr([],"empties",defs)
+    const overrides = propOr({},"overrides",defs)
     function trivialEquals(other){
         return getVariant(this) === getVariant(other) && eq(this.get(), other.get())
     }
@@ -18,6 +32,9 @@ const Eq = ({ trivials, empties, overrides }) => mark((cases) => {
         const equals = overrides?.equals?.[empt] || emptyEquals
         cases[empt].prototype.equals = equals
     })
+    globals.equals = eq;
 })
 
-export default mark(Eq);
+mark(Eq);
+
+export default Eq;

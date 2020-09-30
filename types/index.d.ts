@@ -1,4 +1,4 @@
-declare module "@juan-utils/ramda-structures" {
+declare module "jazzi" {
     
     type Placeholder = import("ramda").Placeholder;
     type Extractable<A> = A | (() => A)
@@ -8,315 +8,561 @@ declare module "@juan-utils/ramda-structures" {
         [P in CaseUnion<K>]?: Extractable<any>;
     }
 
-    type MaybeCases = Cases<"Just" | "None">
-    export interface None {
-        match: (a: MaybeCases) => any;
-        unwrap: () => any;
-        get: () => undefined;
-        map: (fn: (a: any) => any) => Maybe<any>;
-        fmap: (fn: (a: any) => any) => Maybe<any>;
-        effect: (fn: (a: any) => any) => Maybe<any>;
-        peak: (fn: (a: any) => any) => Maybe<any>;
-        chain: (fn: (a: any) => Maybe<any>) => Maybe<any>;
-        bind: (fn: (a: any) => Maybe<any>) => Maybe<any>;
-        flatMap: (fn: (a: any) => Maybe<any>) => Maybe<any>;
-        pure: <T>(x: T) => Maybe<T>;
-        apply: (m: Maybe<any>) => Maybe<any>;
-        concat: (m: Maybe<any>) => Maybe<any>;
-        mappend: (m: Maybe<any>) => Maybe<any>;
-        append: (m: Maybe<any>) => Maybe<any>;
-        filter: (fn: (a: any) => boolean) => Maybe<any>;
-        equals: (b: any) => boolean;
-        onJust: (fn: any) => any;
-        onNone: (fn: any) => any;
+    type MaybeCases  = Cases<"Just" | "None">;
+    type EitherCases = Cases<"Left" | "Right">;
+    type ResultCases = Cases<"Ok" | "Err">;
+    type MultCases   = Cases<"Mult" | "One">;
+    type SumCases    = Cases<"Sum" | "Zero">;
+    type MergeCases  = Cases<"Merge" | "Empty">;
+    type SinkCases   = Cases<"Sink">;
+    type ReaderCases = Cases<"Reader">;
+    type IOCases     = Cases<"IO">;
+
+    /** Type classes */
+    /**
+     * Boxed value
+     */
+    interface Boxed<T,Match> {
+        /**
+         * Breaks the structures and returns the boxed value
+         * @returns {T} Inner value
+         */
+        get(): T;
+        /**
+         * Type matches using the variant name.
+         * Receives an object where the types are the keys and computations are values
+         * @param {Match} patterns
+         */
+        match(patterns: Match): any;
+        /**
+         * Breaks nested structures (if any) until reaching a value without a get function
+         */
+        unwrap(): any;
+    }
+
+    interface Show {
+        show(): string;
+        toString(): string;
+    }
+
+    interface Effect<T> {
+        /**
+         * Runs a function with the inner value of a structure without altering it
+         * @param {(x: T) => void} fn function to run
+         */
+        effect(fn: (x: T) => void): Effect<T>;
+        /**
+         * Runs a function with the inner value of a structure without altering it
+         * @param {(x: T) => void} fn function to run
+         */
+        peak(fn: (x: T) => void): Effect<T>;
+    }
+
+    interface Semigroup<A> {
+        /**
+         * Semigroup combine method. Takes two semigroups and combines them
+         * @param {Semigroup<A>} s Semigroup to be combined
+         */
+        concat(s: Semigroup<A>): Semigroup<A>
+    }
+
+    interface Monoid<A> extends Semigroup<A>{
+        /**
+         * Returns the empty value of a Monoid
+         */
+        empty(): Monoid<A>
+    }
+
+    interface Functor<A> {
+        /**
+         * Map a functor over a given function (`fn`)
+         * @param fn function used to map inner value
+         * @returns mapped functor
+         */
+        map<B>(fn: (a: A) => B ): Functor<B>;
+        /**
+         * Map a functor over a given function (`fn`)
+         * @param fn function used to map inner value
+         * @returns mapped functor
+         */
+        fmap<B>(fn: (a: A) => B ): Functor<B>;
+    }
+
+    interface FunctorError<A> {
+        /**
+         * Map error case of a functor
+         * @param fn function to map over
+         */
+        mapError(fn: (a: A) => B): FunctorError<B>;
+    }
+
+    interface Applicative<A> {
+        /**
+         * Applies the given applicative (`ap`) with inner value
+         * @param ap Applicative to be applied
+         * @returns applied Applicative
+         */
+        apply<B>(ap: Applicative<(a: A) => B>): Applicative<B>;
+    }
+
+    interface Monad<A> extends Functor<A>, Applicative<A> {
+        /**
+         * Performs monad composition using `fn`
+         * @param fn 
+         */
+        chain   <B>(fn: (a: A) => Monad<B>): Monad<B>;
+        /**
+         * Performs monad composition using `fn`
+         * @param fn 
+         */
+        bind    <B>(fn: (a: A) => Monad<B>): Monad<B>;
+        /**
+         * Performs monad composition using `fn`
+         * @param fn 
+         */
+        flatMap <B>(fn: (a: A) => Monad<B>): Monad<B>;
+    }
+
+    interface Filterable<A> {
+        /**
+         * Receives a predicate and returns the filtered structure
+         * @param fn 
+         */
+        filter(fn: (a: A) => boolean): Filterable<A>;
+    }
+
+    interface Eq<A> {
+        /**
+         * Performs an equality check
+         * @param e Eq to be compared with
+         */
+        equals(e: Eq<A>): boolean;
+    }
+
+    interface Swap<L,R> {
+        /**
+         * Swap the context without altering the inner value.
+         */
+        swap(): Swap<L,R>
+    }
+
+    /** Type Representatives */
+
+    interface MonadRep { 
+        /**
+         * Wraps a value of type `a` into a monadic value `M a`
+         * @param x value to be wrapped
+         */       
+        pure<A>(x: A): Monad<A>; 
+    }
+    interface EqRep { 
+        /**
+         * Performs an equality check
+         * @param ea 
+         * @param eb 
+         */
+        equals<A>(ea: Eq<A>, eb: Eq<A>): boolean; 
+    }
+    interface MonoidRep { 
+        /**
+         * Returns the empty value of a Monoid
+         */
+        empty<A>(): Monoid<A>; 
+    }
+    interface BoxedRep<Match> { 
+        /**
+         * Type matches using the variant name.
+         * Receives an object where the types are the keys and computations are values
+         * @param {Match} patterns
+         */
+        match(patterns: Match): any; 
+    }
+
+    /** Data Types */
+
+    /** Maybe */
+    export interface Maybe<A> 
+    extends Boxed<A,MaybeCases>, Show,
+            Effect<A>, Monad<A>, Monoid<A>, 
+            Filterable<A>, Eq<Maybe<A>>, Applicative<A>
+    {
+        onJust: <B>(fn: (x: A) => B) => B;
+        onNone: <B>(fn: () => B) => B;
+        ifJust: <B>(fn: (x: A) => Maybe<B>) => Maybe<B>;
+        ifNone: <B>(fn: (x: A) => Maybe<B>) => Maybe<B>;
         isJust: () => boolean;
         isNone: () => boolean;
-        empty: () => None;
-        show: () => string;
-        toString: () => string;
-    }
-    
-    export interface Just<A> {
-        match: (a: MaybeCases) => any;
-        unwrap: () => any;
-        get: () => A;
-        map: <B>(fn: (a:A) => B) => Just<B>;
-        fmap: <B>(fn: (a:A) => B) => Just<B>;
-        effect: (fn: (a: any) => any) => Maybe<A>;
-        peak: (fn: (a: any) => any) => Maybe<A>;
-        chain: <B>(fn: (a:A) => Maybe<B>) => Maybe<B>;
-        bind: <B>(fn: (a:A) => Maybe<B>) => Maybe<B>;
-        flatMap: <B>(fn: (a:A) => Maybe<B>) => Maybe<B>;
-        pure: <T>(x: T) => Maybe<T>;
-        apply: (m: Maybe<any>) => Maybe<any>;
-        concat: (m: Maybe<any>) => Maybe<any>;
-        mappend: (m: Maybe<any>) => Maybe<any>;
-        append: (m: Maybe<any>) => Maybe<any>;
-        filter: (fn: (a: A) => boolean) => Maybe<any>;
-        equals: (b: any) => boolean;
-        onJust: (fn: any) => any;
-        onNone: (fn: any) => any;
-        isJust: () => boolean;
-        isNone: () => boolean;
-        empty: () => None;
-        show: () => string;
-        toString: () => string;
+
+        effect(fn: (x: A) => void): Maybe<A>;
+        peak(fn: (x: A) => void): Maybe<A>;
+
+        map<B>(fn: (a: A) => B ): Maybe<B>;
+        fmap<B>(fn: (a: A) => B ): Maybe<B>;
+
+        apply<B>(a: Maybe<(a: A) => B>): Maybe<B>;
+
+        chain   <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
+        bind    <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
+        flatMap <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
+
+        concat(s: Maybe<A>): Maybe<A>;
+
+        empty(): Maybe<A>;
+
+        filter(fn: (a: A) => boolean): Maybe<A>;
+
+        equals(e: Maybe<A>): boolean;
     }
 
-    export type Maybe<T> = Just<T> | None;
-    export const Maybe: {
-        Just: <T>(val: T) => Just<T>;
-        None: () => None;
-        pure: <T>(x: T) => Maybe<T>;
-        from: <T>(x: T) => Maybe<T>;
-        fromFalsy: <T>(x: T) => Maybe<T>;
-        fromArray: <T>(x: T[]) => Maybe<T[]>;
-        fromNullish: <T>(x: T) => Maybe<T>;
-        fromEmpty: <T>(x: T) => Maybe<T>;
-        fromPredicate: <A>(pred: (a: A) => boolean, val?: A ) => Maybe<A>;
-        fromResult: <T>(r: Result<T,any>) => Maybe<T>;
-        isEmpty: <T>(x: Maybe<T>) => boolean;
-        match: (...a: readonly any[]) => any;
-        equals: {
-            <T>(__: Placeholder, b: T): (a: T) => boolean;
-            <T>(a: T, b: T): boolean;
-            <T>(a: T): (b: T) => boolean;
-        }
-    };
+    interface MaybeRep
+    extends BoxedRep<MaybeCases>, 
+            MonadRep, MonoidRep, EqRep
+    {
+        Just<A>(a: A): Maybe<A>;
+        None<A>(): Maybe<A>;
+        of<T>(x: T): Maybe<T>;
+        from<T>(x: T): Maybe<T>;
+        fromFalsy<T>(x: T): Maybe<T>;
+        fromArray<T>(x: T[]): Maybe<T[]>;
+        fromNullish<T>(x: T): Maybe<T>;
+        fromEmpty<T>(x: T): Maybe<T>;
+        fromPredicate<A>(pred: (a: A) => boolean, val?: A ): Maybe<A>;
+        fromResult<T>(r: Result<T,any>): Maybe<T>;
+        isEmpty<T>(x: Maybe<T>): boolean;
 
-    type ResultCases = Cases<"Ok"|"Err">;
+        pure<A>(x: A): Maybe<A>;
 
-    export interface Ok<A> {
-        match: (cases: ResultCases) => any;
-        unwrap: () => any;
-        get: () => A;
-        map: <B>(fn: (a:A) => B) => Result<B,any>;
-        fmap: <B>(fn: (a:A) => B) => Result<B,any>;
-        mapError: (fn: (b:any) => any) => Result<any,any>;
-        bimap: (fnOk: (a:any) => any,fnErr: (a:any) => any) => Result<any,any>;
-        filter: (fn: (a: any) => boolean) => Result<any,any>;
-        fold: (fnErr: (a:any) => any,fnOk: (a:any) => any) => Result<any,any>;
-        swap: () => Result<any,any>;
-        apply: (r: Result<any,any>) => Result<any,any>;
-        effect: (fn: (a: any) => any) => Result<A,any>;
-        peak: (fn: (a: any) => any) => Result<A,any>;
-        chain: <B,C>(fn: (a:A) => Result<B,C>) => Result<B,C>;
-        bind: <B,C>(fn: (a:A) => Result<B,C>) => Result<B,C>;
-        flatMap: <B,C>(fn: (a:A) => Result<B,C>) => Result<B,C>;
-        pure: <B,C>(x: B | C) => Result<B,C>
-        equals: (b: any) => boolean;
-        onOk: (fn: any) => any;
-        onErr: (fn: any) => any;
-        isOk: () => boolean;
-        isErr: () => boolean;
-        show: () => string;
-        toString: () => string;
+        empty<A>(): Maybe<A>;
+
+        equals<A>(ma: Maybe<A>, mb: Maybe<A>): boolean;
     }
 
-    export interface Err<A> {
-        match: (cases: ResultCases) => any;
-        unwrap: () => any;
-        get: () => A;
-        map: <B>(fn: (a:A) => B) => Result<B,any>;
-        fmap: <B>(fn: (a:A) => B) => Result<B,any>;
-        mapError: (fn: (b:any) => any) => Result<any,any>;
-        bimap: (fnOk: (a:any) => any,fnErr: (a:any) => any) => Result<any,any>;
-        filter: (fn: (a: any) => boolean) => Result<any,any>;
-        fold: (fnErr: (a:any) => any,fnOk: (a:any) => any) => Result<any,any>;
-        swap: () => Result<any,any>;
-        apply: (r: Result<any,any>) => Result<any,any>;
-        effect: (fn: (a: any) => any) => Result<A,any>;
-        peak: (fn: (a: any) => any) => Result<A,any>;
-        chain: <B,C>(fn: (a:A) => Result<B,C>) => Result<B,C>;
-        bind: <B,C>(fn: (a:A) => Result<B,C>) => Result<B,C>;
-        flatMap: <B,C>(fn: (a:A) => Result<B,C>) => Result<B,C>;
-        pure: <B,C>(x: B | C) => Result<B,C>
-        equals: (b: any) => boolean;
-        onOk: (fn: any) => any;
-        onErr: (fn: any) => any;
-        isOk: () => boolean;
-        isErr: () => boolean;
-        show: () => string;
-        toString: () => string;
+    export const Maybe: MaybeRep;
+
+    /** Result */
+
+    export interface Result<A,E> 
+    extends Boxed<A | E,ResultCases>, Show,
+            Monad<A>, Effect<A>, Filterable<A>,
+            Eq<Result<A,E>>, Applicative<A>, Swap<A,E>,
+            FunctorError<E>
+    {
+        onOk  <B>(fn: (x: A) => B): B;
+        onErr <B>(fn: (x: E) => B): B;
+        isOk  (): boolean;
+        isErr (): boolean;
+
+        mapError <B>(fn: (b: E) => B): Result<A,B>;
+        bimap <B,Z>( fnOk:  (a: A) => B,fnErr: (a: E) => Z ): Result<B,Z>;
+        fold  <B,Z>( fnErr: (a: E) => Z,fnOk:  (a: A) => B ): Result<B,Z>;
+        swap(): Result<A,E>;
+
+        /**
+         * Receives a predicate and returns the filtered structure.
+         * If Ok and predicate fails, returns an Err. Nothing otherwise
+         * @param pred 
+         */
+        filter(pred: (a: A) => boolean): Result<A,E>;
+
+        apply <B>(ap: Result<(a: A) => B,E>): Result<B,E>;
+
+        effect (fn: (a: A) => void): Result<A,E>;
+        peak   (fn: (a: A) => void): Result<A,E>;
+
+        chain   <B>(fn: (a: A) => Result<B,E>): Result<B,E>;
+        bind    <B>(fn: (a: A) => Result<B,E>): Result<B,E>;
+        flatMap <B>(fn: (a: A) => Result<B,E>): Result<B,E>;
+
+        equals(b: Result<A,E>): boolean;
+
+        map <B>(fn: (a:A) => B): Result<B,E>;
+        fmap<B>(fn: (a:A) => B): Result<B,E>;
     }
 
-    export type Result<A,B> = Ok<A> | Err<B>;
+    interface ResultRep 
+    extends BoxedRep<ResultCases>, MonadRep, EqRep
+    {
+        Ok <A>(val: A): Result<A,any>;
+        Err<E>(err: E): Result<any,E>;
+        of<A>(val: A): Result<A,Error>;
+        from<A>(val: A): Result<A,Error>;
+        fromError<A>(val: A): Result<A,Error>;
+        fromFalsy<A>(val: A): Result<A,A>;
+        fromPredicate<A>(pred: (a: A) => boolean, val?: A ): Result<A,A>;
+        fromMaybe<A,E>(val: Maybe<A>, onNothing: Extractable<E>): Result<A,E>;
+        attempt<A>(fn: (a:any) => A): Result<A,Error>;
+        
+        pure<A>(x: A): Result<A,any>;
 
-    export const Result: {
-        Ok: <A>(val: A) => Ok<A>;
-        Err: <A>(err: A) => Err<A>;
-        from: <A>(val: A) => Result<A,Error>;
-        fromError: <A>(val: A) => Result<A,Error>;
-        fromFalsy: <A>(val: A) => Result<A,A>;
-        fromPredicate: <A>(pred: (a: A) => boolean, val?: A ) => Result<A,A>;
-        fromMaybe: <A>(val: Maybe<A>,onNothing: any) => Result<A,undefined>;
-        attempt: <A>(fn: (a:any) => A) => Result<A,Error>;
-        match: <A,B>(cases: ResultCases) => Result<A,B>;
-        equals: {
-            <T>(__: Placeholder, b: T): (a: T) => boolean;
-            <T>(a: T, b: T): boolean;
-            <T>(a: T): (b: T) => boolean;
-        };
-    }
-
-    type MultCases = Cases<"Mult" | "One">
-    export interface Mult {
-        unwrap: () => number;
-        get: () => number;
-        match: (patterns: MultCases) => any;
-        onMult: (fn: Extractable<any>) => any;
-        onOne: (fn: Extractable<any>) => any;
-        isMult: () => boolean;
-        isOne: () => boolean;
-        chain: (fn : (x: number) => Mult) => MultMonoid;
-        bind: (fn : (x: number) => Mult) => MultMonoid;
-        flatMap: (fn : (x: number) => Mult) => MultMonoid;
-        pure: (x: number) => Mult;
-        concat: (x: MultMonoid) => MultMonoid;
-        mappend: (x: MultMonoid) => MultMonoid;
-        append: (x: MultMonoid) => MultMonoid;
-        empty: () => One;
-        isEmpty: () => boolean;
-        equals: (m: MultMonoid) => boolean;
+        equals<A,E>(ma: Result<A,E>, mb: Result<A,E>): boolean;
     }
 
-    export interface One {
-        unwrap: () => number;
-        get: () => number;
-        match: (patterns: MultCases) => any;
-        onMult: (fn: Extractable<any>) => any;
-        onOne: (fn: Extractable<any>) => any;
-        isMult: () => boolean;
-        isOne: () => boolean;
-        chain: (fn : (x: number) => Mult) => MultMonoid;
-        bind: (fn : (x: number) => Mult) => MultMonoid;
-        flatMap: (fn : (x: number) => Mult) => MultMonoid;
-        pure: (x: number) => Mult;
-        concat: (x: MultMonoid) => MultMonoid;
-        mappend: (x: MultMonoid) => MultMonoid;
-        append: (x: MultMonoid) => MultMonoid;
-        empty: () => One;
-        isEmpty: () => boolean;
-        equals: (m: MultMonoid) => boolean;
+    /**
+     * Monoid of numbers under multiplication
+     */
+    export interface Mult<A> 
+    extends Boxed<A,MultCases>, Show,
+            Monoid<A>, Functor<A>
+    {
+        onMult <B>(fn: Extractable<B>): B ;
+        onOne  <B>(fn: Extractable<B>): B ;
+        isMult (): boolean;
+        isOne  (): boolean;
+
+        /**
+         * Semigroup combine method. Takes two semigroups and combines them.
+         * The combination of a Mult type is multiplication
+         * @param x 
+         */
+        concat(x: Mult<A>): Mult<A>;
+
+        empty(): Mult<A>;
+        
+        equals(m: Mult<A>): boolean;
+
+        map <B>(fn: (a:A) => B): Mult<B>;
+        fmap<B>(fn: (a:A) => B): Mult<B>;
     }
 
-    export type MultMonoid = Mult | One;
-    export const Mult: {
-        from: (x: number) => Mult | One;
-        Mult: (x: number) => Mult,
-        One: () => One,
-        pure: (x: number) => Mult,
-        empty: () => One,
-    }
-    
-    type SumCases = Cases<"Sum" | "Zero">
-    export interface Sum {
-        unwrap: () => number;
-        get: () => number;
-        match: (patterns: SumCases) => any;
-        onMult: (fn: Extractable<any>) => any;
-        onOne: (fn: Extractable<any>) => any;
-        isMult: () => boolean;
-        isOne: () => boolean;
-        chain: (fn : (x: number) => Sum) => SumMonoid;
-        bind: (fn : (x: number) => Sum) => SumMonoid;
-        flatMap: (fn : (x: number) => Sum) => SumMonoid;
-        pure: (x: number) => Sum;
-        concat: (x: SumMonoid) => SumMonoid;
-        mappend: (x: SumMonoid) => SumMonoid;
-        append: (x: SumMonoid) => SumMonoid;
-        empty: () => Zero;
-        isEmpty: () => boolean;
-        equals: (m: SumMonoid) => boolean;
+    interface MultRep 
+    extends BoxedRep<MultCases>, 
+            MonadRep, MonoidRep, EqRep
+    {
+        Mult(x: number): Mult<number>;
+        One(): Mult<number>;
+        of(x: number): Mult<number>;
+        from(x: number): Mult<number>;
+        empty(): Mult<number>;
+        equals(ma: Mult<number>, mb: Mult<number>): boolean;
     }
 
-    export interface Zero {
-        unwrap: () => number;
-        get: () => number;
-        match: (patterns: SumCases) => any;
-        onMult: (fn: Extractable<any>) => any;
-        onOne: (fn: Extractable<any>) => any;
-        isMult: () => boolean;
-        isOne: () => boolean;
-        chain: (fn : (x: number) => Sum) => SumMonoid;
-        bind: (fn : (x: number) => Sum) => SumMonoid;
-        flatMap: (fn : (x: number) => Sum) => SumMonoid;
-        pure: (x: number) => Sum;
-        concat: (x: SumMonoid) => SumMonoid;
-        mappend: (x: SumMonoid) => SumMonoid;
-        append: (x: SumMonoid) => SumMonoid;
-        empty: () => Zero;
-        isEmpty: () => boolean;
-        equals: (m: SumMonoid) => boolean;
+    export const Mult: MultRep;
+
+    /**
+     * Monoid of numbers over addition
+     */
+    export interface Sum<A> 
+    extends Boxed<A,SumCases>, Show,
+            Monoid<A>, Functor<A>, Eq<A>
+    {
+        onSum <B>(fn: Extractable<B>): B ;
+        onZero<B>(fn: Extractable<B>): B ;
+        isSum (): boolean;
+        isZero(): boolean;
+
+        /**
+         * Semigroup combine method. Takes two semigroups and combines them.
+         * The combination of a Sum type is addition
+         * @param x 
+         */
+        concat(x: Sum<A>): Sum<A>;
+
+        empty(): Sum<A>;
+
+        equals(m: Sum<A>): boolean;
+
+        map <B>(fn: (a:A) => B): Sum<B>;
+        fmap<B>(fn: (a:A) => B): Sum<B>;
     }
 
-    export type SumMonoid = Sum | Zero;
-    export const Sum: {
-        from: (x: number) => Sum | Zero;
-        Sum: (x: number) => Sum,
-        Zero: () => Zero,
-        pure: (x: number) => Sum,
-        empty: () => Zero,
-    }
-    
-    type ReaderCases = Cases<"Reader">
-    export interface Reader<A>{
-        unwrap: () => any;
-        get: () => A;
-        match: (patterns: ReaderCases) => any;
-        onReader: <B>(fn: Extractable<B>) => B;
-        isReader: () => boolean;
-        fmap: <B>(fn: (a: A) => B) => Reader<B>;
-        map: <B>(fn: (a: A) => B) => Reader<B>;
-        chain: <B>(fn: (a: A) => Reader<B>) => Reader<B>;
-        bind: <B>(fn: (a: A) => Reader<B>) => Reader<B>;
-        flatMap: <B>(fn: (a: A) => Reader<B>) => Reader<B>;
-        pure: <B>(x: B) => Reader<B>;
-        ask: <B>(fn: (a: A) => B) => B;
-        local: <B>(fn: (a: A) => B) => Reader<B>;
-        show: () => string;
-        toString: () => string;
+    interface SumRep 
+    extends BoxedRep<SumCases>, 
+            MonoidRep, EqRep
+    {
+        Sum(x: number): Sum<number>;
+        Zero(): Sum<number>;
+        of(x: number): Sum<number>;
+        from(x: number): Sum<number>;
+        empty(): Sum<number>;
+        equals(ma: Sum<number>, mb: Sum<number>): boolean;
     }
 
-    export const Reader: {
-        from: <A>(x: A) => Reader<A>,
-        Reader: <A>(x: A) => Reader<A>,
-        pure: <A>(x: A) => Reader<A>,
-        runReader: <A>(fn: Function, reader: Reader<A>) => Reader<A>,
+    export const Sum: SumRep;
+
+    /**
+     * Monoid of objects under the merge operation
+     */
+    export interface Merge<A> 
+    extends Boxed<A,MergeCases>, Show,
+            Monoid<A>, Functor<A>, Eq<A>
+    {
+        onMerge<B>(fn: Extractable<B>): B ;
+        onEmpty<B>(fn: Extractable<B>): B ;
+        isMerge(): boolean;
+        isEmpty(): boolean;
+
+        /**
+         * Semigroup combine method. Takes two semigroups and combines them.
+         * The combination of a Merge type is the object merge operation
+         * @param x 
+         */
+        concat(x: Merge<A>): Merge<A>;
+
+        empty(): Merge<A>;
+        
+        equals(m: Merge<A>): boolean;
+
+        map <B>(fn: (a:A) => B): Merge<B>;
+        fmap<B>(fn: (a:A) => B): Merge<B>;
+    }
+
+    interface MergeRep 
+    extends BoxedRep<MergeCases>, 
+            MonoidRep, EqRep
+    {
+        Merge<A>(x: A): Merge<A>;
+        Empty<A>(): Merge<A>;
+        of<A>(x: A): Merge<A>;
+        from<A>(x: A): Merge<A>;
+        empty<A>(): Merge<A>;
+        equals<A>(ma: Merge<A>, mb: Merge<A>): boolean;
+    }
+
+    export const Merge: MergeRep;
+
+    export interface Reader<E,A>
+    extends Boxed<(a: E) => A,ReaderCases>, Monad<A>, Show
+    {
+        local<B>(fn: (a: E) => B): Reader<B,A>;
+
+        fmap<B>(fn: (a: A) => B): Reader<E,B>;
+        map <B>(fn: (a: A) => B): Reader<E,B>;
+
+        apply<B>(m: Reader<E,(a:A) => B>): Reader<E,B>;
+
+        chain   <B>(fn: (a: A) => Reader<E,B>): Reader<E,B>;
+        bind    <B>(fn: (a: A) => Reader<E,B>): Reader<E,B>;
+        flatMap <B>(fn: (a: A) => Reader<E,B>): Reader<E,B>;
+    }
+
+    interface ReaderRep
+    extends MonadRep, BoxedRep<ReaderCases>
+    {
+        of:   <E,A>(x: (a: E) => A) => Reader<E,A>,
+        from:   <E,A>(x: (a: E) => A) => Reader<E,A>,
+        Reader: <E,A>(x: (a: E) => A) => Reader<E,A>,
+        pure:   <E,A>(x: (a: E) => A) => Reader<E,A>,
+        runReader: <E,A>(reader: Reader<E,A>, env: E) => A,
     };
   
-    type WriterCases = Cases<"Writer">
-    export interface Writer<A> {
-        unwrap: () => any;
-        get: () => A;
-        match: (patterns: WriterCases) => any;
-        onWriter: <B>(fn: Extractable<B>) => B;
-        isWriter: () => boolean,
-        chain: <B>(fn: (a: A) => Writer<B>) => Writer<B>;
-        bind: <B>(fn: (a: A) => Writer<B>) => Writer<B>;
-        flatMap: <B>(fn: (a: A) => Writer<B>) => Writer<B>;
-        pure: <B>(x: B) => Writer<B>;
-        mappend: (m: Writer<A>) => Writer<A>;
-        append: (m: Writer<A>) => Writer<A>;
-        empty: <B>() => Writer<B>;
-        isEmpty: () => boolean;
-        tell: (x: A) => Writer<A>;
-        forward: (x: any) => Writer<A>;
-        flush: () => Writer<A>;
-        show: () => string;
-        toString: () => string;
+    export const Reader: ReaderRep
+
+    export interface Sink<A> 
+    extends Boxed<A,SinkCases>, Monad<A>, 
+            Monoid<A>, Show
+    {
+        tell: (x: A) => Sink<A>;
+        flush: () => Sink<A>;
+
+        apply: <B>(m: Sink<(a: A) => B>) => Sink<B>;
+        chain: <B>(fn: (a: A) => Sink<B>) => Sink<B>;
+        bind: <B>(fn: (a: A) => Sink<B>) => Sink<B>;
+        flatMap: <B>(fn: (a: A) => Sink<B>) => Sink<B>;
+        /**
+         * Returns Sink of the empty value of the inner Monoid
+         */
+        empty: <B>() => Sink<B>;
     }
 
-    export const Writer: {
-        Writer: <A>(x: A) => Writer<A>,
-        pure: <A>(x: A) => Writer<A>,
-        empty: <A>(x: A) => Writer<A>,
-        runWriter: <A>(fn: Function, reader: Writer<A>) => Writer<A>,
-        runSeq: <A>(fn: Function[], reader: Reader<A>) => Reader<A>,
-        from: <A>(x: A) => Writer<A>,
-        sumSink: () => Writer<Sum>,
-        multSink: () => Writer<Mult>,
-        arraySink: () => Writer<any[]>
+    export const Sink: {
+        Sink: <A>(x: A) => Sink<A>,
+        pure: <A>(x: A) => Sink<A>,
+        empty: <A>(x: A) => Sink<A>,
+        runSink: <A>(fn: Function, reader: Sink<A>) => Sink<A>,
+        runSeq: <A>(fn: Function[], reader: Sink<A>) => Sink<A>,
+        from: <A>(x: A) => Sink<A>,
+        sumSink: () => Sink<Sum<number>>,
+        multSink: () => Sink<Mult<number>>,
+        objectSink: () => Sink<Merge<any>>,
+        arraySink: () => Sink<any[]>
     }
   
+    export interface IO<A> 
+    extends Boxed<A,IOCases>, Monad<A>
+    {
+        /**
+         * Performs the wrapped computation
+         */
+        unsafeRun(): A;
+
+        chain  <B>(fn : (x: A) => IO<B>): IO<B>;
+        bind   <B>(fn : (x: A) => IO<B>): IO<B>;
+        flatMap<B>(fn : (x: A) => IO<B>): IO<B>;
+
+        apply<B>(ap: IO<(a: A) => B>): IO<B>;
+
+        map <B>(fn: (a:A) => B): IO<B>;
+        fmap<B>(fn: (a:A) => B): IO<B>;
+    }
+
+    interface IORep 
+    extends MonadRep, BoxedRep<IOCases>
+    {
+        of<A>(fn: Extractable<A>): IO<A>;
+        from<A>(fn: Extractable<A>): IO<A>;
+        pure<A>(fn: Extractable<A>): IO<A>;
+    }
+
+    export const IO: IORep;
+
+
+    export interface Either<L,R> 
+    extends Boxed<L | R, EitherCases>, Monad<R>,
+            Swap<L,R>, FunctorError<L>, Show
+    {
+        onRight: <B>(fn: (x: R) => B) => B;
+        onLeft:  <B>(fn: (x: L) => B) => B;
+        ifRight: <B>(fn: (x: R) => Either<L,B>) => Either<B,R>;
+        ifLeft:  <B>(fn: (x: L) => Either<B,R>) => Either<L,B>;
+        isRight: () => boolean;
+        isLeft: () => boolean;
+        /**
+         * Swaps context. If `Right a` returns `Left a` and vice versa
+         */
+        swap: () => Either<L,R>;
+
+        chain  <B>(fn : (x: R) => Either<L,B>): Either<L,B>;
+        bind   <B>(fn : (x: R) => Either<L,B>): Either<L,B>;
+        flatMap<B>(fn : (x: R) => Either<L,B>): Either<L,B>;
+
+        apply<B>(ap: Either<any,(a: R) => B>): Either<L,B>;
+
+        map <B>(fn: (a:R) => B): Either<L,B>;
+        fmap<B>(fn: (a:R) => B): Either<L,B>;
+        mapRight <B>(fn: (a:R) => B): Either<L,B>;
+
+        mapError<B>(fn: (a: L) => B): Either<B,R>;
+        mapLeft<B>(fn: (a: L) => B): Either<B,R>;
+    }
+
+    interface EitherRep
+    extends BoxedRep<EitherCases>, MonadRep
+    {
+        Left<L>(l: L): Either<L,any>;
+        Right<R>(r: R): Either<any,R>;
+        of<L,R>(l: L, r: R): Either<L,R>;
+        from<L,R>(l: L, r: R): Either<L,R>;
+        fromFalsy<L,R>(l: L, r: R): Either<L,R>;
+        fromNullish<L,R>(l: L, r: R): Either<L,R>;
+        fromPredicate<R>(pred: (r: R) => boolean , r: R): Either<R,R>;
+        fromMaybe<A>(m: Maybe<A>): Either<any,A>;
+        fromResult<L,R>(m: Result<R,L>): Either<L,R>;
+        defaultTo<L,R>(l: L): (r: R) => Either<L,R>;
+        /**
+         * Returns an array with all the Lefts of an array of Eithers
+         * @param ls 
+         */
+        lefts<L,R>(ls: Either<L,R>[]): Either<L,R>;
+        /**
+         * Returns an array with all the Rights of an array of Eithers
+         * @param ls 
+         */
+        rights<L,R>(rs: Either<L,R>[]): Either<L,R>;
+        /**
+         * Returns two arrays. The first with all the Lefts and the second with all the Rights
+         */
+        partition<L,R>(lrs: Either<L,R>[]): [Either<L,R>[],Either<L,R>[]]
+    }
+
+    export const Either: EitherRep;
 }

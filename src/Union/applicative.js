@@ -1,23 +1,39 @@
+import { propOr } from "ramda";
 import { currySetTypeclass as setTypeclass } from "../_internals"
 
 const mark = setTypeclass("Applicative")
 
-const Applicative = ({ trivials, identities, overrides }) => mark((cases) => {
+/**
+ * Adds apply method to proto
+ * @param {{ 
+*  trivials: string[], 
+*  identities: string[],
+*  overrides?: {
+*      apply?: any
+*  }
+* }} defs 
+* @returns {(cases: any) => void}
+*/
+const Applicative = (defs) => mark((cases) => {
+    const trivials = propOr([],"trivials",defs);
+    const identities = propOr([],"identities",defs);
+    const overrides = propOr({},"overrides",defs);
     trivials.forEach(trivial => {
-        function trivialApply(other){
+        cases[trivial].prototype.apply = function(other){
             return other?.match?.({
-                [trivial]: () => new cases[trivial]( this.get()(other.get()) ) ,
+                [trivial]: () => new cases[trivial]( other.get()(this.get()) ) ,
                 _: () => other
             })
         }
-        const apply = overrides?.apply?.[trivial] || trivialApply
-        cases[trivial].prototype.apply = apply
     })
     identities.forEach(empt => {
-        function identityApply(){ return this }
-        const apply = overrides?.apply?.[empt] || identityApply
-        cases[empt].prototype.apply = apply
+        cases[empt].prototype.apply = function(){ return this }
+    })
+    Object.keys(overrides?.apply || {}).forEach(key => {
+        cases[key].prototype.apply = overrides?.apply?.[key]
     })
 })
 
-export default mark(Applicative);
+mark(Applicative);
+
+export default Applicative

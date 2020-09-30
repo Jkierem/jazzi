@@ -2,14 +2,22 @@ import Maybe from '../Maybe'
 import Result from '../Result'
 import { isEmpty } from 'ramda'
 import Sum from '../Sum'
+import { Spy } from '../_internals'
 
 describe("Maybe", () => {
-    describe("object methods", () => {
+    describe("methods", () => {
         const just42 = Maybe.Just(42)
         const none = Maybe.None()
         const justInc = Maybe.Just(x => x + 1)
         const justArr1 = Maybe.Just([1])
         const justArr2 = Maybe.Just([2])
+
+        it("should call fn if type matches the function", () => {
+            expect(just42.ifNone()).toTypeMatch("Just")
+            expect(just42.ifJust(() => 42)).toBe(42);
+            expect(none.ifJust()).toTypeMatch("None")
+            expect(none.ifNone(() => 42)).toBe(42);
+        })
     
         it("should match", () => {
             expect(just42).toTypeMatch("Just");
@@ -25,24 +33,16 @@ describe("Maybe", () => {
         })
 
         it("should chain", () => {
-            const expectValue = v => x => {
-                expect(x).toBe(v)
-                return x
-            }
-            let called = false
-            const fn = () => called = true;
-            expect(just42.chain(expectValue(42))).toBe(42);
+            const fn = Spy();
+            expect(just42.chain(x => x)).toBe(42);
             expect(none.chain(fn)).toTypeMatch("None");
-            expect(called).toBe(false);
+            expect(fn.called).toBe(false);
         })
 
         it("isEmpty should return true if None and isEmpty (Just x ) === isEmpty x", () => {
             expect(isEmpty(just42)).toBeFalsy()
             expect(isEmpty(Maybe.Just(""))).toBeTruthy()
             expect(isEmpty(none)).toBeTruthy()
-            expect(just42.isEmpty()).toBeFalsy()
-            expect(Maybe.Just("").isEmpty()).toBeTruthy()
-            expect(none.isEmpty()).toBeTruthy()
             expect(Maybe.isEmpty(just42)).toBeFalsy()
             expect(Maybe.isEmpty(none)).toBeTruthy()
         })
@@ -61,22 +61,17 @@ describe("Maybe", () => {
         })
     
         it("should not call map when is none", () => {
-            let called = false;
-            const fn = () => called = true;
+            const fn = Spy();
             none.map(fn)
-            expect(called).toBeFalsy();
+            expect(fn.called).toBeFalsy();
         })
 
         it("should not call effect when none and effect should leave inner value as is", () => {
-            let calls = 0;
-            const fn = (x) => {
-                calls++;
-                return 0;
-            }
+            const fn = Spy()
             none.effect(fn)
             const val = just42.effect(fn).get();
             expect(val).toBe(42)
-            expect(calls).toBe(1);
+            expect(fn.callCount).toBe(1);
         })
 
         it("should return new object on map", () => {
@@ -102,9 +97,9 @@ describe("Maybe", () => {
         })
 
         it("applicative -> should apply inner function", () => {
-            expect(justInc.apply(just42).get()).toBe(43)
+            expect(just42.apply(justInc).get()).toBe(43)
             expect(justInc.apply(none)).toTypeMatch("None")
-            expect(none.apply(just42)).toTypeMatch("None")
+            expect(none.apply(justInc)).toTypeMatch("None")
         })
 
         it("semigroup -> should concat inner values", () => {
@@ -138,12 +133,11 @@ describe("Maybe", () => {
             expect(Maybe.Just("Hi").empty().get()).toStrictEqual("")
         })
 
-        it("filterable -> should filter inner value", () => {
-            expect(Maybe.Just([1,2,3,4]).filter(x => x % 2 === 0).get()).toStrictEqual([2,4])
-            const called = false;
-            const spy = () => { called = true }
+        it("filterable -> should return None on false predicate", () => {
+            expect(Maybe.Just(42).filter(x => x !== 42)).toTypeMatch("None")
+            const spy = Spy()
             none.filter(spy)
-            expect(called).toBeFalsy()
+            expect(spy.called).toBeFalsy()
         })
     })
 
@@ -166,6 +160,7 @@ describe("Maybe", () => {
             ["fromEmpty"  , "empty string", ""       , "none" ],
             ["fromEmpty"  , "empty array" , []       , "none" ],
             ["fromEmpty"  , "empty of a type", Maybe.None(), "none" ],
+            ["of"       , "truthy value"   , true  , "just" ],
             ["from"       , "truthy value"   , true  , "just" ],
             ["fromFalsy"  , "truthy value"   , true  , "just" ],
             ["fromArray"  , "non empty array", [ 1 ] , "just" ],

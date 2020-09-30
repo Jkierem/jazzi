@@ -1,7 +1,6 @@
-import { Eq, Monad, Monoid, Semigroup, Union } from '../Union';
+import { Eq, Functor, Monad, Monoid, Semigroup, Show, Union } from '../Union';
 
 const Defs = {
-    pure: "Mult",
     trivials: ["Mult"],
     identities: ["One"],
     zero: "One",
@@ -12,6 +11,8 @@ const Defs = {
     }
 }
 
+function defaultConstructor(x){ return x === 1 ? this.One() : this.Mult(x) }
+
 const Mult = Union("Mult",{
     Mult:  x => x,
     One : () => 1
@@ -20,11 +21,13 @@ const Mult = Union("Mult",{
         trivials:["Mult","One"], 
         empties: [] 
     }),
-    Monad(Defs),
+    Functor(Defs),
     Semigroup(Defs),
-    Monoid(Defs)
+    Monoid(Defs),
+    Show(Defs),
 ]).constructors({
-    from(x){ return x === 1 ? this.One() : this.Mult(x) }
+    of: defaultConstructor,
+    from: defaultConstructor,
 })
 
 export default Mult;

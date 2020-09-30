@@ -13,10 +13,6 @@ const Defs = {
     errors: ["Err"],
     pure: "Ok",
     overrides: {
-        fold: {
-            Ok(f,g){ return g(this.get()) },
-            Err(f,g){ return f(this.get()) }
-        },
         equals: {
             Err(other){
                 return other?.match?.({
@@ -29,6 +25,10 @@ const Defs = {
             Ok(pred) {
                 return pred(this.get()) ? this : this.swap();
             }
+        },
+        fold: {
+            Ok(f,g){ return g(this.get()) },
+            Err(f,g){ return f(this.get()) }
         }
     }
 }
@@ -37,10 +37,10 @@ const Result = Union("Result",{
     Ok : x => x,
     Err: x => x
 },[
+    Foldable(Defs),
     Bifunctor(Defs),
     Effect(Defs),
     Eq(Defs),
-    Foldable(Defs),
     Functor(Defs),
     FunctorError(Defs),
     Monad(Defs),
@@ -49,8 +49,19 @@ const Result = Union("Result",{
     Swap(Defs),
     Filterable(Defs)
 ]).constructors({
-    from(val){
-        return val instanceof Error ? this.Err(val) : this.Ok(val)
+    of(f){
+        try {
+            return this.Ok(f())
+        } catch(e) {
+            return this.Err(e)
+        }
+    },
+    from(f){
+        try {
+            return this.Ok(f())
+        } catch(e) {
+            return this.Err(e)
+        }
     },
     fromError(val){
         return val instanceof Error ? this.Err(val) : this.Ok(val)

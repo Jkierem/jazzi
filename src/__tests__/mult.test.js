@@ -1,5 +1,6 @@
 import { empty , isEmpty } from 'ramda'
 import Mult from '../Mult';
+import { getType } from '../_internals';
 
 describe("Mult -> Monoid of numbers over multiplication",() => {
     describe("methods", () => {
@@ -16,8 +17,6 @@ describe("Mult -> Monoid of numbers over multiplication",() => {
         it("monoid -> isEmpty true only if One",() => {
             expect(isEmpty(Mult.from(42))).toBeFalsy();
             expect(isEmpty(Mult.from(1))).toBeTruthy();
-            expect(Mult.from(42).isEmpty()).toBeFalsy();
-            expect(Mult.from(1).isEmpty()).toBeTruthy();
         })
     })
     describe("constructors", () => {

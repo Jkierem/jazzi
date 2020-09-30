@@ -1,4 +1,9 @@
-import { ifElse, is, apply, identity, __, toPairs, toLower, curryN, compose, find, fromPairs, isNil, prop, complement } from 'ramda'
+import { 
+    ifElse, is, apply, identity, 
+    __, toPairs, toLower, curryN, 
+    compose, find, fromPairs, isNil, 
+    prop, complement, any, equals 
+} from 'ramda'
 
 /**
  * @description if the value given is a function, applies it with "data" as arguments and returns the result. Otherwise, it is equal to R.identity
@@ -9,12 +14,6 @@ export const extractWith = (data) => (value) => ifElse(
     apply(__,data), 
     identity
 )(value)
-
-/**
- * @description if the value given is a function, applies it with empty arguments and returns the result. Otherwise, is equal to R.identity
- * @param {any} value value to be extracted
- */
-//export const extract = (value) => extractWith([])(value)
 
 const mapKeys = curryN(2,(fn,obj) => fromPairs(toPairs(obj).map(([key, val]) => [ fn(key), val ])))
 
@@ -35,35 +34,68 @@ export const splitBy = (fn,arr) => arr.reduce(([left,right],next) => {
     return fn(next) ? [ left, [...right, next]] : [ [...left,next], right]
 },[[],[]])
 
+/**
+ * Assigns a value to a key for the given object, returning the same object, mutating it.
+ * @param {string | number | symbol} key 
+ * @returns {<T>(val: any, obj: T) => T}
+ */
+const mutate = (key) => (val,obj) => {
+    obj[key] = val;
+    return obj
+}
+
 export const InnerValue = Symbol("@@value");
-export const getInnerValue = x => x[InnerValue];
-export const setInnerValue = (x,val) => x[InnerValue] = val;
+export const getInnerValue = prop(InnerValue)
+export const setInnerValue = mutate(InnerValue);
 
 export const Type = Symbol("@@type");
-export const getType = x => x[Type]
-export const setType = (x,t) => x[Type] = t
+export const getType = prop(Type);
+export const setType = (t, val) => {
+    Object.defineProperty(val,Type,{
+        get: () => t()
+    })
+};
+
+export const TypeName = Symbol("@@typename");
+export const getTypeName = prop(TypeName)
+export const setTypeName = mutate(TypeName)
 
 export const Variant = Symbol("@@variant");
-export const getVariant = x => x[Variant];
-export const setVariant = (x,t) => x[Variant] = t
+export const getVariant = prop(Variant)
+export const setVariant = mutate(Variant)
 
 export const Typeclass = Symbol("@@typeclass");
-export const getTypeclass = x => x[Typeclass];
-export const setTypeclass = (t,x) => { 
-    x[Typeclass] = t
-    return x
-};
+export const getTypeclass = prop(Typeclass);
+export const setTypeclass = mutate(Typeclass);
 export const currySetTypeclass = t => x => setTypeclass(t,x)
 
 export const Typeclasses = Symbol("@@typeclasses");
-/* istanbul ignore next */
-export const getTypeclasses = x => x[Typeclasses];
-export const setTypeclasses = (x,ts) => x[Typeclasses] = ts;
+export const getTypeclasses = prop(Typeclasses);
+export const setTypeclasses = mutate(Typeclasses)
 
-/* istanbul ignore next */
-export const getGlobal = function () { 
-    if (typeof glboalThis !== "undefined"){ return globalThis; }
-    if (typeof self !== 'undefined') { return self; } 
-    if (typeof window !== 'undefined') { return window; } 
-    if (typeof global !== 'undefined') { return global; }
-};
+export const Spy = (fn = x => x) => {
+    let callCount = 0;
+    let calls = []
+    let _spy = (...args) => {
+        callCount++;
+        calls.push(args);
+        return fn(...args)
+    }
+
+    Object.defineProperty(_spy,"called",{
+        get: () => callCount > 0
+    })
+
+    Object.defineProperty(_spy,"callCount",{
+        get: () => callCount
+    })
+
+    _spy.calledWith = (...args) => any(equals(args),calls);
+
+    _spy.reset = () => {
+        callCount = 0 
+        calls = []
+    }
+
+    return _spy
+}

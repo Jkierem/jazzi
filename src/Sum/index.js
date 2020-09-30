@@ -1,7 +1,6 @@
-import { Eq, Monad, Monoid, Semigroup, Union } from '../Union';
+import { Eq, Functor, Monoid, Semigroup, Show, Union } from '../Union';
 
 const Defs = {
-    pure: "Sum",
     trivials: ["Sum"],
     identities: ["Zero"],
     zero: "Zero",
@@ -12,6 +11,8 @@ const Defs = {
     }
 }
 
+function defaultConstructor(x){ return x === 0 ? this.Zero() : this.Sum(x) }
+
 const Sum = Union("Sum",{
     Sum :  x => x,
     Zero: () => 0,
@@ -20,11 +21,13 @@ const Sum = Union("Sum",{
         trivials: ["Sum","Zero"],
         empties: []
     }),
-    Monad(Defs),
+    Functor(Defs),
     Semigroup(Defs),
-    Monoid(Defs)
+    Monoid(Defs),
+    Show()
 ]).constructors({
-    from(x){ return x === 0 ? this.Zero() : this.Sum(x) },
+    of: defaultConstructor,
+    from: defaultConstructor
 })
 
 export default Sum

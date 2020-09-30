@@ -1,22 +1,18 @@
-import { Functor, Monad, Show, Union } from '../Union'
-import { getGlobal } from '../_internals'
+import { Applicative, Functor, Monad, Show, Union } from '../Union'
+import { extractWith, getType } from '../_internals';
 
 const ReaderMonad = () => (cases,global) => {
-    cases.Reader.prototype.ask = function(fn){
-        return this.chain(fn)
-    }
     cases.Reader.prototype.local = function(fn) {
-        return this.fmap(fn)
+        return getType(this).pure((...env) => this.run(fn(...env)));
     }
-    global.runReader = function(fn,reader){
-        const mem = getGlobal().ask
-        getGlobal().ask = (fn) => reader.ask(fn);
-        const value = fn(reader)
-        getGlobal().ask = mem
-        return value
+    cases.Reader.prototype.run = function(...env) {
+        return extractWith(env)(this.get())
     }
-    global.runBoundReader = function(fn,reader){
-        return fn.call(reader)
+    global.runReader = function(reader,...env){
+        return reader.run(...env)
+    }
+    global.ask = function(){
+        return new cases.Reader(x => x);
     }
 }
 
@@ -24,16 +20,32 @@ const Defs = {
     trivials: ["Reader"], 
     identities:[],
     pure: "Reader",
+    overrides: {
+        fmap: {
+            Reader(fn){ return Reader.Reader((...env) => fn(this.get()(...env)))}
+        },
+        chain: {
+            Reader(fn){ return Reader.Reader( (...env) => fn(this.run(...env)).run(...env) ) }
+        },
+        apply: {
+            Reader(readerFn){ return Reader.Reader((...env) => readerFn.get()(this.run(...env))) }
+        },
+        show: {
+            Reader(){ return "[Reader => E => _]" }
+        }
+    }
 }
 
-const Reader = Union("ReaderMonad",{
-    Reader: (x) => x
+const Reader = Union("Reader",{
+    Reader: (fn) => fn
 },[
     Functor(Defs),
+    Applicative(Defs),
     Monad(Defs),
-    ReaderMonad(),
-    Show(Defs)
+    Show(Defs),
+    ReaderMonad()
 ]).constructors({
+    of(x){ return this.Reader(x) },
     from(x){ return this.Reader(x) }
 })
 

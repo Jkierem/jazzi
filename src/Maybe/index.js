@@ -2,6 +2,13 @@ import { equals as rEquals, isNil, isEmpty, empty } from 'ramda'
 import { match as globalMatch } from '../_tools'
 import { Union, Functor, Monad, Applicative, Eq, Semigroup, Show, Monoid, Effect, Filterable} from '../Union'
 
+const MaybeType = () => cases => {
+    cases.Just.prototype.ifNone = function(){ return this }
+    cases.Just.prototype.ifJust = function(fn){ return fn(this.get()) }
+    cases.None.prototype.ifNone = function(fn){ return fn() }
+    cases.None.prototype.ifJust = function(){ return this }
+}
+
 const MaybeDefs = {
     trivials: ["Just"],
     identities: ["None"],
@@ -15,11 +22,14 @@ const MaybeDefs = {
         empty: {
             Just(){ return Maybe.fromNullish(empty(this.get())) }
         },
-        isEmpty: {
-            Just(){ return isEmpty(this.get()) },
-            None(){ return true }
+        filter: {
+            Just(fn){ return Maybe.fromPredicate(fn,this.get()) },
         }
     }
+}
+
+function defaultConstructor(x){
+    return  x ? this.Just(x) : this.None() 
 }
 
 const Maybe = Union("Maybe",{
@@ -34,14 +44,12 @@ const Maybe = Union("Maybe",{
     Applicative(MaybeDefs),
     Semigroup(MaybeDefs),
     Filterable(MaybeDefs),
-    Show(MaybeDefs)
+    Show(MaybeDefs),
+    MaybeType()
 ]).constructors({
-    from(x){ 
-        return  x ? this.Just(x) : this.None() 
-    },
-    fromFalsy(x){
-        return  x ? this.Just(x) : this.None() 
-    },
+    of: defaultConstructor,
+    from: defaultConstructor,
+    fromFalsy: defaultConstructor,
     fromArray(arr){
         return arr.length === 0 ? this.None() : this.Just(arr)
     },

@@ -1,63 +1,8 @@
 import Maybe from '../Maybe'
 import Result from '../Result'
-
-const Spy = (fn = x => x) => {
-    let calls = 0;
-    let _spy = (...args) => {
-        calls++;
-        return fn(...args)
-    }
-
-    Object.defineProperty(_spy,"called",{
-        get: () => calls > 0
-    })
-
-    _spy.reset = () => { calls = 0 }
-
-    return _spy
-}
+import { Spy } from '../_internals';
 
 describe("Result", () => {
-    describe("constructors", () => {
-        const error = new Error(42);
-        const truthy = 42;
-        const falsy = 0;
-        const just = Maybe.Just(42);
-        const none = Maybe.None();
-        const fnFails = () => { throw 42 };
-
-        [
-            ["from", "Err", "Error object", error],
-            ["from", "Ok", "Non-Error value", truthy],
-            ["fromError", "Err", "Error object", error],
-            ["fromError", "Ok", "Non-Error value", truthy],
-            ["fromFalsy", "Err", "falsy value", falsy],
-            ["fromFalsy", "Ok", "truthy value", truthy],
-            ["fromMaybe", "Err", "None", none],
-            ["fromMaybe", "Ok", "Just", just],
-            ["attempt", "Err", "function that throws", fnFails],
-            ["attempt", "Ok", "function that returns", () => 42]
-        ].forEach(([ cons, type, value, arg ]) => {
-            it(`should return ${type} when "${cons}" is called with ${value}`, () => {
-                expect(Result[cons](arg)).toTypeMatch(type)
-            })
-        })
-
-        const is42 = x => x === 42
-        const True = () => true;
-        const False = () => false;
-
-        it("fromPredicate should create an Ok with a predicate that returns true", () => {
-            expect(Result.fromPredicate(is42,42)).toTypeMatch("Ok")
-            expect(Result.fromPredicate(True)).toTypeMatch("Ok")
-        })
-
-        it("fromPredicate should create an Err with a predicate that returns false", () => {
-            expect(Result.fromPredicate(is42,2)).toTypeMatch("Err")
-            expect(Result.fromPredicate(False)).toTypeMatch("Err")
-        })
-    })
-
     describe("methods", () => {
         const ok42 = Result.Ok(42);
         const err42 = Result.Err(42)
@@ -76,15 +21,11 @@ describe("Result", () => {
         })
 
         it("should not call effect when Err and effect should leave inner value as is", () => {
-            let calls = 0;
-            const fn = (x) => {
-                calls++;
-                return 0;
-            }
+            const fn = Spy(() => 0)
             err42.effect(fn)
             const val = ok42.effect(fn).get();
             expect(val).toBe(42)
-            expect(calls).toBe(1);
+            expect(fn.callCount).toBe(1);
         })
 
         it("should call chain with inner value if Ok, nothing otherwise", () => {
@@ -93,8 +34,8 @@ describe("Result", () => {
         })
 
         it("should apply ok applicatives", () => {
-            expect(okInc.apply(ok42).get()).toBe(43)
-            expect(okInc.apply(err42)).toTypeMatch("Err")
+            expect(ok42.apply(okInc).get()).toBe(43)
+            expect(err42.apply(okInc)).toTypeMatch("Err")
             expect(err42.apply()).toTypeMatch("Err")
         })
 
@@ -178,4 +119,46 @@ describe("Result", () => {
             expect(mapSpy.called).toBeTruthy();
         })
     })
+    describe("constructors", () => {
+        const error = new Error(42);
+        const truthy = 42;
+        const falsy = 0;
+        const just = Maybe.Just(42);
+        const none = Maybe.None();
+        const fnFails = () => { throw 42 };
+
+        [
+            ["of", "Err", "function that throws", fnFails],
+            ["of", "Ok", "function that returns", () => truthy],
+            ["from", "Err", "function that throws", fnFails],
+            ["from", "Ok", "function that returns", () => truthy],
+            ["fromError", "Err", "Error object", error],
+            ["fromError", "Ok", "Non-Error value", truthy],
+            ["fromFalsy", "Err", "falsy value", falsy],
+            ["fromFalsy", "Ok", "truthy value", truthy],
+            ["fromMaybe", "Err", "None", none],
+            ["fromMaybe", "Ok", "Just", just],
+            ["attempt", "Err", "function that throws", fnFails],
+            ["attempt", "Ok", "function that returns", () => 42]
+        ].forEach(([ cons, type, value, arg ]) => {
+            it(`should return ${type} when "${cons}" is called with ${value}`, () => {
+                expect(Result[cons](arg)).toTypeMatch(type)
+            })
+        })
+
+        const is42 = x => x === 42
+        const True = () => true;
+        const False = () => false;
+
+        it("fromPredicate should create an Ok with a predicate that returns true", () => {
+            expect(Result.fromPredicate(is42,42)).toTypeMatch("Ok")
+            expect(Result.fromPredicate(True)).toTypeMatch("Ok")
+        })
+
+        it("fromPredicate should create an Err with a predicate that returns false", () => {
+            expect(Result.fromPredicate(is42,2)).toTypeMatch("Err")
+            expect(Result.fromPredicate(False)).toTypeMatch("Err")
+        })
+    })
+
 })

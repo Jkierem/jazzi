@@ -1,6 +1,23 @@
+import { prop, propOr } from "ramda";
 import { setTypeclass } from "../_internals"
 
-const Monad = ({ trivials, identities, pure, overrides }) => setTypeclass("Monad",(cases,globals) => {
+/**
+ * Adds pure, chain, bind and flatMap method to proto. Adds pure to global.
+ * @param {{ 
+ *  trivials: string[], 
+ *  identities: string[],
+ *  pure: string,
+ *  overrides?: {
+ *      chain?: any
+ *  }
+ * }} defs 
+ * @returns {(cases: any) => void}
+ */
+const Monad = (defs) => setTypeclass("Monad",(cases,globals) => {
+    const trivials = propOr([],"trivials",defs);
+    const identities = propOr([],"identities",defs);
+    const overrides = propOr({},"overrides",defs);
+    const pure = prop("pure",defs);
     trivials.forEach(trivial => {
         function trivialChain(fn){
             return fn(this.get())
@@ -18,9 +35,6 @@ const Monad = ({ trivials, identities, pure, overrides }) => setTypeclass("Monad
         cases[empt].prototype.chain   = chain
         cases[empt].prototype.bind    = chain
         cases[empt].prototype.flatMap = chain
-    })
-    Object.keys(cases).forEach(key => {
-        cases[key].prototype.pure = (...args) => new cases[pure](...args)
     })
     globals.pure = (...args) => new cases[pure](...args)
 })

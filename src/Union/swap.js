@@ -1,6 +1,21 @@
+import { prop, propOr } from "ramda";
 import { setTypeclass } from "../_internals"
 
-const Swap = ({ left, right, overrides }) => setTypeclass("Swap",(cases) => {
+/**
+ * Adds swap method to proto
+ * @param {{ 
+ *  left: string, 
+ *  right: string,
+ *  overrides?: {
+ *      swap?: any
+ *  }
+ * }} defs 
+ * @returns {(cases: any) => void}
+ */
+const Swap = (defs) => setTypeclass("Swap",(cases) => {
+    const left = prop("left",defs);
+    const right = prop("right",defs);
+    const overrides = propOr({},"overrides",defs);
     function triviallswap(){
         return new cases[right](this.get())
     }

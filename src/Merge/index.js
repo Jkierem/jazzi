@@ -1,8 +1,7 @@
 import { equals, mergeAll } from "ramda";
-import { Eq, Monad, Monoid, Semigroup, Union } from "../Union";
+import { Eq, Functor, Monad, Monoid, Semigroup, Show, Union } from "../Union";
 
 const Defs = {
-    pure: "Merge",
     trivials: ["Merge"],
     identities: ["Empty"],
     zero: "Empty", 
@@ -13,19 +12,25 @@ const Defs = {
     }
 }
 
+function defaultConstructor(x){
+    return equals({},x) ? this.Empty() : this.Merge(x);
+}
+
 const Merge = Union("Merge",{
     Merge: x => x,
     Empty: () => ({})
 },[
     Eq({
-        trivials: ["Merge","Empty"],
+        trivials: [ "Merge", "Empty" ],
         empties: []
     }),
-    Monad(Defs),
+    Functor(Defs),
     Semigroup(Defs),
-    Monoid(Defs)
+    Monoid(Defs),
+    Show(Defs)
 ]).constructors({
-    from(x){ return equals({},x) ? this.Empty() : this.Merge(x); }
+    of: defaultConstructor,
+    from: defaultConstructor
 })
 
 export default Merge

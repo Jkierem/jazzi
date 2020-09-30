@@ -19,8 +19,6 @@ describe("Merge -> Monoid of object over merge operation", () => {
         it("monoid -> isEmpty true only if Zero",() => {
             expect(isEmpty(Merge.from({a: 42}))).toBeFalsy();
             expect(isEmpty(Merge.from({}))).toBeTruthy();
-            expect(Merge.from({a: 42}).isEmpty()).toBeFalsy();
-            expect(Merge.from({}).isEmpty()).toBeTruthy();
         })
     })
     describe("constructors",() => {

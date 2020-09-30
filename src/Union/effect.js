@@ -1,8 +1,23 @@
+import { propOr } from "ramda";
 import { currySetTypeclass as setTypeclass } from "../_internals"
 
 const mark = setTypeclass("Effect")
 
-const Effect = ({ trivials, identities, overrides }) => mark((cases) => {
+/**
+ * Adds effect and peak method to proto
+ * @param {{ 
+ *  trivials: string[], 
+ *  identities: string[],
+ *  overrides?: {
+ *      effect?: any;
+ *  }
+ * }} defs 
+ * @returns {(cases: any) => void}
+ */
+const Effect = (defs) => mark((cases) => {
+    const trivials = propOr([],"trivials",defs);
+    const identities = propOr([],"identities",defs);
+    const overrides = propOr({},"overrides",defs);
     trivials.forEach(trivial => {
         function trivialEffect(fn){
             fn(this.get())
@@ -23,4 +38,6 @@ const Effect = ({ trivials, identities, overrides }) => mark((cases) => {
     })
 })
 
-export default mark(Effect)
+mark(Effect)
+
+export default Effect

@@ -1,6 +1,24 @@
-import { getVariant, setTypeclass } from "../_internals"
+import { prop, propOr } from "ramda";
+import { setTypeclass } from "../_internals"
 
-const Monoid = ({ zero, trivials, identities, overrides }) => setTypeclass("Monoid",(cases,globals) => {
+/**
+ * Adds mappend, append and empty method to proto and empty to globals
+ * @param {{ 
+ *  trivials: string[], 
+ *  identities: string[],
+ *  zero: string,
+ *  overrides?: {
+ *      empty?: any;
+ *      mappend?: any;
+ *  }
+ * }} defs 
+ * @returns {(cases: any) => void}
+ */
+const Monoid = (defs) => setTypeclass("Monoid",(cases,globals) => {
+    const trivials = propOr([],"trivials",defs);
+    const identities = propOr([],"identities",defs);
+    const overrides = propOr({},"overrides",defs);
+    const zero = prop("zero",defs)
     trivials.forEach(trivial => {
         function trivMappend(m){ return this.concat(m) }
         const mappend = overrides?.mappend?.[trivial] || trivMappend
@@ -19,14 +37,11 @@ const Monoid = ({ zero, trivials, identities, overrides }) => setTypeclass("Mono
         }
         const empty = overrides?.empty?.[key] || trivialEmpty;
         cases[key].prototype.empty = empty
-
-        function trivialIsEmpty(){
-            return getVariant(this) === zero
-        }
-        const isEmpty = overrides?.isEmpty?.[key] || trivialIsEmpty
-        cases[key].prototype.isEmpty = isEmpty
     })
     globals.empty = function(){ return new cases[zero]() }
+    globals.accumulate = function(arr){ 
+        return arr.reduce((acc,next) => acc.concat(next), new cases[zero]())
+    }
 })
 
 setTypeclass("Monoid",Monoid)
