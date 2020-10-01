@@ -29,14 +29,23 @@ describe("IO",() => {
             expect(ioId.show()).toBe("[IO => () => _]")
             expect(id.called).toBeFalsy();
         })
+        it("IO Effect", () => {
+            const plusOne = Spy(x => x + 1);
+            const io42 = IO.of(42).peak(plusOne)
+            expect(plusOne.called).toBeFalsy()
+            const res = io42.unsafeRun()
+            expect(plusOne.called).toBeTruthy()
+            expect(plusOne.returned(43)).toBeTruthy()
+            expect(res).toBe(42);
+        })
     })
 
     describe("constructors",() => {
         it("should return evaluation of the given function, forwarding arguments", () => {
             const times2 = Spy(x => x * 2)
-            const io42 = IO.of(x => x + 10).map(times2)
+            const io42 = IO.of(21).map(times2)
             expect(times2.called).toBeFalsy();
-            expect(io42.unsafeRun(11)).toBe(42)
+            expect(io42.unsafeRun()).toBe(42)
             expect(times2.called).toBeTruthy();
         })
 

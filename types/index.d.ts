@@ -168,6 +168,16 @@ declare module "jazzi" {
          * Returns the empty value of a Monoid
          */
         empty<A>(): Monoid<A>; 
+        /**
+         * Combines a list of monoids
+         * @param monoids list of monoids
+         */
+        accumulate<A>(monoids: Monoid<A>[]): Monoid<A>;
+        /**
+         * Maps a list of values into a list of monoids and combines them
+         * @param values 
+         */
+        foldMap<A>(values: A[]): Monoid<A>;
     }
     interface BoxedRep<Match> { 
         /**
@@ -233,6 +243,8 @@ declare module "jazzi" {
         pure<A>(x: A): Maybe<A>;
 
         empty<A>(): Maybe<A>;
+        accumulate<A>(monoids: Maybe<A>[]): Maybe<A>;
+        foldMap<A>(values: A[]): Maybe<A>;
 
         equals<A>(ma: Maybe<A>, mb: Maybe<A>): boolean;
     }
@@ -333,6 +345,8 @@ declare module "jazzi" {
         of(x: number): Mult<number>;
         from(x: number): Mult<number>;
         empty(): Mult<number>;
+        accumulate<A>(monoids: Mult<A>[]): Mult<A>;
+        foldMap<A>(values: A[]): Mult<A>;
         equals(ma: Mult<number>, mb: Mult<number>): boolean;
     }
 
@@ -374,6 +388,8 @@ declare module "jazzi" {
         of(x: number): Sum<number>;
         from(x: number): Sum<number>;
         empty(): Sum<number>;
+        accumulate<A>(monoids: Sum<A>[]): Sum<A>;
+        foldMap<A>(values: A[]): Sum<A>;
         equals(ma: Sum<number>, mb: Sum<number>): boolean;
     }
 
@@ -415,6 +431,8 @@ declare module "jazzi" {
         of<A>(x: A): Merge<A>;
         from<A>(x: A): Merge<A>;
         empty<A>(): Merge<A>;
+        accumulate<A>(monoids: Merge<A>[]): Merge<A>;
+        foldMap<A>(values: A[]): Merge<A>;
         equals<A>(ma: Merge<A>, mb: Merge<A>): boolean;
     }
 
@@ -436,14 +454,14 @@ declare module "jazzi" {
     }
 
     interface ReaderRep
-    extends MonadRep, BoxedRep<ReaderCases>
+    extends BoxedRep<ReaderCases>
     {
-        of:   <E,A>(x: (a: E) => A) => Reader<E,A>,
-        from:   <E,A>(x: (a: E) => A) => Reader<E,A>,
-        Reader: <E,A>(x: (a: E) => A) => Reader<E,A>,
-        pure:   <E,A>(x: (a: E) => A) => Reader<E,A>,
-        runReader: <E,A>(reader: Reader<E,A>, env: E) => A,
-    };
+        of:   <E,A>(x: (a: E) => A) => Reader<E,A>;
+        from:   <E,A>(x: (a: E) => A) => Reader<E,A>;
+        Reader: <E,A>(x: (a: E) => A) => Reader<E,A>;
+        pure:   <E,A>(x: (a: E) => A) => Reader<E,A>;
+        runReader: <E,A>(reader: Reader<E,A>, env: E) => A;
+    }
   
     export const Reader: ReaderRep
 
@@ -565,4 +583,30 @@ declare module "jazzi" {
     }
 
     export const Either: EitherRep;
+
+    /* Standalone utilities */
+
+    /**
+     * Type match a value
+     * @param {{ match: (cases: any) => any }} value
+     * @param {any} cases
+     */
+    export const match: <A>(value: A, cases: Cases<A>) => any;
+    /**
+     * Calls unwrap on the given object
+     * @param {{ unwrap: () => any }} x 
+     */
+    export const toPrimitive: (x: any) => any;
+    /**
+     * Returns true if value implements the provided typeclass or typeclass name
+     * @param {any} value
+     * @param {any} typeclass 
+     */
+    export const hasInstance: (val: any,tc: any | string) => boolean;
+    /**
+     * Calls foldMap of the given type
+     * @param t Monoid type
+     * @param values values to be foldMapped
+     */
+    export const foldMap: <M extends MonoidRep>(t: M, values: any[]) => any;
 }

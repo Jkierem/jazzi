@@ -15,15 +15,6 @@ const config = {
             file: pkg.module,
             sourceMaps: true,
             format: 'esm'
-        },
-        {
-            file: pkg.browser,
-            sourceMaps: true,
-            format: "umd",
-            name: "JuanRamdaStructures",
-            globals: {
-                ramda: "ramda"
-            }
         }
     ],
     external: [ "ramda" ],

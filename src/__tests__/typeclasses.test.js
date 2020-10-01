@@ -24,5 +24,8 @@ describe("typeclasses", () => {
             const sum42 = Sum.accumulate([10,12,20].map(Sum.of));
             expect(sum42.get()).toBe(42)
         })
+        it("foldMap -> should create monoids and combine them", () => {
+            expect(Sum.foldMap([10,12,20]).unwrap()).toBe(42)
+        })
     })
 })

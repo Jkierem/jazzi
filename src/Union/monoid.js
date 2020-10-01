@@ -42,6 +42,9 @@ const Monoid = (defs) => setTypeclass("Monoid",(cases,globals) => {
     globals.accumulate = function(arr){ 
         return arr.reduce((acc,next) => acc.concat(next), new cases[zero]())
     }
+    globals.foldMap = function(arr) {
+        return arr.map(this.of).reduce((acc,next) => acc.concat(next), new cases[zero]())
+    }
 })
 
 setTypeclass("Monoid",Monoid)

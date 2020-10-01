@@ -1,9 +1,8 @@
 {
     "name": "jazzi",
     "version": "1.0.0",
-    "main": "./dist/cjs/juan-utils-ramda-structs.cjs.js",
-    "module": "./dist/esm/juan-utils-ramda-structs.esm.js",
-    "browser": "./dist/umd/juan-utils-ramda-structs.umd.js",
+    "main": "./dist/cjs/jazzi.cjs.js",
+    "module": "./dist/esm/jazzi.esm.js",
     "license": "MIT",
     "types": "types/index.d.ts",
     "publishConfig": {
@@ -11,7 +10,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/Jkierem/juan-utils"
+        "url": "https://github.com/Jkierem/jazzi"
     },
     "files": [
         "dist",

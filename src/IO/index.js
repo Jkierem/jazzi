@@ -1,10 +1,10 @@
 import { extractWith, getInnerValue } from "../_internals";
-import { Union, Monad, Applicative, Functor, Show } from "../Union";
+import { Union, Monad, Applicative, Functor, Show, Effect } from "../Union";
 import { compose } from "ramda";
 
 const IOType = () => (cases) => {
-    cases.IO.prototype.unsafeRun = function(...args){
-        return this.get()(...args)
+    cases.IO.prototype.unsafeRun = function(){
+        return this.get()()
     }
 }
 
@@ -45,6 +45,7 @@ const IO = Union("IO",{
     Applicative(IODefs),
     Monad(IODefs),
     Show(IODefs),
+    Effect(IODefs),
     IOType()
 ]).constructors({
     of: defaultIO,

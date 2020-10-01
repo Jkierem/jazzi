@@ -1,6 +1,11 @@
 import { curryN, includes } from "ramda";
 import { getTypeclass, getTypeclasses, safeMatch } from "../_internals";
 
+/**
+ * Type match a value
+ * @param {{ match: (cases: any) => any }} value
+ * @param {any} cases
+ */
 export const match = curryN(2,safeMatch)
 /**
  * Calls unwrap on the given object
@@ -14,3 +19,5 @@ export const toPrimitive = x => x?.unwrap?.() || x;
  * @param {any} typeclass 
  */
 export const hasInstance = (x,tc) => includes(getTypeclass(tc) || tc, getTypeclasses(x)?.() || [])
+
+export const foldMap = (t,values) => t.foldMap(values)

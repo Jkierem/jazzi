@@ -2,7 +2,7 @@ import {
     ifElse, is, apply, identity, 
     __, toPairs, toLower, curryN, 
     compose, find, fromPairs, isNil, 
-    prop, complement, any, equals 
+    prop, complement, any, equals, map 
 } from 'ramda'
 
 /**
@@ -73,13 +73,15 @@ export const Typeclasses = Symbol("@@typeclasses");
 export const getTypeclasses = prop(Typeclasses);
 export const setTypeclasses = mutate(Typeclasses)
 
+/* istanbul ignore next : spy works believe me*/
 export const Spy = (fn = x => x) => {
     let callCount = 0;
     let calls = []
     let _spy = (...args) => {
         callCount++;
-        calls.push(args);
-        return fn(...args)
+        const res = fn(...args)
+        calls.push({args, result: res});
+        return res;
     }
 
     Object.defineProperty(_spy,"called",{
@@ -89,8 +91,12 @@ export const Spy = (fn = x => x) => {
     Object.defineProperty(_spy,"callCount",{
         get: () => callCount
     })
+    Object.defineProperty(_spy,"calls",{
+        get: () => calls
+    })
 
-    _spy.calledWith = (...args) => any(equals(args),calls);
+    _spy.calledWith = (...args) => any(equals(args),map(prop("args"))(calls));
+    _spy.returned = (val) => any(equals(val),map(prop("result"))(calls));
 
     _spy.reset = () => {
         callCount = 0 

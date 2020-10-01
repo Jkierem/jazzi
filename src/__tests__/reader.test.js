@@ -11,11 +11,19 @@ describe("Reader Monad",() => {
             expect(spy.called).toBeTruthy();
         })
         it("monad -> chain is lazy", () => {
-            const spy = Spy(x => Reader.of(42))
-            const read42 = Reader.of(() => 0).chain(spy);
+            const spy = Spy(x => Reader.of(x + 40))
+            const read42 = Reader.of(val => val).chain(spy);
             expect(spy.called).toBeFalsy();
-            expect(read42.run()).toBe(42);
+            expect(read42.run(2)).toBe(42);
             expect(spy.called).toBeTruthy();
+        })
+        it("moinad -> chain readers", () => {
+            const log = something => Reader.of(logger => logger.log(something))
+            const logSomething = () => log("something").chain(() => log("else"));
+            const spy = { log: Spy() };
+            logSomething().run(spy)
+            expect(spy.log.calledWith("something")).toBeTruthy()
+            expect(spy.log.calledWith("else")).toBeTruthy()
         })
         it("applicative -> apply is lazy",() => {
             const spy = Spy(x => x + 1)
@@ -43,6 +51,16 @@ describe("Reader Monad",() => {
             const read = Reader.from(fn).local(x => x + 1);
             Reader.runReader(read,42);
             expect(fn.calledWith(43)).toBeTruthy()
+        })
+        it("should pass enviroment (dependency injection)", () => {
+            const spy = Spy()
+            const Inc = (value) => Reader.of(inc => inc.do(value));
+            const comp = () => Inc(41).map(spy)
+            expect(spy.called).toBeFalsy()
+            const res = comp().run({ do: x => x + 1 })
+            expect(spy.called).toBeTruthy()
+            expect(spy.calledWith(42)).toBeTruthy()
+            expect(res).toBe(42)
         })
     })
     describe("constructors",() => {

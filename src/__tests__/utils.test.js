@@ -1,7 +1,8 @@
 import { __ } from 'ramda'
+import Sum from '../Sum';
 import { Union, NewType, Monad, Functor } from '../Union';
 import { getCase } from '../_internals';
-import { hasInstance, toPrimitive } from '../_tools'
+import { foldMap, hasInstance, toPrimitive } from '../_tools'
 
 describe("Utils", () => {
     // Box is the simplest definition of an union
@@ -18,6 +19,13 @@ describe("Utils", () => {
             expect(toPrimitive(undefined)).toBeUndefined();
         })
     })
+
+    describe("foldMap", () => {
+        it("should call foldMap on a Monoid type", () => {
+            expect(foldMap(Sum,[10,12,20]).unwrap()).toBe(42)
+        })
+    })
+
     describe("hasInstance", () => {
         const Box = NewType("Box",[ Functor({trivials: ["Box"], identities: [] }) ]);
         const Boxed42 = Box.from(42)

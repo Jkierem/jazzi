@@ -20,8 +20,10 @@ const Effect = (defs) => mark((cases) => {
     const overrides = propOr({},"overrides",defs);
     trivials.forEach(trivial => {
         function trivialEffect(fn){
-            fn(this.get())
-            return this
+            return this.map(x => {
+                fn(x)
+                return x
+            })
         }
         const effect = overrides?.effect?.[trivial] || trivialEffect
         cases[trivial].prototype.effect = effect
