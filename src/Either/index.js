@@ -24,7 +24,13 @@ const Defs = {
     errors: ["Left"],
     pure: "Right",   
     left: "Left",
-    right: "Right"
+    right: "Right",
+    overrides: {
+        fold: {
+            Left: function(fnLeft,fnRight){ return fnLeft(this.get())},
+            Right: function(fnLeft,fnRight){ return fnRight(this.get())}
+        }
+    }
 }
 
 function defaultConstructor(l,r){ return isNil(r) ? this.Left(l) : this.Right(r) }

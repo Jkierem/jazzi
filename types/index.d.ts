@@ -2,6 +2,7 @@ declare module "jazzi" {
     
     type Placeholder = import("ramda").Placeholder;
     type Extractable<A> = A | (() => A)
+    type Extractable1<A,B> = B | ((a: A) => B)
 
     type CaseUnion<K> = K | "default" | "_";
     type Cases<K extends string | number | symbol> = {
@@ -196,8 +197,8 @@ declare module "jazzi" {
             Effect<A>, Monad<A>, Monoid<A>, 
             Filterable<A>, Eq<Maybe<A>>, Applicative<A>
     {
-        onJust: <B>(fn: (x: A) => B) => B;
-        onNone: <B>(fn: () => B) => B;
+        onJust: <B>(fn: B | ((x: A) => B)) => B;
+        onNone: <B>(fn: B | (() => B)) => B;
         ifJust: <B>(fn: (x: A) => Maybe<B>) => Maybe<B>;
         ifNone: <B>(fn: (x: A) => Maybe<B>) => Maybe<B>;
         isJust: () => boolean;
@@ -259,8 +260,8 @@ declare module "jazzi" {
             Eq<Result<A,E>>, Applicative<A>, Swap<A,E>,
             FunctorError<E>
     {
-        onOk  <B>(fn: (x: A) => B): B;
-        onErr <B>(fn: (x: E) => B): B;
+        onOk  <B>(fn: B | ((x: A) => B)): B;
+        onErr <B>(fn: B | ((x: E) => B)): B;
         isOk  (): boolean;
         isErr (): boolean;
 
@@ -317,8 +318,8 @@ declare module "jazzi" {
     extends Boxed<A,MultCases>, Show,
             Monoid<A>, Functor<A>
     {
-        onMult <B>(fn: Extractable<B>): B ;
-        onOne  <B>(fn: Extractable<B>): B ;
+        onMult <B>(fn: Extractable1<A,B>): B ;
+        onOne  <B>(fn: Extractable1<A,B>): B ;
         isMult (): boolean;
         isOne  (): boolean;
 
@@ -360,8 +361,8 @@ declare module "jazzi" {
     extends Boxed<A,SumCases>, Show,
             Monoid<A>, Functor<A>, Eq<A>
     {
-        onSum <B>(fn: Extractable<B>): B ;
-        onZero<B>(fn: Extractable<B>): B ;
+        onSum <B>(fn: Extractable1<A,B>): B ;
+        onZero<B>(fn: Extractable1<A,B>): B ;
         isSum (): boolean;
         isZero(): boolean;
 
@@ -403,8 +404,8 @@ declare module "jazzi" {
     extends Boxed<A,MergeCases>, Show,
             Monoid<A>, Functor<A>, Eq<A>
     {
-        onMerge<B>(fn: Extractable<B>): B ;
-        onEmpty<B>(fn: Extractable<B>): B ;
+        onMerge<B>(fn: Extractable1<A,B>): B ;
+        onEmpty<B>(fn: Extractable1<A,B>): B ;
         isMerge(): boolean;
         isEmpty(): boolean;
 
@@ -529,8 +530,8 @@ declare module "jazzi" {
     extends Boxed<L | R, EitherCases>, Monad<R>,
             Swap<L,R>, FunctorError<L>, Show
     {
-        onRight: <B>(fn: (x: R) => B) => B;
-        onLeft:  <B>(fn: (x: L) => B) => B;
+        onRight: <B>(fn: B | ((x: R) => B)) => B;
+        onLeft:  <B>(fn: B | ((x: L) => B)) => B;
         ifRight: <B>(fn: (x: R) => Either<L,B>) => Either<B,R>;
         ifLeft:  <B>(fn: (x: L) => Either<B,R>) => Either<L,B>;
         isRight: () => boolean;
@@ -539,6 +540,8 @@ declare module "jazzi" {
          * Swaps context. If `Right a` returns `Left a` and vice versa
          */
         swap: () => Either<L,R>;
+
+        fold: <B>(l: (x:L) => B, r:(x: R) => B) => B;
 
         chain  <B>(fn : (x: R) => Either<L,B>): Either<L,B>;
         bind   <B>(fn : (x: R) => Either<L,B>): Either<L,B>;
