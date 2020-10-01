@@ -94,7 +94,7 @@ declare module "jazzi" {
          * Map error case of a functor
          * @param fn function to map over
          */
-        mapError(fn: (a: A) => B): FunctorError<B>;
+        mapError<B>(fn: (a: A) => B): FunctorError<B>;
     }
 
     interface Applicative<A> {
