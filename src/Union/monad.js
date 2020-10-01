@@ -4,14 +4,14 @@ import { setTypeclass } from "../_internals"
 /**
  * Adds pure, chain, bind and flatMap method to proto. Adds pure to global.
  * @param {{ 
+ *  pure: string,
  *  trivials: string[], 
  *  identities: string[],
- *  pure: string,
  *  overrides?: {
  *      chain?: any
  *  }
  * }} defs 
- * @returns {(cases: any) => void}
+ * @returns {(cases: any, globals: any) => void}
  */
 const Monad = (defs) => setTypeclass("Monad",(cases,globals) => {
     const trivials = propOr([],"trivials",defs);

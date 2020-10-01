@@ -308,6 +308,7 @@ declare module "jazzi" {
 
         equals<A,E>(ma: Result<A,E>, mb: Result<A,E>): boolean;
     }
+    export const Result: ResultRep
 
     /**
      * Monoid of numbers under multiplication
@@ -609,4 +610,25 @@ declare module "jazzi" {
      * @param values values to be foldMapped
      */
     export const foldMap: <M extends MonoidRep>(t: M, values: any[]) => any;
+    /**
+     * Creates a sum type than can be extended using typeclasses provided by this library. For more info lookup API in the docs.
+     * @param name Name used for the type
+     * @param cases Cases that make up the union. It's an object with functions as values. 
+     * @param extensions Typeclasses that modify the prototype of the cases
+     */
+    export function Union(name: string, cases: any, extensions: Function[]): { constructors: (constructors: any) => any }
+    
+    export function Applicative(defs: { trivials: string[], identities: string[], overrides?: { apply?: any } }) : (cases: any, globals: any) => void;
+    export function Bifunctor(defs: { first: string, second: string, overrides?: { bimap?: any } }) : (cases: any, globals: any) => void;
+    export function Effect(defs: { trivials: string[], identities: string[], overrides?: { effect?: any } }) : (cases: any, globals: any) => void;
+    export function Eq(defs: { trivials: string[], empties: string[], overrides?: { equals?: any } }) : (cases: any, globals: any) => void;
+    export function Filterable(defs: { trivials: string[], identities: string[], overrides?: { filter?: any } }) : (cases: any, globals: any) => void;
+    export function Foldable(defs: { overrides: { filter: any } }) : (cases: any) => void;
+    export function Functor(defs: { trivials: string[], identities: string[], overrides?: { fmap?: any } }) : (cases: any, globals: any) => void;
+    export function FunctorError(defs: { errors: string[], overrides?: { mapError?: any } }) : (cases: any, globals: any) => void;
+    export function Monad(defs: { pure: string, trivials: string[], identities: string[], overrides?: { chain?: any } }) : (cases: any, globals: any) => void;
+    export function Monoid(defs: { zero: string, trivials: string[], identities: string[], overrides?: { empty?: any, mappend?: any } }) : (cases: any, globals: any) => void;
+    export function Semigroup(defs: { trivials: string[], identities: string[], overrides?: { concat?: any } }) : (cases: any, globals: any) => void;
+    export function Show(defs: { overrides?: { show?: any } }) : (cases: any, globals: any) => void;
+    export function Swap(defs: { left: string, right: string, overrides?: { swap?: any } }) : (cases: any, globals: any) => void;
 }
