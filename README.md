@@ -56,7 +56,7 @@ Maybe.do(function*(){
 })
 ```
 
-Also all Monads have a `run` and an `unsafeRun` method. This methods make sense for the lazy monads that store computations (`IO`,`Reader`,`Sink`). For the other Monads, it will do nothing.
+Also all Monads have a `run` and an `unsafeRun` method. This methods make sense for the lazy monads that store computations (`IO`,`Reader`). For the other Monads, it will do nothing.
 
 ## Either
 
@@ -103,15 +103,24 @@ Has three more constructors:
 IO stores a computation and will not run it unless `unsafeRun` is called on it while allowing us to work with the result of said computation and sequencing with other IOs. IO is a lazy monad so mapping and chaining will not execute the computation. The default constructor expects a function but if a value is received, it will wrap it in a nullary function.
 
 ```javascript
-const log = IO.pure(console.log);
+const ioLog = str => IO.of(() => console.log(str));
 
 const log42 = IO.of(20)
 .map(x => x + 1)
 .peak(console.log) // Does nothing yet
 .map(x => x * 2)
-.flatMap(log) // Does nothing yet
+.flatMap(ioLog) // Does nothing yet
 
 log42.unsafeRun() // logs 21 then logs 42
+
+// Let's try that in do-notation
+const doLog42 = IO.do(function*(){
+    const a = yield IO.of(20)
+    yield ioLog(a + 1)
+    return ioLog((a + 1) * 2)
+})
+
+doLog42.unsafeRun()
 ```
 
 ## Reader
@@ -139,7 +148,15 @@ const log = something => Reader.of(logger => logger.log(something))
 const logSomething = () => log("something").chain(() => log("else"));
 
 logSomething().run(console); // logs "something" then "else"
+
+// Now in do notation!
+Reader.do(function*(){
+    yield log("something")
+    return log("else")
+}).run(console)
 ```
+
+This is simple example but there are tons of uses for the Reader monad.
 
 ## Sink
 

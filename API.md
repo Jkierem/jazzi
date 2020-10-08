@@ -13,7 +13,7 @@ The function signature notation used is similar to haskell's type notations with
 // "Maybe m" means "m" is of type Maybe
 // "match" is a method called on a "Maybe" object and
 // "m a" is a Maybe of a type "a"
-// "c m a" is Cases of a Maybe of a type "a"
+// "c (m a)" is Cases of a Maybe of a type "a"
 // "*" just means "any type"
 ```
 
@@ -91,6 +91,7 @@ Defines a type than can be filtered. The trivial case implementation calls filte
 Defines a type that has a fold method. There is no default implementation. Must be implemented.
 
 | method | description |
+| ------ | ----------- |
 | fold :: Foldable f => f a -> (a -> b -> b) -> b | folds the structure. Result is a special case of folds |
 
 ## Monad
@@ -148,6 +149,7 @@ Defines a type that has a string representation. The default implementation is `
 Swaps the context of the structure. Requires a left and right case. If called on a left, returns a right and vice versa, without changing the inner value. 
 
 | method | description |
+| ------ | ----------- |
 | swap :: Swap s => s a ~> () -> s a | returns `left a` if the value is `right a` or `left a` if the value `right a` |
 
 ## Box
@@ -384,7 +386,13 @@ They all override the concat function. Sum uses addition, Mult uses multiplicati
 
 ## Reader
 
-Reader monad is used to supply a common value to a group of functions. 
+Reader monad is used to supply a common value to a group of functions. It is lazy and is very similar to `IO`: Like `IO` this structures provides lazy overrides for the Functor, Applicative and Monad methods. Unlike `IO` arguments passed to `unsafeRun` are passed to the inner computation.
+
+| methods | descriptions |
+| ------- | ------------ |
+| local :: Reader r => r a b ~> (a -> c) -> r c b | transforms the enviroment before passing it to the computaions using the given function. |
+
+It also provides `runReader` to run a reader and a `ask` constructor that returns `Reader.of(x => x)`
 
 ## Sink
 
