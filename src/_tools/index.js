@@ -18,6 +18,6 @@ export const toPrimitive = x => x?.unwrap?.() || x;
  * @param {any} value
  * @param {any} typeclass 
  */
-export const hasInstance = (x,tc) => includes(getTypeclass(tc) || tc, getTypeclasses(x)?.() || [])
+export const hasInstance = (tc,x) => includes(getTypeclass(tc) || tc, getTypeclasses(x)?.() || [])
 
 export const foldMap = (t,values) => t.foldMap(values)

@@ -42,7 +42,13 @@ declare module "jazzi" {
     }
 
     interface Show {
+        /**
+         * Returns the string representation
+         */
         show(): string;
+        /**
+         * Returns the string representation
+         */
         toString(): string;
     }
 
@@ -122,6 +128,16 @@ declare module "jazzi" {
          * @param fn 
          */
         flatMap <B>(fn: (a: A) => Monad<B>): Monad<B>;
+        /**
+         * For lazy monads, runs the wrapper computation. 
+         * For Monads that are eager, returns the monad unchanged
+         */
+        unsafeRun(): any;
+        /**
+         * For lazy monads, runs the wrapper computation. 
+         * For Monads that are eager, returns the monad unchanged
+         */
+        run(): any;
     }
 
     interface Filterable<A> {
@@ -154,7 +170,11 @@ declare module "jazzi" {
          * Wraps a value of type `a` into a monadic value `M a`
          * @param x value to be wrapped
          */       
-        pure<A>(x: A): Monad<A>; 
+        pure<A>(x: A): Monad<A>;
+        /**
+         * Do notation using generator functions
+         */
+        do<A>(fn: GeneratorFunction): Monad<A>;
     }
     interface EqRep { 
         /**
@@ -197,11 +217,35 @@ declare module "jazzi" {
             Effect<A>, Monad<A>, Monoid<A>, 
             Filterable<A>, Eq<Maybe<A>>, Applicative<A>
     {
+        /**
+         * If Just, returns application of argument or argument. 
+         * If None, returns inner value. 
+         */
         onJust: <B>(fn: B | ((x: A) => B)) => B;
+        /**
+         * If None, returns application of argument or argument. 
+         * If Just, returns inner value. 
+         */
         onNone: <B>(fn: B | (() => B)) => B;
+        /**
+         * If Just, maps over argument
+         * If None, returns structure unchanged. 
+         */
         ifJust: <B>(fn: (x: A) => Maybe<B>) => Maybe<B>;
+        /**
+         * If None, maps over argument
+         * If Just, returns structure unchanged. 
+         */
         ifNone: <B>(fn: (x: A) => Maybe<B>) => Maybe<B>;
+        /**
+         * If Just, returns true
+         * If None, returns false
+         */
         isJust: () => boolean;
+        /**
+         * If Just, returns false
+         * If None, returns true
+         */
         isNone: () => boolean;
 
         effect(fn: (x: A) => void): Maybe<A>;
@@ -229,16 +273,59 @@ declare module "jazzi" {
     extends BoxedRep<MaybeCases>, 
             MonadRep, MonoidRep, EqRep
     {
+        /**
+         * Just constructor
+         * @param a inner value
+         */
         Just<A>(a: A): Maybe<A>;
+        /**
+         * None constructor
+         */
         None<A>(): Maybe<A>;
+        /**
+         * If truthy returns Just. None otherwise
+         * @param x inner value
+         */
         of<T>(x: T): Maybe<T>;
+        /**
+         * If truthy returns Just. None otherwise
+         * @param x inner value
+         */
         from<T>(x: T): Maybe<T>;
+        /**
+         * If truthy returns Just. None otherwise
+         * @param x inner value
+         */
         fromFalsy<T>(x: T): Maybe<T>;
+        /**
+         * If non-empty array returns Just. None otherwise
+         * @param x inner value
+         */
         fromArray<T>(x: T[]): Maybe<T[]>;
+        /**
+         * If null or undefined returns None. Just otherwise
+         * @param x inner value
+         */
         fromNullish<T>(x: T): Maybe<T>;
+        /**
+         * If `ramda.empty` returns true, None. Just otherwise
+         * @param x inner value
+         */
         fromEmpty<T>(x: T): Maybe<T>;
+        /**
+         * If predicate evaluates to true returns Just of second argument. None otherwise
+         * @param x inner value
+         */
         fromPredicate<A>(pred: (a: A) => boolean, val?: A ): Maybe<A>;
+        /**
+         * If Ok returns Just.
+         * If Err returns None.
+         */
         fromResult<T>(r: Result<T,any>): Maybe<T>;
+        /**
+         * Returns true if inner value is considered an empty value.
+         * @param x inner value
+         */
         isEmpty<T>(x: Maybe<T>): boolean;
 
         pure<A>(x: A): Maybe<A>;
@@ -248,6 +335,7 @@ declare module "jazzi" {
         foldMap<A>(values: A[]): Maybe<A>;
 
         equals<A>(ma: Maybe<A>, mb: Maybe<A>): boolean;
+        do<A>(fn: GeneratorFunction): Maybe<A>;
     }
 
     export const Maybe: MaybeRep;
@@ -260,7 +348,15 @@ declare module "jazzi" {
             Eq<Result<A,E>>, Applicative<A>, Swap<A,E>,
             FunctorError<E>
     {
+        /**
+         * Returns argument or evaluation of argument if Ok. Inner value otherwise
+         * @param fn 
+         */
         onOk  <B>(fn: B | ((x: A) => B)): B;
+        /**
+         * Returns argument or evaluation of argument if Err. Inner value otherwise
+         * @param fn 
+         */
         onErr <B>(fn: B | ((x: E) => B)): B;
         isOk  (): boolean;
         isErr (): boolean;
@@ -297,17 +393,46 @@ declare module "jazzi" {
     {
         Ok <A>(val: A): Result<A,any>;
         Err<E>(err: E): Result<any,E>;
-        of<A>(val: A): Result<A,Error>;
-        from<A>(val: A): Result<A,Error>;
+        /**
+         * Receives a function. Returns Ok if the function evaluates. Err if it throws.
+         * @param fn 
+         */
+        of<A>(fn: A): Result<A,Error>;
+        /**
+         * Receives a function. Returns Ok if the function evaluates. Err if it throws.
+         * @param fn 
+         */
+        from<A>(fn: A): Result<A,Error>;
+        /**
+         * Returns Err if it receives an Error. Ok otherwise.
+         * @param val 
+         */
         fromError<A>(val: A): Result<A,Error>;
+        /**
+         * Returns Err if it receives a falsy value. Ok otherwise.
+         * @param val 
+         */
         fromFalsy<A>(val: A): Result<A,A>;
+        /**
+         * If predicate evaluates to true returns Ok of second argument. Err otherwise
+         * @param x inner value
+         */
         fromPredicate<A>(pred: (a: A) => boolean, val?: A ): Result<A,A>;
+        /**
+         * If Just returns Ok.
+         * If None returns Err.
+         */
         fromMaybe<A,E>(val: Maybe<A>, onNothing: Extractable<E>): Result<A,E>;
+        /**
+         * Receives a function. Returns Ok if the function evaluates. Err if it throws.
+         * @param fn 
+         */
         attempt<A>(fn: (a:any) => A): Result<A,Error>;
         
         pure<A>(x: A): Result<A,any>;
 
         equals<A,E>(ma: Result<A,E>, mb: Result<A,E>): boolean;
+        do<A,B>(fn: GeneratorFunction): Result<A,B>;
     }
     export const Result: ResultRep
 
@@ -316,7 +441,7 @@ declare module "jazzi" {
      */
     export interface Mult<A> 
     extends Boxed<A,MultCases>, Show,
-            Monoid<A>, Functor<A>
+            Monoid<A>, Functor<A>, EqRep
     {
         onMult <B>(fn: Extractable1<A,B>): B ;
         onOne  <B>(fn: Extractable1<A,B>): B ;
@@ -340,11 +465,21 @@ declare module "jazzi" {
 
     interface MultRep 
     extends BoxedRep<MultCases>, 
-            MonadRep, MonoidRep, EqRep
+            MonoidRep, EqRep
     {
         Mult(x: number): Mult<number>;
         One(): Mult<number>;
+        /**
+         * If 1, returns One
+         * Otherwise, returns Mult
+         * @param {number} x inner value
+         */
         of(x: number): Mult<number>;
+        /**
+         * If 1, returns One
+         * Otherwise, returns Mult
+         * @param {number} x inner value
+         */
         from(x: number): Mult<number>;
         empty(): Mult<number>;
         accumulate<A>(monoids: Mult<A>[]): Mult<A>;
@@ -387,7 +522,17 @@ declare module "jazzi" {
     {
         Sum(x: number): Sum<number>;
         Zero(): Sum<number>;
+        /**
+         * If 0, returns Cero
+         * Otherwise, returns Sum
+         * @param {number} x inner value
+         */
         of(x: number): Sum<number>;
+        /**
+         * If 0, returns Cero
+         * Otherwise, returns Sum
+         * @param {number} x inner value
+         */
         from(x: number): Sum<number>;
         empty(): Sum<number>;
         accumulate<A>(monoids: Sum<A>[]): Sum<A>;
@@ -430,7 +575,17 @@ declare module "jazzi" {
     {
         Merge<A>(x: A): Merge<A>;
         Empty<A>(): Merge<A>;
+        /**
+         * If {}, returns Empty
+         * Otherwise, returns Merge
+         * @param {number} x inner value
+         */
         of<A>(x: A): Merge<A>;
+        /**
+         * If {}, returns Empty
+         * Otherwise, returns Merge
+         * @param {number} x inner value
+         */
         from<A>(x: A): Merge<A>;
         empty<A>(): Merge<A>;
         accumulate<A>(monoids: Merge<A>[]): Merge<A>;
@@ -443,6 +598,10 @@ declare module "jazzi" {
     export interface Reader<E,A>
     extends Boxed<(a: E) => A,ReaderCases>, Monad<A>, Show
     {
+        /**
+         * Transforms the received enviroment with `fn`
+         * @param fn Function to transform enviroment
+         */
         local<B>(fn: (a: E) => B): Reader<B,A>;
 
         fmap<B>(fn: (a: A) => B): Reader<E,B>;
@@ -456,13 +615,21 @@ declare module "jazzi" {
     }
 
     interface ReaderRep
-    extends BoxedRep<ReaderCases>
+    extends BoxedRep<ReaderCases>, MonadRep
     {
+        /**
+         * Constructs a Reader. Expects a function that receives the enviroment
+         */
         of:   <E,A>(x: (a: E) => A) => Reader<E,A>;
+        /**
+         * Constructs a Reader. Expects a function that receives the enviroment
+         */
         from:   <E,A>(x: (a: E) => A) => Reader<E,A>;
         Reader: <E,A>(x: (a: E) => A) => Reader<E,A>;
         pure:   <E,A>(x: (a: E) => A) => Reader<E,A>;
         runReader: <E,A>(reader: Reader<E,A>, env: E) => A;
+        do<E,A>(fn: GeneratorFunction): Reader<E,A>;
+        ask<E,A>(): Reader<E,A>
     }
   
     export const Reader: ReaderRep
@@ -471,7 +638,13 @@ declare module "jazzi" {
     extends Boxed<A,SinkCases>, Monad<A>, 
             Monoid<A>, Show
     {
+        /**
+         * Receives a Monoid to combine later
+         */
         tell: (x: A) => Sink<A>;
+        /**
+         * Receives a value to wrap inside a Monoid to be combined later
+         */
         flush: () => Sink<A>;
 
         apply: <B>(m: Sink<(a: A) => B>) => Sink<B>;
@@ -484,27 +657,58 @@ declare module "jazzi" {
         empty: <B>() => Sink<B>;
     }
 
-    export const Sink: {
+    export interface SinkRep extends
+        BoxedRep<SinkCases>, MonadRep
+    {
         Sink: <A>(x: A) => Sink<A>,
         pure: <A>(x: A) => Sink<A>,
         empty: <A>(x: A) => Sink<A>,
-        runSink: <A>(fn: Function, reader: Sink<A>) => Sink<A>,
-        runSeq: <A>(fn: Function[], reader: Sink<A>) => Sink<A>,
+        /**
+         * Runs a sink over a function
+         */
+        runSink: <A>(fn: Function, sink: Sink<A>) => Sink<A>,
+        /**
+         * Runs a sink over a list of functions
+         */
+        runSeq: <A>(fn: Function[], sink: Sink<A>) => Sink<A>,
+        /**
+         * If Monoid, returns Sink
+         * Otherwise, throws an error
+         * @param {number} x starting value of the sink
+         */
         from: <A>(x: A) => Sink<A>,
+        /**
+         * If Monoid, returns Sink
+         * Otherwise, throws an error
+         * @param {number} x starting value of the sink
+         */
+        of: <A>(x: A) => Sink<A>,
+        /**
+         * If Monoid, returns Sink
+         * Otherwise, throws an error
+         * @param {number} x starting value of the sink
+         */
+        fromMonoid: <A>(x: A) => Sink<A>,
+        /**
+         * Receives the type representative of a Monoid and returns a sink that, using the empty element as starting value.
+         */
+        fromType: <A>(t: any) => Sink<A>,
+        /**
+         * Creates a sink whether the given value is a Monoid or not
+         */
+        force: <A>(x: A) => Sink<A>,
         sumSink: () => Sink<Sum<number>>,
         multSink: () => Sink<Mult<number>>,
         objectSink: () => Sink<Merge<any>>,
-        arraySink: () => Sink<any[]>
+        arraySink: () => Sink<any[]>,
+        do<A>(fn: GeneratorFunction): Sink<A>;
     }
+
+    export const Sink: SinkRep;
   
     export interface IO<A> 
     extends Boxed<A,IOCases>, Monad<A>
     {
-        /**
-         * Performs the wrapped computation
-         */
-        unsafeRun(): A;
-
         chain  <B>(fn : (x: A) => IO<B>): IO<B>;
         bind   <B>(fn : (x: A) => IO<B>): IO<B>;
         flatMap<B>(fn : (x: A) => IO<B>): IO<B>;
@@ -521,10 +725,10 @@ declare module "jazzi" {
         of<A>(fn: Extractable<A>): IO<A>;
         from<A>(fn: Extractable<A>): IO<A>;
         pure<A>(fn: Extractable<A>): IO<A>;
+        do<A>(fn: GeneratorFunction): IO<A>;
     }
 
     export const IO: IORep;
-
 
     export interface Either<L,R> 
     extends Boxed<L | R, EitherCases>, Monad<R>,
@@ -541,6 +745,10 @@ declare module "jazzi" {
          */
         swap: () => Either<L,R>;
 
+        /**
+         * If Left, calls the first function with inner value.
+         * If Right, calls the second function with inner value.
+         */
         fold: <B>(l: (x:L) => B, r:(x: R) => B) => B;
 
         chain  <B>(fn : (x: R) => Either<L,B>): Either<L,B>;
@@ -551,9 +759,17 @@ declare module "jazzi" {
 
         map <B>(fn: (a:R) => B): Either<L,B>;
         fmap<B>(fn: (a:R) => B): Either<L,B>;
+        /**
+         * Alias of `map`
+         * @param fn 
+         */
         mapRight <B>(fn: (a:R) => B): Either<L,B>;
 
         mapError<B>(fn: (a: L) => B): Either<B,R>;
+        /**
+         * Alias of `mapError`
+         * @param fn 
+         */
         mapLeft<B>(fn: (a: L) => B): Either<B,R>;
     }
 
@@ -562,13 +778,56 @@ declare module "jazzi" {
     {
         Left<L>(l: L): Either<L,any>;
         Right<R>(r: R): Either<any,R>;
+        /**
+         * Returns Left of `l` if `r` is null or undefined
+         * Returns Right of `r` otherwise
+         * @param l 
+         * @param r 
+         */
         of<L,R>(l: L, r: R): Either<L,R>;
+        /**
+         * Returns Left of `l` if `r` is null or undefined
+         * Returns Right of `r` otherwise
+         * @param l 
+         * @param r 
+         */
         from<L,R>(l: L, r: R): Either<L,R>;
+        /**
+         * Returns Left of `l` if `r` is falsy
+         * Returns Right of `r` otherwise
+         * @param l 
+         * @param r 
+         */
         fromFalsy<L,R>(l: L, r: R): Either<L,R>;
+        /**
+         * Returns Left of `l` if `r` is null or undefined
+         * Returns Right of `r` otherwise
+         * @param l 
+         * @param r 
+         */
         fromNullish<L,R>(l: L, r: R): Either<L,R>;
+        /**
+         * Returns Right of `r` if predicate returns true for `r`
+         * Returns Left of `r` otherwise
+         * @param l 
+         * @param r 
+         */
         fromPredicate<R>(pred: (r: R) => boolean , r: R): Either<R,R>;
+        /**
+         * Right if Just
+         * Left if None
+         * @param m 
+         */
         fromMaybe<A>(m: Maybe<A>): Either<any,A>;
+         /**
+         * Right if Ok
+         * Left if Err
+         * @param m 
+         */
         fromResult<L,R>(m: Result<R,L>): Either<L,R>;
+        /**
+         * Curryed version of `Either.of`
+         */
         defaultTo<L,R>(l: L): (r: R) => Either<L,R>;
         /**
          * Returns an array with all the Lefts of an array of Eithers
@@ -584,6 +843,17 @@ declare module "jazzi" {
          * Returns two arrays. The first with all the Lefts and the second with all the Rights
          */
         partition<L,R>(lrs: Either<L,R>[]): [Either<L,R>[],Either<L,R>[]]
+        /**
+         * Receives an Array of Eithers and returns a Left of the array of values. Only collects values from Lefts.
+         * @param lrs Array of Eithers
+         */
+        collectLefts<L,R>(lrs: Either<L,R>[]): Either<L[],R>;
+        /**
+         * Receives an Array of Eithers and returns a Right of the array of values. Only collects values from Rights.
+         * @param lrs Array of Eithers
+         */
+        collectRights<L,R>(lrs: Either<L,R>[]): Either<L,R[]>;
+        do<A,B>(fn: GeneratorFunction): Either<A,B>;
     }
 
     export const Either: EitherRep;
@@ -606,7 +876,7 @@ declare module "jazzi" {
      * @param {any} value
      * @param {any} typeclass 
      */
-    export const hasInstance: (val: any,tc: any | string) => boolean;
+    export const hasInstance: (tc: any | string,val: any) => boolean;
     /**
      * Calls foldMap of the given type
      * @param t Monoid type

@@ -23,17 +23,52 @@ describe("Either", () => {
             expect(left42.mapLeft(spy).get()).toBe(43);
             expect(spy.callCount).toBe(2);
         })
-        const eithers = [1,2,undefined,0,3,4,null].map(Either.fromFalsy);
+        const eithers = [1,2,undefined,0,3,4,null].map(x => Either.fromFalsy(x,x));
         it("filters -> rights returns all Rights", () => {
             expect(Either.rights(eithers).every(r => r.isRight())).toBeTruthy()
         })
         it("filters -> lefts returns all Lefts", () => {
-            expect(Either.lefts(eithers).every(l => l.isLeft())).toBeTruthy()
+            const ls = Either.lefts(eithers)
+            expect(ls.every(l => l.isLeft())).toBeTruthy()
+            expect(ls.length).toBe(3)
         })
         it("filters -> paritions returns [lefts, rights]", () => {
             const [ ls, rs ] = Either.partition(eithers);
             expect(ls.every(l => l.isLeft())).toBeTruthy()
             expect(rs.every(r => r.isRight())).toBeTruthy()
+        })
+        describe("catamorphisms", () => {
+            it("fold -> calls left function on Left, right function on Right", () => {
+                const spyl = Spy(() => "left")
+                const spyr = Spy(() => "right")
+                expect(right42.fold(spyl,spyr)).toBe("right")
+                expect(spyl.called).toBeFalsy()
+                expect(spyr.called).toBeTruthy()
+                expect(spyr.calledWith(42)).toBeTruthy()
+                spyl.reset()
+                spyr.reset()
+                left42.fold(spyl,spyr);
+                expect(left42.fold(spyl,spyr)).toBe("left")
+                expect(spyr.called).toBeFalsy()
+                expect(spyl.called).toBeTruthy()
+                expect(spyl.calledWith(42)).toBeTruthy()
+            })
+            it("fromRight -> returns inner value if Right, fallback value otherwise", () => {
+                expect(Either.fromRight(40,right42)).toBe(42)
+                expect(Either.fromRight(40,left42)).toBe(40)
+            })
+            it("fromLeft -> returns inner value if Left, fallback value otherwise", () => {
+                expect(Either.fromLeft(40,right42)).toBe(40)
+                expect(Either.fromLeft(40,left42)).toBe(42)
+            })
+            const { Left, Right } = Either
+            const collects = [ Left([1]), Right([1]), Left([2]), Left([3]), Right([2]), Right([3])];
+            it("collectRights -> [Right (Monoid a)] => Right (Monoid a)", () => {
+                expect(Either.collectRights(collects).get()).toStrictEqual([1,2,3])
+            })
+            it("collectLefts -> [Left (Monoid a)] => Left (Monoid a)", () => {
+                expect(Either.collectLefts(collects).get()).toStrictEqual([1,2,3])
+            })
         })
     })
 

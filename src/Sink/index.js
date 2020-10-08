@@ -8,7 +8,7 @@ import { hasInstance } from '../_tools';
 
 const isArray = is(Array)
 const isFunction = is(Function)
-const isMonoid = x => hasInstance(x,Monoid) || isArray(x) || (isFunction(x?.concat) && isFunction(x?.empty))
+const isMonoid = x => hasInstance(Monoid,x) || isArray(x) || (isFunction(x?.concat) && isFunction(x?.empty))
 
 const SinkType = () => (cases,globals) => {
     cases.Sink.prototype.tell = function(m){
@@ -37,9 +37,11 @@ const SinkType = () => (cases,globals) => {
         fn(sink)
         return sink
     }
-    cases.Sink.prototype.run = function(fn){
+    function run(fn){
         return innerRun(fn,this)
     }
+    cases.Sink.prototype.run = run
+    cases.Sink.prototype.unsafeRun = run
     globals.runSink = (fn,sink) => {
         return innerRun(fn,sink)
     }
@@ -54,7 +56,7 @@ const Defs = {
     trivials: ["Sink"],
     identities: [],
     pure: "Sink",
-    zero: "Sink"
+    zero: "Sink",
 }
 
 const safeConstruct = (x,cons) => {

@@ -30,12 +30,12 @@ describe("Utils", () => {
         const Box = NewType("Box",[ Functor({trivials: ["Box"], identities: [] }) ]);
         const Boxed42 = Box.from(42)
         it("should return true for implementors, false otherwise", () => {
-            expect(hasInstance(Boxed42,"Functor")).toBeTruthy()
-            expect(hasInstance(Boxed42,Functor)).toBeTruthy()
-            expect(hasInstance(Boxed42,"Monad")).toBeFalsy()
-            expect(hasInstance(Boxed42,Monad)).toBeFalsy()
-            expect(hasInstance(42,Monad)).toBeFalsy()
-            expect(hasInstance(42,Monad)).toBeFalsy()
+            expect(hasInstance(Functor,Boxed42)).toBeTruthy()
+            expect(hasInstance("Functor",Boxed42)).toBeTruthy()
+            expect(hasInstance(Monad,Boxed42)).toBeFalsy()
+            expect(hasInstance("Monad",Boxed42)).toBeFalsy()
+            expect(hasInstance(Monad,42)).toBeFalsy()
+            expect(hasInstance(Monad,42)).toBeFalsy()
         })
     })
 

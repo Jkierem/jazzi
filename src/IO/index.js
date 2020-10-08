@@ -2,16 +2,11 @@ import { extractWith, getInnerValue } from "../_internals";
 import { Union, Monad, Applicative, Functor, Show, Effect } from "../Union";
 import { compose } from "ramda";
 
-const IOType = () => (cases) => {
-    cases.IO.prototype.unsafeRun = function(){
-        return this.get()()
-    }
-}
-
 const IODefs = {
     trivials: ["IO"],
     identities: [],
     pure: "IO",
+    lazy: true,
     overrides: {
         fmap:{
             IO(fn){
@@ -32,6 +27,9 @@ const IODefs = {
             IO(){
                 return `[IO => () => _]`
             }
+        },
+        run: {
+            IO(){ return this.get()() }
         }
     }
 }
@@ -45,8 +43,7 @@ const IO = Union("IO",{
     Applicative(IODefs),
     Monad(IODefs),
     Show(IODefs),
-    Effect(IODefs),
-    IOType()
+    Effect(IODefs)
 ]).constructors({
     of: defaultIO,
     from: defaultIO,

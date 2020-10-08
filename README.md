@@ -1,5 +1,7 @@
 # Jazzi: Juan's Algebraic Data Structures
 
+*Now with Do notation*
+
 Implementations of common structures using ramda for utilities. Available Structures: 
 
 - Either
@@ -38,6 +40,24 @@ Maybe.Just(42).onNone(() => false) // returns 42
 Maybe.Just(42).onJust(() => false) // returns false
 ```
 
+All Monadic Types have a `do` function to chain Monads using `do-notation` through generator functions:
+
+```javascript
+const just21 = Maybe.of(21)
+
+just21.flatMap(a => just21.flatMap(b => Maybe.of(a + b)))
+
+// Can be written as
+
+Maybe.do(function*(){
+    const a = yield just21
+    const b = yield just21
+    return Maybe.of(a + b)
+})
+```
+
+Also all Monads have a `run` and an `unsafeRun` method. This methods make sense for the lazy monads that store computations (`IO`,`Reader`). For the other Monads, it will do nothing.
+
 ## Either
 
 Either represents a value that can be one of two possibilities, either `Left` or `Right` (badum tssss). By convention `Left` is treated as the error case and `Right` as the happy path but they are just two possibilities. The default constructor receives a left value `l` and right value `r` where if `r` is neither null nor undefined then we get `Right r` otherwise we get a `Left l`. There is a curried version of the `fromFalsy` constructor that was made for convenience.
@@ -75,7 +95,7 @@ Result.of(() => { throw 42 }) // returns Err 42
 Has three more constructors:
 
 - `fromFalsy`: `Ok` on truthy, `Err` on falsy
-- `fromError`: `Ok undefined` on anything other than Error, `Err Error` of Error
+- `fromError`: `Ok` on anything other than Error, `Err Error` of Error
 - `attempt`  : alias of `of`
 
 ## IO
@@ -83,15 +103,24 @@ Has three more constructors:
 IO stores a computation and will not run it unless `unsafeRun` is called on it while allowing us to work with the result of said computation and sequencing with other IOs. IO is a lazy monad so mapping and chaining will not execute the computation. The default constructor expects a function but if a value is received, it will wrap it in a nullary function.
 
 ```javascript
-const log = IO.pure(console.log);
+const ioLog = str => IO.of(() => console.log(str));
 
 const log42 = IO.of(20)
 .map(x => x + 1)
 .peak(console.log) // Does nothing yet
 .map(x => x * 2)
-.flatMap(log) // Does nothing yet
+.flatMap(ioLog) // Does nothing yet
 
 log42.unsafeRun() // logs 21 then logs 42
+
+// Let's try that in do-notation
+const doLog42 = IO.do(function*(){
+    const a = yield IO.of(20)
+    yield ioLog(a + 1)
+    return ioLog((a + 1) * 2)
+})
+
+doLog42.unsafeRun()
 ```
 
 ## Reader
@@ -119,7 +148,15 @@ const log = something => Reader.of(logger => logger.log(something))
 const logSomething = () => log("something").chain(() => log("else"));
 
 logSomething().run(console); // logs "something" then "else"
+
+// Now in do notation!
+Reader.do(function*(){
+    yield log("something")
+    return log("else")
+}).run(console)
 ```
+
+This is simple example but there are tons of uses for the Reader monad.
 
 ## Sink
 
@@ -159,8 +196,10 @@ Sink.runSeq([fn,fn], Sink.sumSink()).get() // returns Sum 42
 ## Sum, Mult and Merge Monoids
 
 `Sum` is the monoid of numbers over addition
+
 `Mult` is the monoid of numbers over multiplication
-`Merge` is the monoid of objects over object merging 
+
+`Merge` is the monoid of objects over object shallow merging. 
 
 Monoids have an empty case. `Cero` for `Sum`, `One` for `Mult` and `Empty` for `Merge`. All Monoid types have a `foldMap` method and an `accumulate` method. There is also a standalone foldMap that receives the Monoid type. They all implement equality and are functors
 

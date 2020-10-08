@@ -1,5 +1,5 @@
 import { isNil } from 'ramda'
-import { Applicative, Functor, FunctorError, Monad, Show, Swap, Union } from '../Union'
+import { Applicative, Foldable, Functor, FunctorError, Monad, Show, Swap, Union } from '../Union'
 
 const EitherType = () => (cases,globals) => {
     cases.Right.prototype.ifRight = function(fn){ return this.map(fn) }
@@ -13,16 +13,25 @@ const EitherType = () => (cases,globals) => {
     cases.Right.prototype.mapRight = function(fn){ return this.map(fn) }
     cases.Left.prototype.mapRight = function(fn){ return this }
 
+    globals.fromRight = function(or,val){ return val.isRight?.() ? val.get() : or };
+    globals.fromLeft = function(or,val){ return val.isLeft?.() ? val.get() : or };
+
     globals.lefts = (ls) => ls.filter(l => l.isLeft())
     globals.rights = (rs) => rs.filter(r => r.isRight())
     globals.partition = (lrs) => [lrs.filter(l => l.isLeft()), lrs.filter(r => r.isRight())]
+    globals.collectLefts = (xs) => xs.filter(x => x.isLeft?.()).reduce((acc,next) => {
+        return acc.mapLeft(ls => ls.concat(next.get()))
+    },new cases.Left([]))
+    globals.collectRights = (xs) => xs.filter(x => x.isRight?.()).reduce((acc,next) => {
+        return acc.map(rs => rs.concat(next.get()))
+    },new cases.Right([]))
 }
 
 const Defs = {
     trivials: ["Right"],
     identities: ["Left"],
     errors: ["Left"],
-    pure: "Right",   
+    pure: "Right",
     left: "Left",
     right: "Right",
     overrides: {
@@ -44,6 +53,7 @@ const Either = Union("Either",
     Functor(Defs),
     FunctorError(Defs),
     Applicative(Defs),
+    Foldable(Defs),
     Monad(Defs),
     Swap(Defs),
     Show(Defs),
