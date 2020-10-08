@@ -1,5 +1,7 @@
 # Jazzi: Juan's Algebraic Data Structures
 
+*Now with Do notation*
+
 Implementations of common structures using ramda for utilities. Available Structures: 
 
 - Either
@@ -38,6 +40,24 @@ Maybe.Just(42).onNone(() => false) // returns 42
 Maybe.Just(42).onJust(() => false) // returns false
 ```
 
+All Monadic Types have a `do` function to chain Monads using `do-notation` through generator functions:
+
+```javascript
+const just21 = Maybe.of(21)
+
+just21.flatMap(a => just21.flatMap(b => Maybe.of(a + b)))
+
+// Can be written as
+
+Maybe.do(function*(){
+    const a = yield just21
+    const b = yield just21
+    return Maybe.of(a + b)
+})
+```
+
+Also all Monads have a `run` and an `unsafeRun` method. This methods make sense for the lazy monads that store computations (`IO`,`Reader`,`Sink`). For the other Monads, it will do nothing.
+
 ## Either
 
 Either represents a value that can be one of two possibilities, either `Left` or `Right` (badum tssss). By convention `Left` is treated as the error case and `Right` as the happy path but they are just two possibilities. The default constructor receives a left value `l` and right value `r` where if `r` is neither null nor undefined then we get `Right r` otherwise we get a `Left l`. There is a curried version of the `fromFalsy` constructor that was made for convenience.
@@ -75,7 +95,7 @@ Result.of(() => { throw 42 }) // returns Err 42
 Has three more constructors:
 
 - `fromFalsy`: `Ok` on truthy, `Err` on falsy
-- `fromError`: `Ok undefined` on anything other than Error, `Err Error` of Error
+- `fromError`: `Ok` on anything other than Error, `Err Error` of Error
 - `attempt`  : alias of `of`
 
 ## IO
@@ -159,8 +179,10 @@ Sink.runSeq([fn,fn], Sink.sumSink()).get() // returns Sum 42
 ## Sum, Mult and Merge Monoids
 
 `Sum` is the monoid of numbers over addition
+
 `Mult` is the monoid of numbers over multiplication
-`Merge` is the monoid of objects over object merging 
+
+`Merge` is the monoid of objects over object shallow merging. 
 
 Monoids have an empty case. `Cero` for `Sum`, `One` for `Mult` and `Empty` for `Merge`. All Monoid types have a `foldMap` method and an `accumulate` method. There is also a standalone foldMap that receives the Monoid type. They all implement equality and are functors
 

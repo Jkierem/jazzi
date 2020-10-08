@@ -5,9 +5,6 @@ const ReaderMonad = () => (cases,global) => {
     cases.Reader.prototype.local = function(fn) {
         return getType(this).pure((...env) => this.run(fn(...env)));
     }
-    cases.Reader.prototype.run = function(...env) {
-        return extractWith(env)(this.get())
-    }
     global.runReader = function(reader,...env){
         return reader.run(...env)
     }
@@ -20,6 +17,7 @@ const Defs = {
     trivials: ["Reader"], 
     identities:[],
     pure: "Reader",
+    lazy: true,
     overrides: {
         fmap: {
             Reader(fn){ return Reader.Reader((...env) => fn(this.get()(...env)))}
@@ -32,6 +30,11 @@ const Defs = {
         },
         show: {
             Reader(){ return "[Reader => E => _]" }
+        },
+        run: {
+            Reader(...env) {
+                return extractWith(env)(this.get())
+            }
         }
     }
 }
