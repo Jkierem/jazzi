@@ -1,5 +1,5 @@
 import { curryN, includes } from "ramda";
-import { getTypeclass, getTypeclasses, safeMatch } from "../_internals";
+import { getType, getTypeclass, getTypeclasses, getVariant, safeMatch } from "../_internals";
 
 /**
  * Type match a value
@@ -20,4 +20,13 @@ export const toPrimitive = x => x?.unwrap?.() || x;
  */
 export const hasInstance = (tc,x) => includes(getTypeclass(tc) || tc, getTypeclasses(x)?.() || [])
 
-export const foldMap = (t,values) => t.foldMap(values)
+export const foldMap = (t,values) => values.reduce((acc,next) => acc.concat(t.of(next)) , t.empty())
+
+export const show = x => x.show()
+
+export const fromEnum = en => getType(en).fromEnum(en)
+export const toEnum = (en,i) => en.toEnum(i)
+export const succ = (en) => en.succ()
+export const pred = (en) => en.pred()
+
+export const getTag = v => getVariant(v)

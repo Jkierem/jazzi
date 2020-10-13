@@ -33,17 +33,17 @@ const Monoid = (defs) => setTypeclass("Monoid",(cases,globals) => {
     })
     Object.keys(cases).forEach(key => {
         function trivialEmpty(){
-            return new cases[zero]()
+            return globals.empty()
         }
         const empty = overrides?.empty?.[key] || trivialEmpty;
         cases[key].prototype.empty = empty
     })
     globals.empty = function(){ return new cases[zero]() }
     globals.accumulate = function(arr){ 
-        return arr.reduce((acc,next) => acc.concat(next), new cases[zero]())
+        return arr.reduce((acc,next) => acc.concat(next), globals.empty())
     }
     globals.foldMap = function(arr) {
-        return arr.map(this.of).reduce((acc,next) => acc.concat(next), new cases[zero]())
+        return arr.map(this.of).reduce((acc,next) => acc.concat(next), globals.empty())
     }
 })
 
