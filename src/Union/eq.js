@@ -1,4 +1,5 @@
 import { equals as eq, propOr } from "ramda"
+import { forEachValue } from "../_internals"
 import { currySetTypeclass, getVariant } from "../_internals"
 
 const mark = currySetTypeclass("Eq")
@@ -25,13 +26,14 @@ const Eq = (defs) => mark((cases,globals) => {
         return getVariant(this) === getVariant(other)
     }
     trivials.forEach(trivial => {
-        const equals = overrides?.equals?.[trivial] || trivialEquals
-        cases[trivial].prototype.equals = equals
+        cases[trivial].prototype.equals = trivialEquals
     })
     empties.forEach(empt => {
-        const equals = overrides?.equals?.[empt] || emptyEquals
-        cases[empt].prototype.equals = equals
+        cases[empt].prototype.equals = emptyEquals
     })
+    forEachValue((override,key) => {
+        cases[key].prototype.equals = override
+    }, overrides?.equals || {})
     globals.equals = eq;
 })
 

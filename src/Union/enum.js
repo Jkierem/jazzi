@@ -1,4 +1,4 @@
-import { prop, propOr } from "ramda";
+import { propOr } from "ramda";
 import { forEachValue, getVariant } from "../_internals";
 
 const Enum = (defs) => (cases,globals) => {

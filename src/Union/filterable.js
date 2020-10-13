@@ -1,4 +1,5 @@
 import { propOr } from "ramda";
+import { forEachValue } from "../_internals";
 import { currySetTypeclass } from "../_internals";
 
 const mark = currySetTypeclass("Filterable")
@@ -19,19 +20,20 @@ const Filterable = (defs) => mark((cases) => {
     const identities = propOr([],"identities",defs);
     const overrides = propOr({},"overrides",defs);
     trivials.forEach(trivial => {
-        function trivialFilter(fn){
+        function filter(fn){
             return new cases[trivial](this.get().filter(fn))
         }
-        const filter = overrides?.filter?.[trivial] || trivialFilter;
         cases[trivial].prototype.filter = filter
     });
     identities.forEach(empt => {
-        function idFilter(){
+        function filter(){
             return this
         }
-        const filter = overrides?.filter?.[empt] || idFilter;
         cases[empt].prototype.filter = filter
     });
+    forEachValue((override,key) => {
+        cases[key].prototype.filter = override
+    },overrides?.filter)
 })
 
 mark(Filterable)

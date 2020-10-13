@@ -1,4 +1,5 @@
 import { prop, propOr } from "ramda";
+import { forEachValue } from "../_internals";
 import { setTypeclass } from "../_internals"
 
 /**
@@ -20,28 +21,35 @@ const Monad = (defs) => setTypeclass("Monad",(cases,globals) => {
     const lazy = propOr(false,"lazy",defs);
     const pure = prop("pure",defs);
     trivials.forEach(trivial => {
-        function trivialChain(fn){
+        function chain(fn){
             return fn(this.get())
         }
-        const chain = overrides?.chain?.[trivial] || trivialChain
         cases[trivial].prototype.chain   = chain
         cases[trivial].prototype.bind    = chain
         cases[trivial].prototype.flatMap = chain
     })
     identities.forEach(empt => {
-        function idChain(){
+        function chain(){
             return this
         }
-        const chain = overrides?.chain?.[empt] || idChain
         cases[empt].prototype.chain   = chain
         cases[empt].prototype.bind    = chain
         cases[empt].prototype.flatMap = chain
     })
     Object.keys(cases).forEach(key => {
         function run(){ return this }
-        cases[key].prototype.run = overrides?.run?.[key] || run;
-        cases[key].prototype.unsafeRun = overrides?.run?.[key] || run;
+        cases[key].prototype.run       = run;
+        cases[key].prototype.unsafeRun = run;
     })
+    forEachValue((override,key) => {
+        cases[key].prototype.chain   = override
+        cases[key].prototype.bind    = override
+        cases[key].prototype.flatMap = override
+    },overrides?.chain || {})
+    forEachValue((override,key) => {
+        cases[key].prototype.run       = override
+        cases[key].prototype.unsafeRun = override
+    },overrides?.run || {})
     globals.pure = (...args) => new cases[pure](...args)
     globals.do = function(fn){
         let gen = undefined;

@@ -1,14 +1,17 @@
 import { propOr } from 'ramda'
-import { EnumType } from './union'
-import { getVariant } from '../_internals'
+import { getVariant, forEachValue } from '../_internals'
+import EnumType from './enumType'
 
 const Ord = defs => (cases) => {
     const order = propOr([],"order",defs)
     const overrides = propOr({},"overrides",defs);
-    Object.keys(cases).forEach( key => {
-        if( overrides?.lessThanOrEqual ){
-            cases[key].prototype.lessThanOrEqual = overrides?.lessThanOrEqual
-            cases[key].prototype.compare = function(o){
+    const ltBased      = overrides?.lessThanOrEqual || false;
+    const compareBased = overrides?.compare         || false;
+    const orderBased   = order.length               || false;
+    forEachValue( variant => {
+        if( ltBased ){
+            variant.prototype.lessThanOrEqual = overrides.lessThanOrEqual
+            variant.prototype.compare = function(o){
                 if( this.lessThanOrEqual(o) ){
                     if( o.lessThanOrEqual(this) ){
                         return Ordering.EQ
@@ -17,19 +20,19 @@ const Ord = defs => (cases) => {
                 }
                 return Ordering.GT
             }
-        } else if( overrides?.compare ) {
-            cases[key].prototype.compare = overrides?.compare
-            cases[key].prototype.lessThanOrEqual = function(o){
+        } else if( compareBased ) {
+            variant.prototype.compare = overrides.compare
+            variant.prototype.lessThanOrEqual = function(o){
                 return !this.compare(o).isGT()
             }
-        } else if( order.length ) {
-            cases[key].prototype.lessThanOrEqual = function(o){
+        } else if( orderBased ) {
+            variant.prototype.lessThanOrEqual = function(o){
                 const getOrder = y => order.findIndex(x => x === getVariant(y))
                 const a = getOrder(this)
                 const b = getOrder(o)
                 return a <= b
             }
-            cases[key].prototype.compare = function(o){
+            variant.prototype.compare = function(o){
                 if( this.lessThanOrEqual(o) ){
                     if( o.lessThanOrEqual(this) ){
                         return Ordering.EQ
@@ -39,18 +42,18 @@ const Ord = defs => (cases) => {
                 return Ordering.GT
             }
         }
-        cases[key].prototype.lessThan = function(o){
+        variant.prototype.lessThan = function(o){
             return this.compare(o).isLT()
         }
-        cases[key].prototype.greaterThan = function(o){
+        variant.prototype.greaterThan = function(o){
             return this.compare(o).isGT()
         }
-        cases[key].prototype.greaterThanOrEqual = function(o){
+        variant.prototype.greaterThanOrEqual = function(o){
             return !this.compare(o).isLT()
         }
-    })
+    },cases)
 }
 
-export const Ordering = EnumType("Ordering",[ "LT", "EQ", "GT" ])
-
 export default Ord
+
+export const Ordering = EnumType("Ordering",[ "LT", "EQ", "GT" ])

@@ -1,4 +1,5 @@
 import { propOr } from "ramda"
+import { forEachValue } from "../_internals";
 import { setTypeclass } from "../_internals"
 
 /**
@@ -17,22 +18,23 @@ const Semigroup = (defs) => setTypeclass("Semigroup",(cases) => {
     const identities = propOr([],"identities",defs);
     const overrides = propOr({},"overrides",defs);
     trivials.forEach(trivial => {
-        function trivialConcat(m){
+        function concat(m){
             return m.match({
                 [trivial]: () => new cases[trivial](this.get().concat(m.get())),
                 _: () => this
             })
         }
-        const concat = overrides?.concat?.[trivial] || trivialConcat
         cases[trivial].prototype.concat = concat
     })
     identities.forEach(empt => {
-        function idConcat(m){
+        function concat(m){
             return m
         }
-        const concat = overrides?.concat?.[empt] || idConcat
         cases[empt].prototype.concat = concat
     })
+    forEachValue((override,key) => {
+        cases[key].prototype.concat = override
+    },overrides?.concat || {})
 })
 
 setTypeclass("Semigroup",Semigroup)

@@ -1,5 +1,5 @@
 import { propOr } from "ramda";
-import { currySetTypeclass as setTypeclass } from "../_internals"
+import { currySetTypeclass as setTypeclass, defineOverrides } from "../_internals"
 
 const mark = setTypeclass("Applicative")
 
@@ -29,9 +29,7 @@ const Applicative = (defs) => mark((cases) => {
     identities.forEach(empt => {
         cases[empt].prototype.apply = function(){ return this }
     })
-    Object.keys(overrides?.apply || {}).forEach(key => {
-        cases[key].prototype.apply = overrides?.apply?.[key]
-    })
+    defineOverrides("apply",[],overrides,cases)
 })
 
 mark(Applicative);

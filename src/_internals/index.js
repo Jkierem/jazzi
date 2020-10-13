@@ -111,3 +111,19 @@ export const forEachValue = fn => data => {
         fn(data[key],key,idx,data)
     })
 }
+
+/**
+ * Sets overrides on the cases proto
+ * @param {string} method 
+ * @param {string[]} aliases 
+ * @param {any} overrides 
+ * @param {any} cases 
+ */
+export const defineOverrides = (method,aliases=[],overrides={},cases={}) => {
+    forEachValue((override,key) => {
+        cases[key].prototype[method] = override
+        aliases.forEach(alias => {
+            cases[key].prototype[alias] = override
+        })
+    }, overrides[method])
+}
