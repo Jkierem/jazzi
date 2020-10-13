@@ -62,11 +62,11 @@ describe("Either", () => {
                 expect(Either.fromLeft(40,left42)).toBe(42)
             })
             const { Left, Right } = Either
-            const collects = [ Left([1]), Right([1]), Left([2]), Left([3]), Right([2]), Right([3])];
-            it("collectRights -> [Right (Monoid a)] => Right (Monoid a)", () => {
+            const collects = [ Left(1), Right(1), Left(2), Left(3), Right(2), Right(3)];
+            it("collectRights -> [Right a] => Right [a]", () => {
                 expect(Either.collectRights(collects).get()).toStrictEqual([1,2,3])
             })
-            it("collectLefts -> [Left (Monoid a)] => Left (Monoid a)", () => {
+            it("collectLefts -> [Left a] => Left [a]", () => {
                 expect(Either.collectLefts(collects).get()).toStrictEqual([1,2,3])
             })
         })

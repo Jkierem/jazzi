@@ -1,5 +1,8 @@
-import { fromPairs, is, toPairs } from 'ramda'
+import { fromPairs, toPairs, assoc } from 'ramda'
 import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass, setTypeName } from '../_internals'
+import Enum from './enum'
+import Eq from './eq'
+import Ord from './ord'
 import Show from './show'
 
 const mapObj = fn => obj => fromPairs(toPairs(obj).map(fn))
@@ -19,20 +22,18 @@ const Box = (config) => (cases) => {
         cases[trivial].prototype.match = function(patterns){
             return extractWith([this.get()])(getCase(getVariant(this),patterns));
         }
+
+        function callGet(){ return this.get() }
+        function extractWithGet(fn){ return extractWith([this.get()])(fn) }
+        function True(){ return true }
+        function False(){ return false }
+
         if( !config?.noHelpers && Object.keys(cases).length > 1 ){
-            cases[trivial].prototype[`on${trivial}`] = function(fn){
-                return extractWith([this.get()])(fn)
-            }
-            cases[trivial].prototype[`is${trivial}`] = function(){
-                return true
-            }
+            cases[trivial].prototype[`on${trivial}`] = extractWithGet
+            cases[trivial].prototype[`is${trivial}`] = True
             keys.filter(x => x !== trivial).forEach( key => {
-                cases[trivial].prototype[`is${key}`] = function(){
-                    return false
-                }
-                cases[trivial].prototype[`on${key}`] = function(fn) {
-                    return this.get()
-                }
+                cases[trivial].prototype[`is${key}`] = False
+                cases[trivial].prototype[`on${key}`] = callGet
             })
         }
     })
@@ -79,5 +80,27 @@ export const NewType = (name,exts=[]) => Union(name,
         }),
         ...exts,
     ]).constructors({ from(...args){ return this[name](...args) }})
+
+export const EnumType = (name,rawCases) => {
+    return Union(
+        name,
+        rawCases.reduce((acc,next) => assoc(next,() => {},acc),{}),
+        [
+            Eq({ empties: rawCases }),
+            Ord({ order: rawCases }),
+            Enum({ order: rawCases }),
+            Show({ overrides: {
+                show: rawCases.reduce((acc,next) => {
+                    return assoc(next,() => `[${name} => ${next}]`,acc)
+                },{})
+            } }),
+            (cases,globals) => {
+                rawCases.forEach((key,idx) => {
+                    globals[key] = new cases[key]();
+                })
+            }
+        ]
+    ).constructors({})
+}
 
 export default Union;
