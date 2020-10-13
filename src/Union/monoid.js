@@ -1,4 +1,5 @@
 import { prop, propOr } from "ramda";
+import { forEachValue } from "../_internals";
 import { setTypeclass } from "../_internals"
 
 /**
@@ -20,24 +21,25 @@ const Monoid = (defs) => setTypeclass("Monoid",(cases,globals) => {
     const overrides = propOr({},"overrides",defs);
     const zero = prop("zero",defs)
     trivials.forEach(trivial => {
-        function trivMappend(m){ return this.concat(m) }
-        const mappend = overrides?.mappend?.[trivial] || trivMappend
+        function mappend(m){ return this.concat(m) }
         cases[trivial].prototype.mappend = mappend
-        cases[trivial].prototype.append = mappend
+        cases[trivial].prototype.append  = mappend
     })
     identities.forEach(empt => {
-        function idMappend(m){ return m }
-        const mappend = overrides?.mappend?.[empt] || idMappend
+        function mappend(m){ return m }
         cases[empt].prototype.mappend = mappend
-        cases[empt].prototype.append = mappend
+        cases[empt].prototype.append  = mappend
     })
     Object.keys(cases).forEach(key => {
-        function trivialEmpty(){
+        function empty(){
             return globals.empty()
         }
-        const empty = overrides?.empty?.[key] || trivialEmpty;
         cases[key].prototype.empty = empty
     })
+    forEachValue((override,key) => {
+        cases[key].prototype.mappend = override;
+        cases[key].prototype.append  = override;
+    } , overrides?.mappend || {} )
     globals.empty = function(){ return new cases[zero]() }
     globals.accumulate = function(arr){ 
         return arr.reduce((acc,next) => acc.concat(next), globals.empty())

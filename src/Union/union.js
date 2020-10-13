@@ -1,8 +1,5 @@
-import { fromPairs, toPairs, assoc } from 'ramda'
+import { fromPairs, toPairs } from 'ramda'
 import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass, setTypeName } from '../_internals'
-import Enum from './enum'
-import Eq from './eq'
-import Ord from './ord'
 import Show from './show'
 
 const mapObj = fn => obj => fromPairs(toPairs(obj).map(fn))
@@ -81,26 +78,5 @@ export const NewType = (name,exts=[]) => Union(name,
         ...exts,
     ]).constructors({ from(...args){ return this[name](...args) }})
 
-export const EnumType = (name,rawCases) => {
-    return Union(
-        name,
-        rawCases.reduce((acc,next) => assoc(next,() => {},acc),{}),
-        [
-            Eq({ empties: rawCases }),
-            Ord({ order: rawCases }),
-            Enum({ order: rawCases }),
-            Show({ overrides: {
-                show: rawCases.reduce((acc,next) => {
-                    return assoc(next,() => `[${name} => ${next}]`,acc)
-                },{})
-            } }),
-            (cases,globals) => {
-                rawCases.forEach((key,idx) => {
-                    globals[key] = new cases[key]();
-                })
-            }
-        ]
-    ).constructors({})
-}
 
 export default Union;

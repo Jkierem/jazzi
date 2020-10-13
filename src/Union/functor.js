@@ -1,4 +1,5 @@
 import { includes, propOr } from "ramda"
+import { forEachValue } from "../_internals";
 import { setTypeclass, splitBy } from "../_internals"
 
 /**
@@ -20,18 +21,20 @@ const Functor = (defs) => setTypeclass("Functor",(cases) => {
         function trivialFmap(fn){
             return new cases[trivial](fn(this.get()))
         }
-        const fmap = overrides?.fmap?.[trivial] || trivialFmap
-        cases[trivial].prototype.fmap = fmap
-        cases[trivial].prototype.map = fmap
+        cases[trivial].prototype.fmap = trivialFmap
+        cases[trivial].prototype.map = trivialFmap
     })
     identities.forEach(empt => {
-        function idFmap(fn){
+        function idFmap(){
             return this
         }
-        const fmap = overrides?.fmap?.[empt] || idFmap
-        cases[empt].prototype.fmap = fmap
-        cases[empt].prototype.map = fmap
+        cases[empt].prototype.fmap = idFmap
+        cases[empt].prototype.map = idFmap
     })
+    forEachValue((override,key) => {
+        cases[key].prototype.fmap = override
+        cases[key].prototype.map = override
+    }, overrides?.fmap)
 })
 
 setTypeclass("Functor",Functor)
@@ -51,20 +54,21 @@ const FunctorError = (defs) => setTypeclass("FunctorError",(cases) => {
     const overrides = propOr({},"overrides",defs);
     const [ lefts, rights ] = splitBy( c => !includes(c,errors), Object.keys(cases))
     lefts.forEach(left => {
-        function trivialMapError(fn){
+        cases[left].prototype.mapError = function(fn){
             return new cases[left](fn(this.get()))
         }
-        const mapError = overrides?.mapError?.[left] || trivialMapError
-        cases[left].prototype.mapError = mapError
     })
 
+    function idMapError(){
+        return this
+    }
     rights.forEach(right => {
-        function idMapError(){
-            return this
-        }
-        const mapError = overrides?.mapError?.[right] || idMapError
-        cases[right].prototype.mapError = mapError
+        cases[right].prototype.mapError = idMapError
     })
+
+    forEachValue((override,key) => {
+        cases[key].prototype.mapError = override
+    }, overrides?.mapError)
 })
 
 setTypeclass("FunctorError",FunctorError)

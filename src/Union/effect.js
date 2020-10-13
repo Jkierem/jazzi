@@ -1,5 +1,5 @@
 import { propOr } from "ramda";
-import { currySetTypeclass as setTypeclass } from "../_internals"
+import { defineOverrides, forEachValue, currySetTypeclass as setTypeclass } from "../_internals"
 
 const mark = setTypeclass("Effect")
 
@@ -25,19 +25,18 @@ const Effect = (defs) => mark((cases) => {
                 return x
             })
         }
-        const effect = overrides?.effect?.[trivial] || trivialEffect
-        cases[trivial].prototype.effect = effect
-        cases[trivial].prototype.peak = effect
+        cases[trivial].prototype.effect = trivialEffect
+        cases[trivial].prototype.peak = trivialEffect
     })
 
     identities.forEach(empt => {
         function idEffect(){
             return this
         }
-        const effect = overrides?.effect?.[empt] || idEffect
-        cases[empt].prototype.effect = effect
-        cases[empt].prototype.peak = effect
+        cases[empt].prototype.effect = idEffect
+        cases[empt].prototype.peak = idEffect
     })
+    defineOverrides("effect",["peak"],overrides,cases)
 })
 
 mark(Effect)
