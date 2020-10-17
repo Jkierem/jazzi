@@ -1,5 +1,5 @@
 import { prop, propOr } from "ramda";
-import { forEachValue } from "../_internals";
+import { defineOverrides, forEachValue } from "../_internals";
 import { setTypeclass } from "../_internals"
 
 /**
@@ -41,15 +41,8 @@ const Monad = (defs) => setTypeclass("Monad",(cases,globals) => {
         cases[key].prototype.run       = run;
         cases[key].prototype.unsafeRun = run;
     })
-    forEachValue((override,key) => {
-        cases[key].prototype.chain   = override
-        cases[key].prototype.bind    = override
-        cases[key].prototype.flatMap = override
-    },overrides?.chain || {})
-    forEachValue((override,key) => {
-        cases[key].prototype.run       = override
-        cases[key].prototype.unsafeRun = override
-    },overrides?.run || {})
+    defineOverrides("chain",["bind","flatMap"],overrides,cases)
+    defineOverrides("run",["unsafeRun"],overrides,cases)
     globals.pure = (...args) => new cases[pure](...args)
     globals.do = function(fn){
         let gen = undefined;

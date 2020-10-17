@@ -106,7 +106,7 @@ export const Spy = (fn = x => x) => {
     return _spy
 }
 
-export const forEachValue = fn => data => {
+export const forEachValue = (fn , data={}) => {
     Object.keys(data).forEach( (key,idx) => {
         fn(data[key],key,idx,data)
     })
@@ -119,11 +119,11 @@ export const forEachValue = fn => data => {
  * @param {any} overrides 
  * @param {any} cases 
  */
-export const defineOverrides = (method,aliases=[],overrides={},cases={}) => {
+export const defineOverrides = (method,aliases,overrides,cases) => {
     forEachValue((override,key) => {
         cases[key].prototype[method] = override
         aliases.forEach(alias => {
             cases[key].prototype[alias] = override
         })
-    }, overrides[method])
+    },overrides[method] || {})
 }

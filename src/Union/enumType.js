@@ -19,7 +19,7 @@ const EnumType = (name,rawCases) => {
                 },{})
             } }),
             (cases,globals) => {
-                rawCases.forEach((key,idx) => {
+                rawCases.forEach((key) => {
                     globals[key] = new cases[key]();
                 })
             }

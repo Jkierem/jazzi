@@ -32,7 +32,7 @@ const Enum = (defs) => (cases,globals) => {
         variant.prototype.pred = function(){
             return globals.toEnum( globals.fromEnum(this) - 1 )
         }
-    })(cases)
+    },cases)
     globals.pred = en => en.pred()
     globals.succ = en => en.succ()
     globals.range = (start,end) => {
@@ -42,7 +42,7 @@ const Enum = (defs) => (cases,globals) => {
             res.push(cur)
             cur = cur.succ()
         }
-        if( cur.equals(end) ){
+        if( cur?.equals?.(end) ){
             res.push(end)
         }
         return res

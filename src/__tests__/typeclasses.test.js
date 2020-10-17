@@ -1,6 +1,7 @@
 import Sum from '../Sum';
-import { Filterable, Monad, Union } from '../Union'
-import { extractWith } from '../_internals';
+import { Enum, Eq, Filterable, FunctorError, Monad, Union } from '../Union'
+import { extractWith, Spy } from '../_internals';
+import { fromEnum, toPrimitive } from '../_tools';
 const trivialImpl = (...tcs) => {
     const defs = {
         trivials: ["Trivial"],
@@ -51,11 +52,17 @@ describe("typeclasses", () => {
                 lazy: false 
             })
         ]).constructors({})
+        const Lazy2 = Union("Lazy",{ Lazy: x => x },[
+            Monad({ 
+            trivials: ["Lazy"] , 
+            lazy: true,
+            pure: "Lazy"
+        })]).constructors({})
 
         const meager = Eager.Eager(42);
         it("unsafeRun -> should do nothing unless provided implementation",() => {
-            const mlazy = Lazy.Lazy(() => 50)
-            expect(mlazy.unsafeRun()).toBe(50);
+            const mlazy = Lazy2.Lazy(() => 50)
+            expect(mlazy.unsafeRun()).toBe(mlazy);
             expect(meager.unsafeRun()).toBe(meager);
         })
 
@@ -75,6 +82,92 @@ describe("typeclasses", () => {
                 return Lazy.Lazy(a + b)
             })
             expect(l100.unsafeRun()).toBe(100)
+        })
+    })
+
+    describe("FunctorError", () => {
+        describe("mapError override", () => {
+            const mapSpy = Spy(x => x)
+            const ErrorMap = Union("Box",{ Box: x => x },[
+                FunctorError({ errors: ["Box"] , overrides: {
+                    mapError: {
+                        Box: mapSpy 
+                    }
+                }})
+            ]).constructors({})
+            it("should call override method", () => {
+                ErrorMap.Box(42).mapError(x => x + 1)
+                expect(mapSpy.callCount).toBe(1)
+            })
+        })
+    })
+
+    describe("Enum", () => {
+        const createEnum = impl => Union("Nat",{
+            Zero: () => {},
+            One: () => {},
+            Two: () => {},
+        },[ 
+            Eq({ empties: ["Zero","One","Two"]}),
+            impl 
+        ]).constructors({})
+        describe("order impl",() => {
+            const E = createEnum(Enum({
+                order: ["Zero","One","Two"]
+            }))
+            it("succ should return succesor", () => {
+                expect(E.succ(E.One()).equals(E.Two())).toBeTruthy();
+                expect(E.succ(E.Two())).toBeUndefined();
+            })
+            it("pred should return predecesor", () => {
+                expect(E.pred(E.Two()).equals(E.One())).toBeTruthy();
+                expect(E.pred(E.Zero())).toBeUndefined();
+            })
+            it("range should return range [from,to]", () => {
+                expect(E.range(E.Zero(),E.Two()).map(fromEnum)).toStrictEqual([0,1,2])
+                expect(E.range(E.Zero()).map(fromEnum)).toStrictEqual([0,1,2])
+            })
+        })
+        describe("fromEnum & toEnum impl",() => {
+            const E = createEnum(Enum({
+                overrides: {
+                    fromEnum(e){
+                        return e.isZero() ? 0 :
+                               e.isOne()  ? 1 :
+                               e.isTwo()  ? 2 : undefined
+                    },
+                    toEnum(i){
+                        return [E.Zero(),E.One(),E.Two()][i]
+                    }
+                }
+            }))
+            it("succ should return succesor", () => {
+                expect(E.succ(E.One()).equals(E.Two())).toBeTruthy();
+                expect(E.succ(E.Two())).toBeUndefined();
+            })
+            it("pred should return predecesor", () => {
+                expect(E.pred(E.Two()).equals(E.One())).toBeTruthy();
+                expect(E.pred(E.Zero())).toBeUndefined();
+            })
+            it("range should return range [from,to]", () => {
+                expect(E.range(E.Zero(),E.Two()).map(fromEnum)).toStrictEqual([0,1,2])
+                expect(E.range(E.Zero()).map(fromEnum)).toStrictEqual([0,1,2])
+            })
+        })
+        describe("trivial impl",() => {
+            const E = createEnum(Enum({}))
+            it("succ should return succesor", () => {
+                expect(E.succ(E.One()).equals(E.Two())).toBeTruthy();
+                expect(E.succ(E.Two())).toBeUndefined();
+            })
+            it("pred should return predecesor", () => {
+                expect(E.pred(E.Two()).equals(E.One())).toBeTruthy();
+                expect(E.pred(E.Zero())).toBeUndefined();
+            })
+            it("range should return range [from,to]", () => {
+                expect(E.range(E.Zero(),E.Two()).map(fromEnum)).toStrictEqual([0,1,2])
+                expect(E.range(E.Zero()).map(fromEnum)).toStrictEqual([0,1,2])
+            })
         })
     })
 })

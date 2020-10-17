@@ -1,5 +1,5 @@
 import { propOr } from "ramda";
-import { forEachValue } from "../_internals";
+import { defineOverrides, forEachValue } from "../_internals";
 import { currySetTypeclass } from "../_internals";
 
 const mark = currySetTypeclass("Filterable")
@@ -31,9 +31,7 @@ const Filterable = (defs) => mark((cases) => {
         }
         cases[empt].prototype.filter = filter
     });
-    forEachValue((override,key) => {
-        cases[key].prototype.filter = override
-    },overrides?.filter)
+    defineOverrides("filter",[],overrides,cases)
 })
 
 mark(Filterable)

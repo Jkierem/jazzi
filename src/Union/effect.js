@@ -1,5 +1,5 @@
 import { propOr } from "ramda";
-import { defineOverrides, forEachValue, currySetTypeclass as setTypeclass } from "../_internals"
+import { defineOverrides, currySetTypeclass as setTypeclass } from "../_internals"
 
 const mark = setTypeclass("Effect")
 

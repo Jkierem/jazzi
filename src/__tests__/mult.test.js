@@ -1,6 +1,5 @@
 import { empty , isEmpty } from 'ramda'
 import Mult from '../Mult';
-import { getType } from '../_internals';
 
 describe("Mult -> Monoid of numbers over multiplication",() => {
     describe("methods", () => {

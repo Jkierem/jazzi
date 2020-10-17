@@ -11,6 +11,11 @@ Implementations of common structures using ramda for utilities. Available Struct
 - Result
 - Sink
 - Useful Monoids: Sum, Mult, Merge
+- Moar Monoids: Max, Min, First, Last
+- A function to create Tagged Unions/Sum types: Union
+- A way to implement typeclasses and use prototype inheritance. More on this on API.md
+- Pre built typeclasses available to use. More on this on API.md 
+- A way to create C++ style Enums but with a haskell-ish feel: the EnumType function
 
 All structures share a common set of functions to be used. In terms of nomenclature, all constructor functions start with "from". All structures have a default constructor named "of" and "from" that are the most common use of the structure. They all have a "match" function that is case-insensitive to make matches. Due to the use of objects for matching, Order of cases does not alter the result. Matching has two reserved keys for default cases: "default" and "_"(underscore). "default" precedes over underscore and a matching type precedes over default cases. Matching is done with the name of the variant meaning you match using `Just` instead of `Maybe` and is not possible the other way around. Match will return evaluation of the case with the inner value or `undefined` if no case matches.
 
@@ -211,4 +216,29 @@ Merge.of({ a: 42 }).concat(Merge.of({ b: 42 })) // Merge { a: 42, b: 42 }
 Sum.accumulate([ Sum(20), Sum(22) ]) // Sum 42
 Sum.foldMap([10,12,20]) // Sum 42
 foldMap(Sum,[10,12,20]) // Sum 42
+```
+
+## A note on Max, Min, First, Last
+
+This monoids abstract operations over arrays with the caveat that for `Max` and `Min` need the values to be comparable with `>` and `<` respectively. `First` and `Last` will return a structure with `undefined` if the array is empty. They all share that calling the default constructor without any arguments returns the empty value. The empty values for each Monoid are as follows:
+
+- `Max.of(-Inifinity)`
+- `Min.of(Infinity)`
+- `First.of(undefined)`
+- `Last.of(undefined)`
+
+You can use them like you would use the previous Monoids:
+
+```javascript
+Max.of(20).concat(Max.of(42)) // Max 42
+Min.of(20).concat(Min.of(42)) // Max 20
+First.of(20).concat(First.of(42)) // First 20
+Last.of(20).concat(Last.of(42)) // Last 42
+
+const values = [1,2,3,4,5]
+foldMap(Max  ,values)   // Max 5
+foldMap(Min  ,values)   // Min 1
+foldMap(First,values)   // First 1
+foldMap(Last ,values)   // Last 5
+
 ```
