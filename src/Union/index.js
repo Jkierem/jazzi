@@ -12,6 +12,8 @@ export { default as Swap } from './swap'
 export { default as Effect } from './effect'
 export { default as Bifunctor } from './bifunctor'
 export { default as Filterable } from './filterable'
+export { default as Enum } from './enum'
+export { default as EnumType } from './enumType'
 export * from "./functor"
 export * from './union'
 export * from './ord'

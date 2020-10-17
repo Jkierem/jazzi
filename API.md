@@ -18,13 +18,81 @@ The function signature notation used is similar to haskell's type notations with
 ```
 
 
-# Typeclasses
+# Union and Typeclasses
 
-This library implements typeclasses as functions that alter the prototype of the cases of a given union. The functions receive an object with their definitions and return a function that receives the cases and alters their prototype. Cases are the equivalent to data constructors or at least in this library. The word "variant" is used as a synomin to "case". In general, a `trivial` case is one that uses the default implementation, an `identity` case is one that either does nothing or that returns its argument and a `empty` case is one that does not need the inner value to excecute the operation. `overrides` are cases that have their own implementation. The following typeclasses are available:
+This library implements typeclasses as functions that alter the prototype of the cases of a given union. The functions receive an object with their definitions and return a function that receives the cases and alters their prototype. Cases are the equivalent to data constructors or at least in this library. The word "variant" is used as a synomyn to "case". In general, a `trivial` case is one that uses the default implementation, an `identity` case is one that either does nothing or that returns its argument and a `empty` case is one that does not need the inner value to excecute the operation. `overrides` are cases that have their own implementation. If an attribute of `overrides` is a function itself it is a "general implementation". Example usage of Union to create Maybe Functor with Eq and Show:
+
+```javascript
+import { Union, Functor, Eq, Show } from 'jazzi'
+
+// Cases are functions to map the received values to the case construction
+// They will be used internally to build the inner value
+const cases = {
+    Just: x => x,
+    None: () => {}
+}
+
+// This is the array of typeclasses that the union implements
+// Each typeclass receives the definitions and returns a function that
+// alters the prototype of the case constructor functions
+// A typeclass has the following signature (in typescript notation):
+// typeclass: (definitions) => (cases,globals) => void
+// where 
+//  definitions are the required definitions for the implementation
+//  cases is an object with constructor functions for each case
+//  globals is an object that references the type. Used to define methods on the type
+const typeclasses = [
+    Eq({
+        trivials: ["Just"],
+        empties: ["None"],
+    }),
+    Functor({
+        trivials: ["Just"],
+        identities: ["None"],
+    }),
+    Show({
+        overrides: {
+            show: {
+                Just(){ return `[Maybe => Just ${this.get()}]` },
+                None(){ return `[Maybe => None]` },
+            }
+        }
+    })
+]
+
+// Union configuration. Optional. Can be used to set flags that 
+// alter the construction of the union. By default all flags start as false.
+// The only available flag is noHelpers that removes the `on` and `is` methods
+const config = {
+    noHelpers: false
+}
+
+// Constructors: By default, there are constructors for each case.
+// This is to add more constructors apart from the default. 
+// They cannot be arrow function due to the need to be bound.
+// The this value is an object with the default constructors
+const consts = {
+    of(x){ x ? this.Just(x) : this.None() }
+}
+
+const Maybe = Union("Maybe",cases,typeclasses,config).constructors(consts)
+
+Maybe.of(41).map(x => x + 1)   // Just 42
+Maybe.of(null).map(x => x + 1) // None
+Maybe.Just(42).show()          // [Maybe => Just 42]
+```
+
+The following typeclasses are available:
 
 ## Applicative
 
-Defines a structure that can apply its inner value to the inner value of another applicative. A type that implements this typeclass has to define a list of trivial cases and a list of identity cases. Defines the following method:
+Defines a structure that can apply its inner value to the inner value of another applicative. A type that implements this typeclass has to define a list of trivial cases and a list of identity cases. The overrides are taken from `apply` key of overrides.
+
+- Definitions: 
+    - trivials: string[]
+    - identities: string[]
+- Overrides:
+    - apply
 
 | method | description |
 | ------ | ----------- |
@@ -32,7 +100,13 @@ Defines a structure that can apply its inner value to the inner value of another
 
 ## Functor
 
-Defines a structure that can be mapped over a given function without leaving the context of the functor meaning that the map operation always returns the same type variant and remains in the same context. Requires the definition of trivial cases and identity cases if the default implementation wants to be used. 
+Defines a structure that can be mapped over a given function without leaving the context of the functor meaning that the map operation always returns the same type variant and remains in the same context. Requires the definition of trivial cases and identity cases if the default implementation wants to be used. The overrides are taken from `fmap` key of overrides
+
+- Definitions: 
+    - trivials: string[]
+    - identities: string[]
+- Overrides:
+    - fmap: object
 
 | method | description |
 | ------ | ----------- |
@@ -41,7 +115,12 @@ Defines a structure that can be mapped over a given function without leaving the
 
 ## FunctorError
 
-Defines a mapError operation that behaves like map but maps over the error cases and all other cases behave like an identity. It is a way to handle error cases and map them. Although it does not need to be a functor, it is implied and suggested.
+Defines a mapError operation that behaves like map but maps over the error cases and all other cases behave like an identity. It is a way to handle error cases and map them. Although it does not need to be a functor, it is implied and suggested. The overrides are taken from `mapError` key of overrides
+
+- Definitions: 
+    - errors: string[]
+- Overrides:
+    - mapError: object
 
 | method | description |
 | ------ | ----------- |
@@ -51,22 +130,83 @@ Defines a mapError operation that behaves like map but maps over the error cases
 
 Defines a bimap method for a structure that has a defined first and second cases.
 
+- Definitions: 
+    - first: string
+    - second: string
+- Overrides: N/A
+
 | method | description |
 |--------|-------------|
-| bimap :: Bifunctor (a | c) ~> (a -> b) -> (c -> d) -> Bifunctor (b \| d) | maps using the first function if first, second function if second. |
+| bimap :: Bifunctor f => f a c ~> (a -> b) -> (c -> d) -> f b d | maps using the first function if first, second function if second. |
 
 ## Effect
 
 This typeclass defines a way to look into a structure without altering it. Usually runs tasks considered as side effects hence the name. It requires the definition of trivial cases and identity cases if the default implementation wants to be used.
+
+- Definitions: 
+    - trivials: string[]
+    - identities: string[]
+- Overrides:
+    - effect: object
 
 | method | description |
 | ------ | ----------- |
 | effect :: Effect f => f a ~> (a -> ()) -> f a | runs the given function without altering the structure if trivial. Does nothing if identity |
 | peak   :: Effect f => f a ~> (a -> ()) -> f a | alias of effect |
 
+## Enum
+
+This typeclass defines a set where each element has a succesor and predecesor. To define a implementation of Enum you need to either provide an explicit order or provide a general implementation of `fromEnum` and `toEnum` through overrides. If no implementaion is given the default order used is the result from `Object.keys(cases)`.
+
+- Definitions: 
+    - order: string[]
+- Overrides:
+    - fromEnum: Function
+    - toEnum: Function
+
+Defines the following methods on values:
+
+| method | description |
+| ------ | ----------- |
+| succ :: Enum a => a ~> () -> a | returns the succesor of the Enum value or `undefined` if it has no succesor. |
+| pred :: Enum a => a ~> () -> a | returns the predecesor of the Enum value or `undefined` if it has no predecesor. |
+
+Defines the following methods on the type:
+
+| method | description |
+| ------ | ----------- |
+| succ :: Enum a => a -> a | returns the succesor of the Enum value or `undefined` if it has no succesor. |
+| pred :: Enum a => a -> a | returns the predecesor of the Enum value or `undefined` if it has no predecesor. |
+| toEnum :: Enum a => Integer -> a | returns the corresponding Enum for the given integer value `undefined` if the value is either negative, not an integer or there does not exist a corresponding Enum value. |
+| fromEnum :: Enum a => a -> Integer | returns the corresponding Integer value for the given Enum value |
+
+### A note on EnumType
+
+Used to create enumerations where the tags are the values themselves. Due to this behavior, they have no constructors available and the values are accessed as attributes of the type. This is for ease of use. They also implement `Eq`,`Ord`, `Enum` and `Show` (having a special implementation for `Show` as they contain no values). One example of an enumaration is the `Ordering` provided by jazzi
+
+```javascript
+import { EnumType } from 'jazzi'
+
+const Natural = EnumType("Natural",[ "Zero", "One", "Two" ]);
+
+const { Zero , One , Two } = Natural;
+
+Zero.succ()       // Natural.One
+Zero.equals(Zero) // true
+Zero.compare(One) // Ordering.LT
+Two.compare(One)  // Ordering.GT
+Two.show()        // [Natural => Two]
+```
+
 ## Eq
 
-Defines equality for a structure. Needs to have the trivial and empty definitions if the default implementation wants to be used. For trivials, it compares variant and inner value with deep equality. For empty cases, only compares variant since empty cases have no inner value.
+Defines equality for a structure. Needs to have the trivials and empties definitions if the default implementation wants to be used. For trivials, it compares variant and inner value with deep equality. For empty cases, only compares variant since empty cases should have no inner value.
+
+- Definitions: 
+    - trivials: string[]
+    - empties: string[]
+- Overrides:
+    - equals: object
 
 | method | description |
 | ------ | ----------- |
@@ -82,6 +222,12 @@ Also defines a method on the type:
 
 Defines a type than can be filtered. The trivial case implementation calls filter on the inner value. The identity case returns the same structure unchanged
 
+- Definitions: 
+    - trivials: string[]
+    - identities: string[]
+- Overrides:
+    - filter: object
+
 | method | description |
 | ------ | ----------- |
 | filter :: Filterable f => f a ~> (a -> Boolean) -> f a | filters the structure |
@@ -90,6 +236,10 @@ Defines a type than can be filtered. The trivial case implementation calls filte
 
 Defines a type that has a fold method. There is no default implementation. Must be implemented.
 
+- Definitions: N/A
+- Overrides:
+    - fold: object
+
 | method | description |
 | ------ | ----------- |
 | fold :: Foldable f => f a -> (a -> b -> b) -> b | folds the structure. Result is a special case of folds |
@@ -97,6 +247,14 @@ Defines a type that has a fold method. There is no default implementation. Must 
 ## Monad
 
 Defines a monadic type with a pure and a chain method. Like other typeclasses, needs the definitions of trivial and identity cases. Trivial chain case returns the value of evaluating the given function. Identity chain cases do nothing and return the structure unchanged. Requires to have a pure case defined.
+
+- Definitions: 
+    - trivials: string[]
+    - identities: string[]
+    - pure: string
+- Overrides:
+    - chain: object
+    - run: object
 
 | method | description |
 | ------ | ----------- |
@@ -114,13 +272,27 @@ Also defines a method on the type
 
 Defines a set of values with a combination operation called concat. Requires the definition of identity and trivial cases if default implementations want to be used. Trivial implementation calls concat on the inner value. Identity implementation is the identity function. 
 
+- Definitions: 
+    - trivials: string[]
+    - identities: string[]
+- Overrides:
+    - concat: object
+
 | method | description |
 | ------ | ----------- |
 | concat :: Semigroup f => f a -> f b -> f c | combines two Semigroups |
 
 ## Monoid
 
-A Monoid is a Semigroup with an identity element called zero. Defines aliases for concat. 
+A Monoid is a Semigroup with an identity element called zero. Defines aliases for concat.
+
+- Definitions: 
+    - trivials: string[]
+    - identities: string[]
+    - zero: string
+- Overrides:
+    - mappend: object
+    - empty: object
 
 | method | description | 
 | ------ | ----------- |
@@ -139,6 +311,10 @@ Also defines a function on the type
 
 Defines a type that has a string representation. The default implementation is `[Type => Variant Value]`. Keep in mind that since the representation uses the value, it will call get on the structure except for IO where it will only show `[IO => () => _]` to avoid running the computation
 
+- Definitions: N/A
+- Overrides:
+    - show: object
+
 | method | description |
 | ------ | ----------- |
 | show :: Show s => s a -> () -> String | returns string representation |
@@ -147,6 +323,12 @@ Defines a type that has a string representation. The default implementation is `
 ## Swap
 
 Swaps the context of the structure. Requires a left and right case. If called on a left, returns a right and vice versa, without changing the inner value. 
+
+- Definitions: 
+    - left: string
+    - right: string
+- Overrides:
+    - swap: object
 
 | method | description |
 | ------ | ----------- |

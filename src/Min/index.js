@@ -2,22 +2,22 @@ import { isNil } from 'ramda';
 import { Eq, Functor, Monoid, Semigroup, Show, Union } from '../Union';
 
 const Defs = {
-    trivials: ["Max"],
-    zero: "Max",
+    trivials: ["Min"],
+    zero: "Min",
     overrides: {
         concat: {
-            Max(o){ return this.get() < o.get() ? o : this }
+            Min(o){ return this.get() > o.get() ? o : this }
         },
         empty: {
-            Max(){ return Max.of(-Infinity) }
+            Min(){ return Min.of(Infinity) }
         }
     }
 }
 
-function defaultConstructor(x){ return this.Max(x) }
+function defaultConstructor(x){ return this.Min(x) }
 
-const Max = Union("Max",{
-    Max :  x => isNil(x) ? -Infinity : x,
+const Min = Union("Min",{
+    Min :  x => isNil(x) ? Infinity : x,
 },[
     Eq(Defs),
     Functor(Defs),
@@ -29,4 +29,4 @@ const Max = Union("Max",{
     from: defaultConstructor
 })
 
-export default Max
+export default Min

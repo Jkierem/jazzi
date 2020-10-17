@@ -1,5 +1,5 @@
 import { prop, propOr } from "ramda";
-import { forEachValue, defineOverrides, currySetTypeclass as setTypeclass } from "../_internals";
+import { defineOverrides, currySetTypeclass as setTypeclass } from "../_internals";
 
 const mark = setTypeclass("Bifunctor")
 

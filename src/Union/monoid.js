@@ -1,5 +1,5 @@
 import { prop, propOr } from "ramda";
-import { forEachValue } from "../_internals";
+import { defineOverrides } from "../_internals";
 import { setTypeclass } from "../_internals"
 
 /**
@@ -36,10 +36,8 @@ const Monoid = (defs) => setTypeclass("Monoid",(cases,globals) => {
         }
         cases[key].prototype.empty = empty
     })
-    forEachValue((override,key) => {
-        cases[key].prototype.mappend = override;
-        cases[key].prototype.append  = override;
-    } , overrides?.mappend || {} )
+    defineOverrides("mappend",["append"],overrides,cases);
+    defineOverrides("empty",[],overrides,cases);
     globals.empty = function(){ return new cases[zero]() }
     globals.accumulate = function(arr){ 
         return arr.reduce((acc,next) => acc.concat(next), globals.empty())
