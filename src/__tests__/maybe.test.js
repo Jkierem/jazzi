@@ -100,6 +100,10 @@ describe("Maybe", () => {
             expect(just42.apply(justInc).get()).toBe(43)
             expect(justInc.apply(none)).toTypeMatch("None")
             expect(none.apply(justInc)).toTypeMatch("None")
+
+            expect(justInc.applyLeft(just42).get()).toBe(43)
+            expect(justInc.applyLeft(none)).toTypeMatch("None")
+            expect(none.applyLeft(justInc)).toTypeMatch("None")
         })
 
         it("semigroup -> should concat inner values", () => {
