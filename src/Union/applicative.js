@@ -21,13 +21,18 @@ const Applicative = (defs) => mark((cases) => {
     trivials.forEach(trivial => {
         cases[trivial].prototype.apply = function(other){
             return other?.match?.({
-                [trivial]: () => new cases[trivial]( other.get()(this.get()) ) ,
+                [trivial]: (fn) => this.map(fn),
                 _: () => other
             })
         }
+        cases[trivial].prototype.applyLeft = function(other){
+            return other.apply(this);
+        }
     })
     identities.forEach(empt => {
-        cases[empt].prototype.apply = function(){ return this }
+        function id(){ return this }
+        cases[empt].prototype.apply = id
+        cases[empt].prototype.applyLeft = id
     })
     defineOverrides("apply",[],overrides,cases)
 })

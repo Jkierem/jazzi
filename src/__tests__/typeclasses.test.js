@@ -1,7 +1,7 @@
 import Sum from '../Sum';
 import { Enum, Eq, Filterable, FunctorError, Monad, Union } from '../Union'
 import { extractWith, Spy } from '../_internals';
-import { fromEnum, toPrimitive } from '../_tools';
+import { fromEnum } from '../_tools';
 const trivialImpl = (...tcs) => {
     const defs = {
         trivials: ["Trivial"],

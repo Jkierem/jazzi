@@ -59,6 +59,7 @@ const Union = (name, cases, exts, config) => {
                 ...globals,
                 ...mapObj(([key,fn]) => [key,fn.bind(trueCases)])(cons),
             }
+            setTypeclasses(() => tcs,typeRep)
             return typeRep
         }
     }
@@ -70,13 +71,16 @@ export const NewType = (name,exts=[]) => Union(name,
         Show({ overrides:{
                 show: { 
                     [name](){ 
-                        return `[NewType => ${name} ${this.get()}]`
+                        return `[${name} => ${name} ${this.get()}]`
                     }
                 }
             }
         }),
         ...exts,
-    ]).constructors({ from(...args){ return this[name](...args) }})
+    ]).constructors({ 
+        of(...args){ return this[name](...args) },
+        from(...args){ return this[name](...args) }
+    })
 
 
 export default Union;

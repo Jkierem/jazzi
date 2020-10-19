@@ -35,8 +35,10 @@ describe("Utils", () => {
         it("should return true for implementors, false otherwise", () => {
             expect(hasInstance(Functor,Boxed42)).toBeTruthy()
             expect(hasInstance("Functor",Boxed42)).toBeTruthy()
+            expect(hasInstance(Functor,Box)).toBeTruthy()
             expect(hasInstance(Monad,Boxed42)).toBeFalsy()
             expect(hasInstance("Monad",Boxed42)).toBeFalsy()
+            expect(hasInstance(Monad,Box)).toBeFalsy()
             expect(hasInstance(Monad,42)).toBeFalsy()
             expect(hasInstance(Monad,42)).toBeFalsy()
         })
@@ -87,10 +89,12 @@ describe("Utils", () => {
     describe("newType", () => {
         const Box = NewType("Box");
         const Boxed42 = Box.from(42)
+        const Boxed41 = Box.of(41)
         it("should create a trivial boxed type", () => {
             expect(Boxed42).toTypeMatch("Box")
-            expect(Boxed42.toString()).toEqual("[NewType => Box 42]")
+            expect(Boxed42.toString()).toEqual("[Box => Box 42]")
             expect(Boxed42.get()).toEqual(42)
+            expect(Boxed41.get()).toEqual(41)
         })
     })
     describe("getCase", () => {
