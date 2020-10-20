@@ -149,11 +149,13 @@ declare module "jazzi" {
          * For Monads that are eager, returns the monad unchanged
          */
         unsafeRun(): any;
+        unsafeRun(...args: any[]): any;
         /**
          * For lazy monads, runs the wrapper computation. 
          * For Monads that are eager, returns the monad unchanged
          */
         run(): any;
+        run(...args: any[]): any;
     }
 
     interface Filterable<A> {
@@ -613,7 +615,7 @@ declare module "jazzi" {
     export const Merge: MergeRep;
 
     export interface Reader<E,A>
-    extends Boxed<(a: E) => A,ReaderCases>, Monad<A>, Show
+    extends Boxed<(a: E) => A,ReaderCases>, Show, Functor<A>, Applicative<A>
     {
         /**
          * Transforms the received enviroment with `fn`
@@ -626,10 +628,12 @@ declare module "jazzi" {
 
         apply<B>(m: Reader<E,(a:A) => B>): Reader<E,B>;
         applyLeft<B,C>(this: Reader<E,(b: B) => C>,ap: Reader<E,B>): Reader<E,C>;
-
+        
         chain   <B>(fn: (a: A) => Reader<E,B>): Reader<E,B>;
         bind    <B>(fn: (a: A) => Reader<E,B>): Reader<E,B>;
         flatMap <B>(fn: (a: A) => Reader<E,B>): Reader<E,B>;
+        run(env: E): A;
+        unsafeRun(env: E): A;
     }
 
     interface ReaderRep
@@ -638,13 +642,13 @@ declare module "jazzi" {
         /**
          * Constructs a Reader. Expects a function that receives the enviroment
          */
-        of:   <E,A>(x: (a: E) => A) => Reader<E,A>;
+        of:   <E,A>(x: A | ((a: E) => A)) => Reader<E,A>;
         /**
          * Constructs a Reader. Expects a function that receives the enviroment
          */
-        from:   <E,A>(x: (a: E) => A) => Reader<E,A>;
-        Reader: <E,A>(x: (a: E) => A) => Reader<E,A>;
-        pure:   <E,A>(x: (a: E) => A) => Reader<E,A>;
+        from:   <E,A>(x: A | ((a: E) => A)) => Reader<E,A>;
+        Reader: <E,A>(x: A | ((a: E) => A)) => Reader<E,A>;
+        pure:   <E,A>(x: A | ((a: E) => A)) => Reader<E,A>;
         runReader: <E,A>(reader: Reader<E,A>, env: E) => A;
         do<E,A>(fn: any): Reader<E,A>;
         ask<E,A>(): Reader<E,A>
