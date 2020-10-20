@@ -2,7 +2,7 @@ import { __ } from 'ramda'
 import Sum from '../Sum';
 import { Union, NewType, Monad, Functor, EnumType, Show } from '../Union';
 import { getCase } from '../_internals';
-import { foldMap, fromEnum, getTag, hasInstance, pred, show, succ, toEnum, toPrimitive } from '../_tools'
+import { foldMap, fromEnum, getTag, hasInstance, pred, show, succ, toEnum, unwrap } from '../_tools'
 
 describe("Utils", () => {
     // Box is the simplest definition of an union
@@ -16,10 +16,10 @@ describe("Utils", () => {
             expect(TooMuch.unwrap()).toBe(42)
         })
         
-        it("should unbox using toPrimitive", () => {
-            expect(toPrimitive(TooMuch)).toBe(42)
-            expect(toPrimitive(42)).toBe(42)
-            expect(toPrimitive(undefined)).toBeUndefined();
+        it("should unbox using unwrap", () => {
+            expect(unwrap(TooMuch)).toBe(42)
+            expect(unwrap(42)).toBe(42)
+            expect(unwrap(undefined)).toBeUndefined();
         })
     })
 

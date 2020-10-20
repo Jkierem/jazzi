@@ -6,7 +6,9 @@ import {
 } from 'ramda'
 
 /**
- * @description if the value given is a function, applies it with "data" as arguments and returns the result. Otherwise, it is equal to R.identity
+ * @description if the value given is a function, 
+ * applies it with "data" as arguments and returns the result. 
+ * Otherwise, it is equal to R.identity
  * @param {any} data arguments for apply
  */
 export const extractWith = (data) => (value) => ifElse(

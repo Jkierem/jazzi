@@ -93,6 +93,16 @@ declare module "jazzi" {
          * @returns mapped functor
          */
         fmap<B>(fn: (a: A) => B ): Functor<B>;
+        /**
+         * Attempts to perform a natural transformation by calling `of` method on the argument. *Not actually a proper natural transformation*
+         * @param typeRep 
+         */
+        natural<B>(typeRep: { of: (a: A) => B }): B;
+        /**
+         * Attempts to perform a natural transformation by calling `of` method on the argument. *Not actually a proper natural transformation*
+         * @param typeRep 
+         */
+        to<B>(typeRep: { of: (a: A) => B }): B;
     }
 
     interface FunctorError<A> {
@@ -110,6 +120,12 @@ declare module "jazzi" {
          * @returns applied Applicative
          */
         apply<B>(ap: Applicative<(a: A) => B>): Applicative<B>;
+        /**
+         * Applies the value inside the given applicative (`ap`) to the inner value of `this`
+         * @param ap Applicative to use for application
+         * @returns applied Applicative
+         */
+        applyLeft<B,C>(this: Applicative<(b: B) => C>,ap: Applicative<B>): Applicative<C>;
     }
 
     interface Monad<A> extends Functor<A>, Applicative<A> {
@@ -255,6 +271,7 @@ declare module "jazzi" {
         fmap<B>(fn: (a: A) => B ): Maybe<B>;
 
         apply<B>(a: Maybe<(a: A) => B>): Maybe<B>;
+        applyLeft<B,C>(this: Maybe<(b: B) => C>,ap: Maybe<B>): Maybe<C>;
 
         chain   <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
         bind    <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
@@ -608,6 +625,7 @@ declare module "jazzi" {
         map <B>(fn: (a: A) => B): Reader<E,B>;
 
         apply<B>(m: Reader<E,(a:A) => B>): Reader<E,B>;
+        applyLeft<B,C>(this: Reader<E,(b: B) => C>,ap: Reader<E,B>): Reader<E,C>;
 
         chain   <B>(fn: (a: A) => Reader<E,B>): Reader<E,B>;
         bind    <B>(fn: (a: A) => Reader<E,B>): Reader<E,B>;
@@ -714,6 +732,7 @@ declare module "jazzi" {
         flatMap<B>(fn : (x: A) => IO<B>): IO<B>;
 
         apply<B>(ap: IO<(a: A) => B>): IO<B>;
+        applyLeft<B,C>(this: IO<(b: B) => C>,ap: IO<B>): IO<C>;
 
         map <B>(fn: (a:A) => B): IO<B>;
         fmap<B>(fn: (a:A) => B): IO<B>;
@@ -756,6 +775,7 @@ declare module "jazzi" {
         flatMap<B>(fn : (x: R) => Either<L,B>): Either<L,B>;
 
         apply<B>(ap: Either<any,(a: R) => B>): Either<L,B>;
+        applyLeft<B,C>(this: Either<L,(b: B) => C>,ap: Either<L,B>): Either<L,C>;
 
         map <B>(fn: (a:R) => B): Either<L,B>;
         fmap<B>(fn: (a:R) => B): Either<L,B>;
@@ -870,7 +890,7 @@ declare module "jazzi" {
      * Calls unwrap on the given object
      * @param {{ unwrap: () => any }} x 
      */
-    export const toPrimitive: (x: any) => any;
+    export const unwrap: (x: any) => any;
     /**
      * Returns true if value implements the provided typeclass or typeclass name
      * @param {any} value

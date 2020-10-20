@@ -1,6 +1,6 @@
 import { includes, propOr } from "ramda"
-import { forEachValue } from "../_internals";
-import { setTypeclass, splitBy } from "../_internals"
+import { defineOverrides, forEachValue, setTypeclass, splitBy } from "../_internals";
+import { hasInstance } from "../_tools"
 
 /**
  * Adds map and fmap method to proto
@@ -31,10 +31,18 @@ const Functor = (defs) => setTypeclass("Functor",(cases) => {
         cases[empt].prototype.fmap = idFmap
         cases[empt].prototype.map = idFmap
     })
-    forEachValue((override,key) => {
-        cases[key].prototype.fmap = override
-        cases[key].prototype.map = override
-    }, overrides?.fmap)
+    forEachValue((variant) => {
+        function NatTrans(other){
+            if( hasInstance(Functor,other) ){
+                return this.map(other.of).get()
+            }
+            throw Error("Cannot transform into a non-Functor")
+        }
+        variant.prototype.natural = NatTrans;
+        variant.prototype.to      = NatTrans;
+    },cases)
+    defineOverrides("fmap",["map"],overrides,cases);
+    defineOverrides("natural",["to"],overrides,cases);
 })
 
 setTypeclass("Functor",Functor)
