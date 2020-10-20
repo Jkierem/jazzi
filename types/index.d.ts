@@ -190,7 +190,7 @@ declare module "jazzi" {
         /**
          * Do notation using generator functions
          */
-        do<A>(fn: GeneratorFunction): Monad<A>;
+        do<A>(fn: Generator<any,any,any>): Monad<A>;
     }
     interface EqRep { 
         /**
@@ -352,7 +352,7 @@ declare module "jazzi" {
         foldMap<A>(values: A[]): Maybe<A>;
 
         equals<A>(ma: Maybe<A>, mb: Maybe<A>): boolean;
-        do<A>(fn: GeneratorFunction): Maybe<A>;
+        do<A>(fn: Generator<any,any,any>): Maybe<A>;
     }
 
     export const Maybe: MaybeRep;
@@ -449,7 +449,7 @@ declare module "jazzi" {
         pure<A>(x: A): Result<A,any>;
 
         equals<A,E>(ma: Result<A,E>, mb: Result<A,E>): boolean;
-        do<A,B>(fn: GeneratorFunction): Result<A,B>;
+        do<A,B>(fn: Generator<any,any,any>): Result<A,B>;
     }
     export const Result: ResultRep
 
@@ -646,7 +646,7 @@ declare module "jazzi" {
         Reader: <E,A>(x: (a: E) => A) => Reader<E,A>;
         pure:   <E,A>(x: (a: E) => A) => Reader<E,A>;
         runReader: <E,A>(reader: Reader<E,A>, env: E) => A;
-        do<E,A>(fn: GeneratorFunction): Reader<E,A>;
+        do<E,A>(fn: Generator<any,any,any>): Reader<E,A>;
         ask<E,A>(): Reader<E,A>
     }
   
@@ -719,7 +719,7 @@ declare module "jazzi" {
         multSink: () => Sink<Mult<number>>,
         objectSink: () => Sink<Merge<any>>,
         arraySink: () => Sink<any[]>,
-        do<A>(fn: GeneratorFunction): Sink<A>;
+        do<A>(fn: Generator<any,any,any>): Sink<A>;
     }
 
     export const Sink: SinkRep;
@@ -744,7 +744,7 @@ declare module "jazzi" {
         of<A>(fn: Extractable<A>): IO<A>;
         from<A>(fn: Extractable<A>): IO<A>;
         pure<A>(fn: Extractable<A>): IO<A>;
-        do<A>(fn: GeneratorFunction): IO<A>;
+        do<A>(fn: Generator<any,any,any>): IO<A>;
     }
 
     export const IO: IORep;
@@ -873,7 +873,7 @@ declare module "jazzi" {
          * @param lrs Array of Eithers
          */
         collectRights<L,R>(lrs: Either<L,R>[]): Either<L,R[]>;
-        do<A,B>(fn: GeneratorFunction): Either<A,B>;
+        do<A,B>(fn: Generator<any,any,any>): Either<A,B>;
     }
 
     export const Either: EitherRep;
