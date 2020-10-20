@@ -11,7 +11,7 @@ export const match = curryN(2,safeMatch)
  * Calls unwrap on the given object
  * @param {{ unwrap: () => any }} x 
  */
-export const toPrimitive = x => x?.unwrap?.() || x;
+export const unwrap = x => x?.unwrap ? x.unwrap() : x ;
 
 /**
  * Returns true if value implements the provided typeclass or typeclass name

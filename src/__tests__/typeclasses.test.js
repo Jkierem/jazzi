@@ -1,5 +1,5 @@
 import Sum from '../Sum';
-import { Enum, Eq, Filterable, FunctorError, Monad, Union } from '../Union'
+import { Enum, Eq, Filterable, Functor, FunctorError, Monad, NewType, Union } from '../Union'
 import { extractWith, Spy } from '../_internals';
 import { fromEnum } from '../_tools';
 const trivialImpl = (...tcs) => {
@@ -82,6 +82,23 @@ describe("typeclasses", () => {
                 return Lazy.Lazy(a + b)
             })
             expect(l100.unsafeRun()).toBe(100)
+        })
+    })
+
+    describe("Functor", () => {
+        describe("natural transformation", () => {
+            const Trivial = NewType("Trivial",[ Functor({ trivials: ["Trivial"] })])
+            const Trivial2 = NewType("Trivial2",[ Functor({ trivials: ["Trivial2"] })])
+            it("should change structure and leave value unchanged", () => {
+                const t42 = Trivial.of(42).natural(Trivial2)
+                expect(t42).toTypeMatch("Trivial2")
+                expect(t42.get()).toBe(42)
+            })
+            it("should throw if not a functor", () => {
+                expect(() => {
+                    const t42 = Trivial.of(42).to({})
+                }).toThrow()
+            })
         })
     })
 
