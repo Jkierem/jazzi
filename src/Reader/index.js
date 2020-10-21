@@ -23,24 +23,24 @@ const Defs = {
             Reader(fn){ return Reader.Reader((...env) => fn(this.get()(...env)))}
         },
         chain: {
-            Reader(fn){ return Reader.Reader( (...env) => fn(this.run(...env)).run(...env) ) }
+            Reader(fn){ return Reader.Reader((...env) => fn(this.run(...env)).run(...env))}
         },
         apply: {
-            Reader(readerFn){ return Reader.Reader((...env) => readerFn.get()(this.run(...env))) }
+            Reader(readerFn){ return Reader.Reader((...env) => readerFn.get()(this.run(...env)))}
         },
         show: {
             Reader(){ return "[Reader => E => _]" }
         },
         run: {
             Reader(...env) {
-                return extractWith(env)(this.get())
+                return this.get()(...env)
             }
         }
     }
 }
 
 const Reader = Union("Reader",{
-    Reader: (fn) => fn
+    Reader: fn => (...env) => extractWith(env)(fn)
 },[
     Functor(Defs),
     Applicative(Defs),
