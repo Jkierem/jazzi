@@ -1,3 +1,5 @@
+import { type } from "ramda";
+
 declare module "jazzi" {
     
     type Placeholder = import("ramda").Placeholder;
@@ -181,6 +183,41 @@ declare module "jazzi" {
         swap(): Swap<L,R>
     }
 
+    interface Enum {
+        /**
+         * Returns succesor. Undefined if not defined.
+         */
+        succ(): Enum | undefined;
+        /**
+         * Returns predecessor. Undefined if not defined.
+         */
+        pred(): Enum | undefined; 
+    }
+
+    interface Ord {
+        /**
+         * Compares two Ord values
+         * @param {Ord} o ord to compare to
+         * @returns {Ordering}
+         */
+        compare: (o: Ord) => Ordering;
+        /**
+         * Returns whether caller is less than or equal to the argument
+         * @param {Ord} o ord to compare to
+         */
+        lessThanOrEqual: (o: Ord) => boolean;
+        /**
+         * Returns whether caller is greater than the argument
+         * @param {Ord} o ord to compare to
+         */
+        greaterThan: (o: Ord) => boolean;
+        /**
+         * Returns whether caller is greater than or equal to the argument
+         * @param {Ord} o ord to compare to
+         */
+        greaterThanOrEqual: (o: Ord) => boolean;
+    }
+
     /** Type Representatives */
 
     interface MonadRep { 
@@ -225,6 +262,35 @@ declare module "jazzi" {
          * @param {Match} patterns
          */
         match(patterns: Match): any; 
+    }
+
+    interface EnumRep {
+        /**
+         * Return predecessor of an inhabitant of the Enum type
+         * @param {Enum} v Enum value
+         */
+        pred(v: Enum): Enum | undefined;
+        /**
+         * Return successor of an inhabitant of the Enum type
+         * @param {Enum} v Enum value
+         */
+        succ(v: Enum): Enum | undefined;
+        /**
+         * Returns an array from start to end (exclusive)
+         * @param {Enum} start
+         * @param {Enum} end
+         */
+        range(start: Enum, end: Enum): Enum[];
+        /**
+         * Returns numeric representation of Enum value. -1 if does not belong on Enum type
+         * @param {Enum} en 
+         */
+        fromEnum(en: Enum): number;
+        /**
+         * Returns respective Enum value of the Enum type. Undefined if non-existant
+         * @param {number} i 
+         */
+        toEnum(i: number): Enum | undefined;
     }
 
     /** Data Types */
@@ -882,6 +948,55 @@ declare module "jazzi" {
 
     export const Either: EitherRep;
 
+    export interface Ordering
+    extends Eq<undefined>, Enum, Ord, Show {
+        equals(e: Ordering): boolean;
+        succ(): Ordering | undefined;
+        pred(): Ordering | undefined;
+        compare: (o: Ordering) => Ordering;
+        lessThanOrEqual: (o: Ordering) => boolean;
+        greaterThan: (o: Ordering) => boolean;
+        greaterThanOrEqual: (o: Ordering) => boolean;
+        show: () => string;
+        toString: () => string;
+    }
+
+    export interface OrderingRep 
+    extends EqRep, EnumRep {
+        LT: Ordering;
+        EQ: Ordering;
+        GT: Ordering;
+        equals(ea: Ordering, eb: Ordering): boolean; 
+        pred(v: Ordering): Ordering | undefined;
+        succ(v: Ordering): Ordering | undefined;
+        range(start: Ordering, end: Ordering): Ordering[];
+        fromEnum(en: Ordering): number;
+        toEnum(i: number): Ordering | undefined;
+    }
+    export const Ordering: OrderingRep;
+
+    interface EnumTypeValue<Cases> 
+    extends Eq<undefined>, Ord, Enum, Show, Boxed<undefined,Cases> {
+        equals(e: EnumTypeValue<Cases>): boolean;
+        succ(): EnumTypeValue<Cases> | undefined;
+        pred(): EnumTypeValue<Cases> | undefined;
+        compare: (o: EnumTypeValue<Cases>) => Ordering;
+        lessThanOrEqual: (o: EnumTypeValue<Cases>) => boolean;
+        greaterThan: (o: EnumTypeValue<Cases>) => boolean;
+        greaterThanOrEqual: (o: EnumTypeValue<Cases>) => boolean;
+        show: () => string;
+        toString: () => string;
+    }
+
+    type EnumTypeRep<Cases extends string | number | symbol> = Record<Cases, EnumTypeValue<Cases>> & EqRep & EnumRep & BoxedRep<Cases> & {
+        equals(ea: EnumTypeValue<Cases>, eb: EnumTypeValue<Cases>): boolean;
+        pred(v: EnumTypeValue<Cases>): EnumTypeValue<Cases> | undefined;
+        succ(v: EnumTypeValue<Cases>): EnumTypeValue<Cases> | undefined;
+        range(start: EnumTypeValue<Cases>, end: EnumTypeValue<Cases>): EnumTypeValue<Cases>[];
+        fromEnum(en: EnumTypeValue<Cases>): number;
+        toEnum(i: number): EnumTypeValue<Cases> | undefined;
+    }
+
     /* Standalone utilities */
 
     /**
@@ -908,16 +1023,59 @@ declare module "jazzi" {
      */
     export const foldMap: <M extends MonoidRep>(t: M, values: any[]) => any;
     /**
+     * Calls show on the given value
+     * @param {any} a Show type
+     * @returns {string} string representation
+     */
+    export const show: (a: any) => string;
+    /**
+     * Call fromEnum of the given value's type representative
+     * @param {any} e Enum value
+     * @returns {number} number value of given enum
+     */
+    export const fromEnum: (e: any) => number;
+    /**
+     * Given an Enum type representative and an integer value, returns the respective Enum value 
+     * @param {any} en Enum type rep
+     * @param {number} i numeric value
+     * @returns {any} Enum value
+     */
+    export const toEnum: (en: any, i: number) => any;
+    /**
+     * Return the succesor of an Enum value. Undefined on no sucessor
+     * @param {any} e Enum value
+     */
+    export const succ: (e: any) => any;
+    /**
+     * Return the predecessor of an Enum value. Undefined on no predecessor
+     * @param {any} e Enum value
+     */
+    export const pred: (e: any) => any;
+    /**
+     * Returns the variant string representation of a given value
+     * @param {any} v Union type value
+     */
+    export const getTag: (v: any) => string;
+
+    /**
      * Creates a sum type than can be extended using typeclasses provided by this library. For more info lookup API in the docs.
      * @param name Name used for the type
      * @param cases Cases that make up the union. It's an object with functions as values. 
      * @param extensions Typeclasses that modify the prototype of the cases
      */
     export function Union(name: string, cases: any, extensions: Function[]): { constructors: (constructors: any) => any }
-    
+
+    /**
+     * Creates an enum type which is an Union that implements Eq, Ord, Enum, and Show.
+     * @param name Enum name
+     * @param cases Cases that inhabit the Enum. 
+     */
+    export function EnumType(name: string, cases: readonly string[]): EnumTypeRep<typeof cases[number]>;
+
     export function Applicative(defs: { trivials: string[], identities: string[], overrides?: { apply?: any } }) : (cases: any, globals: any) => void;
     export function Bifunctor(defs: { first: string, second: string, overrides?: { bimap?: any } }) : (cases: any, globals: any) => void;
     export function Effect(defs: { trivials: string[], identities: string[], overrides?: { effect?: any } }) : (cases: any, globals: any) => void;
+    export function Enum(defs: { order?: string[], overrides?:{ toEnum: (a: any) => any, fromEnum: (a: any) => any } }): (cases: any, globals: any) => void;
     export function Eq(defs: { trivials: string[], empties: string[], overrides?: { equals?: any } }) : (cases: any, globals: any) => void;
     export function Filterable(defs: { trivials: string[], identities: string[], overrides?: { filter?: any } }) : (cases: any, globals: any) => void;
     export function Foldable(defs: { overrides: { filter: any } }) : (cases: any) => void;
@@ -925,6 +1083,7 @@ declare module "jazzi" {
     export function FunctorError(defs: { errors: string[], overrides?: { mapError?: any } }) : (cases: any, globals: any) => void;
     export function Monad(defs: { pure: string, trivials: string[], identities: string[], overrides?: { chain?: any } }) : (cases: any, globals: any) => void;
     export function Monoid(defs: { zero: string, trivials: string[], identities: string[], overrides?: { empty?: any, mappend?: any } }) : (cases: any, globals: any) => void;
+    export function Ord(defs: { order?: string[], overrides?: { lessThanOrEqual?(this: any, a: any): boolean , compare?(this: any,a: any): Ordering } }): (cases: any, globals: any) => void;
     export function Semigroup(defs: { trivials: string[], identities: string[], overrides?: { concat?: any } }) : (cases: any, globals: any) => void;
     export function Show(defs: { overrides?: { show?: any } }) : (cases: any, globals: any) => void;
     export function Swap(defs: { left: string, right: string, overrides?: { swap?: any } }) : (cases: any, globals: any) => void;
