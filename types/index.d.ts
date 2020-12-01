@@ -1,5 +1,3 @@
-import { type } from "ramda";
-
 declare module "jazzi" {
     
     type Placeholder = import("ramda").Placeholder;
@@ -181,6 +179,14 @@ declare module "jazzi" {
          * Swap the context without altering the inner value.
          */
         swap(): Swap<L,R>
+        /**
+         * Swap if predicate returns true
+         */
+        swapIf(fn: (a: any) => boolean): Swap<L,R>;
+        /**
+         * Swap if predicate returns true
+         */
+        swapOn(fn: (a: any) => boolean): Swap<L,R>;
     }
 
     interface Enum {
@@ -450,6 +456,8 @@ declare module "jazzi" {
         bimap <B,Z>( fnOk:  (a: A) => B,fnErr: (a: E) => Z ): Result<B,Z>;
         fold  <B,Z>( fnErr: (a: E) => Z,fnOk:  (a: A) => B ): Result<B,Z>;
         swap(): Result<A,E>;
+        swapIf(fn: (a: any) => boolean): Result<any,any>;
+        swapOn(fn: (a: any) => boolean): Result<any,any>;
 
         /**
          * Receives a predicate and returns the filtered structure.
@@ -833,6 +841,8 @@ declare module "jazzi" {
          * Swaps context. If `Right a` returns `Left a` and vice versa
          */
         swap: () => Either<L,R>;
+        swapIf(fn: (a: any) => boolean): Either<any,any>;
+        swapOn(fn: (a: any) => boolean): Either<any,any>;
 
         /**
          * If Left, calls the first function with inner value.
@@ -975,26 +985,27 @@ declare module "jazzi" {
     }
     export const Ordering: OrderingRep;
 
-    interface EnumTypeValue<Cases> 
-    extends Eq<undefined>, Ord, Enum, Show, Boxed<undefined,Cases> {
-        equals(e: EnumTypeValue<Cases>): boolean;
-        succ(): EnumTypeValue<Cases> | undefined;
-        pred(): EnumTypeValue<Cases> | undefined;
-        compare: (o: EnumTypeValue<Cases>) => Ordering;
-        lessThanOrEqual: (o: EnumTypeValue<Cases>) => boolean;
-        greaterThan: (o: EnumTypeValue<Cases>) => boolean;
-        greaterThanOrEqual: (o: EnumTypeValue<Cases>) => boolean;
+    interface EnumTypeValue 
+    extends Eq<undefined>, Ord, Enum, Show, Boxed<any,any> {
+        match(patterns: any): any
+        equals(e: EnumTypeValue): boolean;
+        succ(): EnumTypeValue | undefined;
+        pred(): EnumTypeValue | undefined;
+        compare: (o: EnumTypeValue) => Ordering;
+        lessThanOrEqual: (o: EnumTypeValue) => boolean;
+        greaterThan: (o: EnumTypeValue) => boolean;
+        greaterThanOrEqual: (o: EnumTypeValue) => boolean;
         show: () => string;
         toString: () => string;
     }
 
-    type EnumTypeRep<Cases extends string | number | symbol> = Record<Cases, EnumTypeValue<Cases>> & EqRep & EnumRep & BoxedRep<Cases> & {
-        equals(ea: EnumTypeValue<Cases>, eb: EnumTypeValue<Cases>): boolean;
-        pred(v: EnumTypeValue<Cases>): EnumTypeValue<Cases> | undefined;
-        succ(v: EnumTypeValue<Cases>): EnumTypeValue<Cases> | undefined;
-        range(start: EnumTypeValue<Cases>, end: EnumTypeValue<Cases>): EnumTypeValue<Cases>[];
-        fromEnum(en: EnumTypeValue<Cases>): number;
-        toEnum(i: number): EnumTypeValue<Cases> | undefined;
+    type EnumTypeRep<Cases extends string | number | symbol> = Record<Cases, EnumTypeValue> & EqRep & EnumRep & BoxedRep<any> & {
+        equals(ea: EnumTypeValue, eb: EnumTypeValue): boolean;
+        pred(v: EnumTypeValue): EnumTypeValue | undefined;
+        succ(v: EnumTypeValue): EnumTypeValue | undefined;
+        range(start: EnumTypeValue, end: EnumTypeValue): EnumTypeValue[];
+        fromEnum(en: EnumTypeValue): number;
+        toEnum(i: number): EnumTypeValue | undefined;
     }
 
     /* Standalone utilities */
