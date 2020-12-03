@@ -1088,7 +1088,7 @@ declare module "jazzi" {
         config?: { 
             noHelpers?: boolean 
         }
-    }): { [P in keyof K]: (...args: any[]) => any } & { [P in keyof T]: T[P] }
+    }): { [P in keyof K]: K[P] } & { [Q in keyof T]: T[Q] }
 
     /**
      * Creates an enum type which is an Union that implements Eq, Ord, Enum, and Show.
