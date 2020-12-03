@@ -41,7 +41,7 @@ const cases = {
 //  definitions are the required definitions for the implementation
 //  cases is an object with constructor functions for each case
 //  globals is an object that references the type. Used to define methods on the type
-const typeclasses = [
+const extensions = [
     Eq({
         trivials: ["Just"],
         empties: ["None"],
@@ -71,14 +71,20 @@ const config = {
 // This is to add more constructors other than the default. 
 // They cannot be arrow functions due to the need to be bound to the case constructors.
 // The this value is an object with the default constructors
-const consts = {
+const constructors = {
     of(x){ x ? this.Just(x) : this.None() }
 }
 
-// Pre v1.3.x
-const Maybe = Union("Maybe",cases,typeclasses,config).constructors(consts)
-// Since v1.3
-const Maybe = Union("Maybe",cases,typeclasses,config,consts)
+// < 1.2.x
+const Maybe = Union("Maybe",cases,extensions,config).constructors(constructors)
+// Since 1.3.x
+const Maybe = Union({
+    name: "Maybe",
+    cases,
+    extensions,
+    constructors,
+    config
+})
 
 Maybe.of(41).map(x => x + 1)   // Just 42
 Maybe.of(null).map(x => x + 1) // None
