@@ -1,3 +1,5 @@
+import { any } from "ramda";
+
 declare module "jazzi" {
     
     type Placeholder = import("ramda").Placeholder;
@@ -1068,20 +1070,32 @@ declare module "jazzi" {
      */
     export const getTag: (v: any) => string;
 
+    type Constructors<T,K> = {
+        [P in T]: function(this: K): any;
+    }
     /**
      * Creates a sum type than can be extended using typeclasses provided by this library. For more info lookup API in the docs.
      * @param name Name used for the type
      * @param cases Cases that make up the union. It's an object with functions as values. 
      * @param extensions Typeclasses that modify the prototype of the cases
+     * @param constructors Object containing smart constructor functions. The this value is altered to include the cases (data constructors)
      */
-    export function Union(name: string, cases: any, extensions: Function[]): { constructors: (constructors: any) => any }
+    export function Union<K,T>(config: { 
+        name: string, 
+        cases: K, 
+        constructors?: T,
+        extensions?: ((cases: K, globals: any) => void)[], 
+        config?: { 
+            noHelpers?: boolean 
+        }
+    }): { [P in keyof K]: (...args: any[]) => any } & { [P in keyof T]: T[P] }
 
     /**
      * Creates an enum type which is an Union that implements Eq, Ord, Enum, and Show.
      * @param name Enum name
      * @param cases Cases that inhabit the Enum. 
      */
-    export function EnumType(name: string, cases: readonly string[]): EnumTypeRep<typeof cases[number]>;
+    export function EnumType<K extends string>(name: string, cases: readonly K[]): EnumTypeRep<K>;
 
     export function Applicative(defs: { trivials: string[], identities: string[], overrides?: { apply?: any } }) : (cases: any, globals: any) => void;
     export function Bifunctor(defs: { first: string, second: string, overrides?: { bimap?: any } }) : (cases: any, globals: any) => void;

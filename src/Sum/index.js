@@ -1,33 +1,48 @@
-import { Eq, Functor, Monoid, Semigroup, Show, Union } from '../Union';
+import {
+  Eq,
+  Functor,
+  Monoid,
+  Semigroup,
+  Show
+} from "../Union";
+import Union from '../Union/union'
 
 const Defs = {
-    trivials: ["Sum"],
-    identities: ["Zero"],
-    zero: "Zero",
-    overrides: {
-        concat: {
-            Sum(o){ return Sum.from(this.get() + o.get()) }
-        }
-    }
+  trivials: ["Sum"],
+  identities: ["Zero"],
+  zero: "Zero",
+  overrides: {
+    concat: {
+      Sum(o) {
+        return Sum.from(this.get() + o.get());
+      },
+    },
+  },
+};
+
+function defaultConstructor(x) {
+  return x === 0 ? this.Zero() : this.Sum(x);
 }
 
-function defaultConstructor(x){ return x === 0 ? this.Zero() : this.Sum(x) }
-
-const Sum = Union("Sum",{
-    Sum :  x => x,
+const Sum = Union(
+  "Sum",
+  {
+    Sum: (x) => x,
     Zero: () => 0,
-},[
+  },
+  [
     Eq({
-        trivials: ["Sum","Zero"],
-        empties: []
+      trivials: ["Sum", "Zero"],
+      empties: [],
     }),
     Functor(Defs),
     Semigroup(Defs),
     Monoid(Defs),
-    Show()
-]).constructors({
-    of: defaultConstructor,
-    from: defaultConstructor
-})
+    Show(),
+  ]
+).constructors({
+  of: defaultConstructor,
+  from: defaultConstructor,
+});
 
-export default Sum
+export default Sum;

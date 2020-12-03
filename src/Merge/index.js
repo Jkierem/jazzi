@@ -1,36 +1,49 @@
 import { equals, mergeAll } from "ramda";
-import { Eq, Functor, Monad, Monoid, Semigroup, Show, Union } from "../Union";
+import {
+  Eq,
+  Functor,
+  Monoid,
+  Semigroup,
+  Show,
+} from "../Union";
+import Union from '../Union/union'
 
 const Defs = {
-    trivials: ["Merge"],
-    identities: ["Empty"],
-    zero: "Empty", 
-    overrides: {
-        concat: {
-            Merge(m){ return Merge.from(mergeAll([this.get(),m.get()])) }
-        }
-    }
+  trivials: ["Merge"],
+  identities: ["Empty"],
+  zero: "Empty",
+  overrides: {
+    concat: {
+      Merge(m) {
+        return Merge.from(mergeAll([this.get(), m.get()]));
+      },
+    },
+  },
+};
+
+function defaultConstructor(x) {
+  return equals({}, x) ? this.Empty() : this.Merge(x);
 }
 
-function defaultConstructor(x){
-    return equals({},x) ? this.Empty() : this.Merge(x);
-}
-
-const Merge = Union("Merge",{
-    Merge: x => x,
-    Empty: () => ({})
-},[
+const Merge = Union(
+  "Merge",
+  {
+    Merge: (x) => x,
+    Empty: () => ({}),
+  },
+  [
     Eq({
-        trivials: [ "Merge", "Empty" ],
-        empties: []
+      trivials: ["Merge", "Empty"],
+      empties: [],
     }),
     Functor(Defs),
     Semigroup(Defs),
     Monoid(Defs),
-    Show(Defs)
-]).constructors({
-    of: defaultConstructor,
-    from: defaultConstructor
-})
+    Show(Defs),
+  ]
+).constructors({
+  of: defaultConstructor,
+  from: defaultConstructor,
+});
 
-export default Merge
+export default Merge;

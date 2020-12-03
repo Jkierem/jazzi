@@ -60,7 +60,7 @@ const typeclasses = [
     })
 ]
 
-// Union configuration. Optional. Can be used to set flags that 
+// Union configuration. Can be used to set flags that 
 // alter the construction of the union. By default all flags start as false.
 // The only available flag is noHelpers that removes the `on` and `is` methods
 const config = {
@@ -68,14 +68,17 @@ const config = {
 }
 
 // Constructors: By default, there are constructors for each case.
-// This is to add more constructors apart from the default. 
-// They cannot be arrow function due to the need to be bound.
+// This is to add more constructors other than the default. 
+// They cannot be arrow functions due to the need to be bound to the case constructors.
 // The this value is an object with the default constructors
 const consts = {
     of(x){ x ? this.Just(x) : this.None() }
 }
 
+// Pre v1.3.x
 const Maybe = Union("Maybe",cases,typeclasses,config).constructors(consts)
+// Since v1.3
+const Maybe = Union("Maybe",cases,typeclasses,config,consts)
 
 Maybe.of(41).map(x => x + 1)   // Just 42
 Maybe.of(null).map(x => x + 1) // None
