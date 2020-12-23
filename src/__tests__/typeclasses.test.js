@@ -1,4 +1,5 @@
 import Sum from "../Sum";
+import First from "../First"
 import {
   Enum,
   Eq,
@@ -7,6 +8,7 @@ import {
   FunctorError,
   Monad,
   NewType,
+  Thenable,
   Union,
 } from "../Union";
 import { extractWith, Spy } from "../_internals";
@@ -244,4 +246,56 @@ describe("typeclasses", () => {
       });
     });
   });
+
+  describe("Thenable", () => {
+    const Trivial = Union({
+      name: "Trivial",
+      cases: { 
+        Resolve: x => x ,
+        Reject: x => x,
+      },
+      extensions: [
+        Thenable({ 
+          resolve: ["Resolve"],
+          reject: ["Reject"]
+        })
+      ]
+    })
+    it("should be able to use with await", async () => {
+      const t = await Trivial.Resolve(42);
+      expect(t).toBe(42)
+    })
+
+    it("should provide a catch utility", () => {
+      const catchSpy = Spy()
+      Trivial.Reject(42).catch(catchSpy);
+      expect(catchSpy.calledWith(42)).toBeTruthy()
+    })
+
+    it("should cast to promise that resolves",async () => {
+      const t = await Trivial.Resolve(42).toPromise()
+      expect(t).toBe(42)
+    })
+
+    it("should cast to promise that rejects",async () => {
+      try {
+        await Trivial.Reject(42).toPromise()
+      } catch(t) {
+        expect(t).toBe(42)
+      }
+    })
+
+    it("arguments are optional on all methods", () => {
+      const spy = Spy()
+      try {
+        First.of(42).then()
+        Trivial.Resolve(42).then()
+        Trivial.Reject(42).then()
+        Trivial.Reject(42).catch()
+      } catch(e) {
+        spy()
+      }
+      expect(spy.called).toBeFalsy()
+    })
+  })
 });

@@ -20,6 +20,7 @@
         "build": "rollup -c",
         "build:watch": "rollup -c --watch",
         "test": "rm -rf ./coverage && jest --coverage --verbose",
+        "test:silent": "rm -rf ./coverage && jest --silent",
         "test:watch": "jest --verbose --watch",
         "prepublish": "yarn build"
     },

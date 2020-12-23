@@ -118,6 +118,23 @@ describe("Result", () => {
             err42.mapError(mapSpy);
             expect(mapSpy.called).toBeTruthy();
         })
+
+        describe("Thenable", () => {
+            it("should resolve on Ok", async () => {
+                const thenSpy = Spy()
+                const catchSpy = Spy()
+                await Result.Ok(42).then(thenSpy,catchSpy)
+                expect(thenSpy.calledWith(42)).toBeTruthy()
+                expect(catchSpy.called).toBeFalsy()
+            })
+            it("should reject on Err", () => {
+                const thenSpy = Spy()
+                const catchSpy = Spy()
+                Result.Err(42).then(thenSpy,catchSpy)
+                expect(catchSpy.calledWith(42)).toBeTruthy()
+                expect(thenSpy.called).toBeFalsy()
+            })
+        })
     })
     describe("constructors", () => {
         const error = new Error(42);

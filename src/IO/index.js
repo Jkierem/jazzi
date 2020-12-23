@@ -5,6 +5,7 @@ import {
   Functor,
   Show,
   Effect,
+  Thenable,
 } from "../Union";
 import Union from '../Union/union'
 import { compose } from "ramda";
@@ -40,6 +41,16 @@ const IODefs = {
         return this.get()();
       },
     },
+    then: {
+      IO(res){
+        res(this.run());
+      }
+    },
+    toPromise: {
+      IO() {
+        return Promise.resolve(this.run())
+      }
+    }
   },
 };
 
@@ -56,6 +67,7 @@ const IO = Union(
     Functor(IODefs),
     Applicative(IODefs),
     Monad(IODefs),
+    Thenable(IODefs),
     Show(IODefs),
     Effect(IODefs),
   ]

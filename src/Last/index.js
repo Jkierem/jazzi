@@ -4,18 +4,27 @@ import {
   Monoid,
   Semigroup,
   Show,
+  Thenable,
 } from "../Union";
 import Union from '../Union/union'
+import { monoidThen, monoidToPromise } from "../_internals";
 
 const Defs = {
   trivials: ["Last"],
   zero: "Last",
+  resolve: ["Last"],
   overrides: {
     concat: {
       Last(o) {
         return o;
       },
     },
+    then: {
+      Last: monoidThen,
+    },
+    toPromise: {
+      Last: monoidToPromise
+    }
   },
 };
 
@@ -28,7 +37,14 @@ const Last = Union(
   {
     Last: (x) => x,
   },
-  [Eq(Defs), Functor(Defs), Semigroup(Defs), Monoid(Defs), Show()]
+  [
+    Eq(Defs), 
+    Functor(Defs), 
+    Semigroup(Defs), 
+    Monoid(Defs), 
+    Thenable(Defs),
+    Show()
+  ]
 ).constructors({
   of: defaultConstructor,
   from: defaultConstructor,

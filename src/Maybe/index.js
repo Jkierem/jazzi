@@ -10,6 +10,7 @@ import {
   Monoid,
   Effect,
   Filterable,
+  Thenable,
 } from "../Union";
 import Union from '../Union/union'
 
@@ -34,6 +35,8 @@ const MaybeDefs = {
   empties: ["None"],
   pure: "Just",
   zero: "None",
+  resolve: ["Just"],
+  reject: ["None"],
   overrides: {
     show: {
       None() {
@@ -49,7 +52,7 @@ const MaybeDefs = {
       Just(fn) {
         return Maybe.fromPredicate(fn, this.get());
       },
-    },
+    }
   },
 };
 
@@ -72,6 +75,7 @@ const Maybe = Union(
     Applicative(MaybeDefs),
     Semigroup(MaybeDefs),
     Filterable(MaybeDefs),
+    Thenable(MaybeDefs),
     Show(MaybeDefs),
     MaybeType(),
   ]

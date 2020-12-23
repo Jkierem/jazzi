@@ -3,6 +3,7 @@ import Sum from '../Sum'
 import Mult from '../Mult';
 import Merge from '../Merge';
 import { is } from 'ramda';
+import { Spy } from '../_internals';
 
 describe("Sink", () => {
     describe("methods", () => {
@@ -65,6 +66,22 @@ describe("Sink", () => {
             const fn = w => w.forward(1);
             const result = Sink.runSink(fn,sink)
             expect(result.unwrap()).toBe(42)
+        })
+
+        describe("Thenable", () => {
+            it("should resolve", () => {
+                const thenSpy = Spy()
+                const catchSpy = Spy()
+                const sink = Sink.multSink();
+                const fn = (w) => {
+                    w.tell(Mult.from(2))
+                    w.tell(Mult.from(21))
+                }
+                const result = Sink.runSink(fn,sink)
+                result.then(thenSpy,catchSpy)
+                expect(thenSpy.calledWith(Mult.of(42))).toBeTruthy()
+                expect(catchSpy.called).toBeFalsy()
+            })
         })
     })
     describe("constructors", () => {

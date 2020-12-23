@@ -87,6 +87,28 @@ describe("Either", () => {
         expect(Either.collectLefts(collects).get()).toStrictEqual([1, 2, 3]);
       });
     });
+
+    describe("Thenable", () => {
+      it("should resolve on Right", async () => {
+        const thenSpy = Spy()
+        const catchSpy = Spy()
+        await Either.Right(42).then(thenSpy,catchSpy);
+        expect(thenSpy.callCount).toBe(1);
+        expect(thenSpy.calledWith(42)).toBeTruthy();
+        expect(catchSpy.called).toBeFalsy();
+      })
+      it("should reject on Left",  async () => {
+        const thenSpy = Spy()
+        const catchSpy = Spy()
+        try {
+          await Either.Left(42).then(thenSpy,catchSpy);
+        } catch(e) {
+          expect(catchSpy.callCount).toBe(1);
+          expect(catchSpy.calledWith(42)).toBeTruthy();
+          expect(thenSpy.called).toBeFalsy();
+        }
+      })
+    })
   });
 
   describe("constructors", () => {

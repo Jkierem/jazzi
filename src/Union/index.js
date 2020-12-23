@@ -15,8 +15,26 @@ export { default as Bifunctor } from "./bifunctor";
 export { default as Filterable } from "./filterable";
 export { default as Enum } from "./enum";
 export { default as EnumType } from "./enumType";
+export { default as Thenable } from "./thenable";
 
 import { default as _RawUnion } from './union'
+
+/**
+ * 
+ * @param {{
+ *  name: string
+ *  cases: {
+ *    [x: string]: (innerValue: any) => any
+ *  }
+ *  extensions: any[]
+ *  config: {
+ *    noHelpers: boolean
+ *  }
+ *  constructors: {
+ *    [x: string]: (x: any) => any
+ *  }
+ * }} data union definition data
+ */
 export const Union = (data) => {
   const { name, cases, extensions=[], config={}, constructors={} } = data;
   return _RawUnion(name, cases, extensions, config).constructors(constructors);

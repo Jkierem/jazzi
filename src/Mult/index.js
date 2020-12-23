@@ -4,18 +4,26 @@ import {
   Monoid,
   Semigroup,
   Show,
+  Thenable,
 } from "../Union";
 import Union from '../Union/union'
+import { monoidToPromise } from "../_internals";
 
 const Defs = {
   trivials: ["Mult"],
   identities: ["One"],
   zero: "One",
+  resolve: ["Mult"],
+  reject: ["One"],
   overrides: {
     concat: {
       Mult(o) {
         return Mult.from(this.get() * o.get());
       },
+    },
+    toPromise: {
+      Mult: monoidToPromise,
+      One: monoidToPromise,
     },
   },
 };
@@ -38,6 +46,7 @@ const Mult = Union(
     Functor(Defs),
     Semigroup(Defs),
     Monoid(Defs),
+    Thenable(Defs),
     Show(Defs),
   ]
 ).constructors({

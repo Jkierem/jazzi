@@ -62,6 +62,21 @@ describe("Reader Monad",() => {
             expect(spy.calledWith(42)).toBeTruthy()
             expect(res).toBe(42)
         })
+
+        describe("Reader Thenable", () => {
+            it("should resolve", () => {
+                const thenSpy = Spy()
+                const catchSpy = Spy()
+                Reader.of(42).then(thenSpy,catchSpy)
+                expect(thenSpy.calledWith(42)).toBeTruthy()
+                expect(catchSpy.called).toBeFalsy()
+            })
+
+            it("should cast to promise that resolves", async () => {
+                const t = await Reader.of(42).toPromise()
+                expect(t).toBe(42)
+            })
+        })
     })
     describe("constructors",() => {
         it("should return Reader of anything", () => {

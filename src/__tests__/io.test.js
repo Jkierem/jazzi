@@ -38,6 +38,21 @@ describe("IO",() => {
             expect(plusOne.returned(43)).toBeTruthy()
             expect(res).toBe(42);
         })
+
+        describe("IO Thenable", () => {
+            it("should resolve", async () => {
+                const thenSpy = Spy()
+                const catchSpy = Spy()
+                await IO.of(42).then(thenSpy,catchSpy)
+                expect(thenSpy.calledWith(42)).toBeTruthy()
+                expect(catchSpy.called).toBeFalsy()
+            })
+
+            it("should cast to promise that resolves", async () => {
+                const t = await IO.of(42).toPromise()
+                expect(t).toBe(42)
+            })
+        })
     })
 
     describe("constructors",() => {

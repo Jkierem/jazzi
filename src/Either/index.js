@@ -5,6 +5,7 @@ import {
   Functor,
   FunctorError,
   Monad,
+  Thenable,
   Show,
   Swap
 } from "../Union";
@@ -72,6 +73,8 @@ const Defs = {
   pure: "Right",
   left: "Left",
   right: "Right",
+  resolve: ["Right"],
+  reject: ["Left"],
   overrides: {
     fold: {
       Left: function (fnLeft, fnRight) {
@@ -102,6 +105,7 @@ const Either = Union(
     Monad(Defs),
     Swap(Defs),
     Show(Defs),
+    Thenable(Defs),
     EitherType(),
   ]
 ).constructors({

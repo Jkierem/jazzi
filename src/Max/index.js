@@ -5,12 +5,15 @@ import {
   Monoid,
   Semigroup,
   Show,
+  Thenable,
 } from "../Union";
 import Union from '../Union/union'
+import { monoidThen, monoidToPromise } from "../_internals";
 
 const Defs = {
   trivials: ["Max"],
   zero: "Max",
+  resolve: ["Max"],
   overrides: {
     concat: {
       Max(o) {
@@ -21,6 +24,12 @@ const Defs = {
       Max() {
         return Max.of(-Infinity);
       },
+    },
+    then: {
+      Max: monoidThen
+    },
+    toPromise: {
+      Max: monoidToPromise
     },
   },
 };
@@ -34,7 +43,14 @@ const Max = Union(
   {
     Max: (x) => (isNil(x) ? -Infinity : x),
   },
-  [Eq(Defs), Functor(Defs), Semigroup(Defs), Monoid(Defs), Show()]
+  [
+    Eq(Defs), 
+    Functor(Defs), 
+    Semigroup(Defs), 
+    Monoid(Defs),
+    Thenable(Defs),
+    Show()
+  ]
 ).constructors({
   of: defaultConstructor,
   from: defaultConstructor,

@@ -1,4 +1,4 @@
-import { Applicative, Functor, Monad, Show } from "../Union";
+import { Applicative, Functor, Monad, Show, Thenable } from "../Union";
 import Union from '../Union/union'
 import { extractWith, getType } from "../_internals";
 
@@ -19,6 +19,7 @@ const Defs = {
   identities: [],
   pure: "Reader",
   lazy: true,
+  resolve: ["Reader"],
   overrides: {
     fmap: {
       Reader(fn) {
@@ -45,6 +46,16 @@ const Defs = {
         return this.get()(...env);
       },
     },
+    then: {
+      Reader(res){
+        res(this.run())
+      }
+    },
+    toPromise: {
+      Reader(...args) {
+        return Promise.resolve(this.run(...args))
+      }
+    }
   },
 };
 
@@ -53,7 +64,14 @@ const Reader = Union(
   {
     Reader: (fn) => (...env) => extractWith(env)(fn),
   },
-  [Functor(Defs), Applicative(Defs), Monad(Defs), Show(Defs), ReaderMonad()]
+  [
+    Functor(Defs), 
+    Applicative(Defs), 
+    Monad(Defs), 
+    Show(Defs), 
+    Thenable(Defs),
+    ReaderMonad()
+  ]
 ).constructors({
   of(x) {
     return this.Reader(x);

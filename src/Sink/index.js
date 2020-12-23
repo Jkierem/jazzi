@@ -1,7 +1,7 @@
 import Sum from "../Sum";
 import Mult from "../Mult";
 import Merge from "../Merge";
-import { Monad, Monoid, Show } from "../Union";
+import { Monad, Monoid, Show, Thenable } from "../Union";
 import Union from '../Union/union'
 import { getInnerValue, setInnerValue, getType } from "../_internals";
 import { is } from "ramda";
@@ -61,6 +61,7 @@ const Defs = {
   identities: [],
   pure: "Sink",
   zero: "Sink",
+  resolve: ["Sink"]
 };
 
 const safeConstruct = (x, cons) => {
@@ -75,7 +76,7 @@ const Sink = Union(
   {
     Sink: (x) => [x, []],
   },
-  [Monad(Defs), Monoid(Defs), Show(Defs), SinkType()]
+  [Monad(Defs), Monoid(Defs), Show(Defs), Thenable(Defs), SinkType()]
 ).constructors({
   of(x) {
     return safeConstruct(x, this.Sink);

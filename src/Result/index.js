@@ -10,7 +10,8 @@ import {
   FunctorError,
   Monad,
   Show,
-  Swap
+  Swap,
+  Thenable
 } from "../Union";
 import Union from '../Union/union'
 import { match } from "../_tools";
@@ -25,6 +26,8 @@ const Defs = {
   empties: ["Err"],
   errors: ["Err"],
   pure: "Ok",
+  resolve: ["Ok"],
+  reject: ["Err"],
   overrides: {
     equals: {
       Err(other) {
@@ -65,6 +68,7 @@ const Result = Union(
     FunctorError(Defs),
     Monad(Defs),
     Applicative(Defs),
+    Thenable(Defs),
     Show(Defs),
     Swap(Defs),
     Filterable(Defs),

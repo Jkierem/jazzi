@@ -2,7 +2,7 @@ import {
     ifElse, is, apply, identity, 
     __, toPairs, toLower, curryN, 
     compose, find, fromPairs, isNil, 
-    prop, complement, any, equals, map 
+    prop, complement, any, equals, map, isEmpty 
 } from 'ramda'
 
 /**
@@ -105,9 +105,22 @@ export const Spy = (fn = x => x) => {
         calls = []
     }
 
+    _spy.debug = () => {
+        return {
+            callCount: _spy.callCount,
+            calls: _spy.calls,
+            called: _spy.called,
+        }
+    }
+
     return _spy
 }
 
+/**
+ * iterates over values of an object
+ * @param {(value: any, key?: string | number | symbol, index?: number, data?: any) => } fn 
+ * @param {any} data 
+ */
 export const forEachValue = (fn , data={}) => {
     Object.keys(data).forEach( (key,idx) => {
         fn(data[key],key,idx,data)
@@ -128,4 +141,13 @@ export const defineOverrides = (method,aliases,overrides,cases) => {
             cases[key].prototype[alias] = override
         })
     },overrides[method] || {})
+}
+
+export function monoidThen(res=identity,rej=identity){
+    isEmpty(this) ? rej(this.get()) : res(this.get());
+}
+export function monoidToPromise(){
+    return new Promise((res,rej) => {
+        isEmpty(this) ? rej(this.get()) : res(this.get());
+    })
 }

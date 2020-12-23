@@ -5,12 +5,15 @@ import {
   Monoid,
   Semigroup,
   Show,
+  Thenable,
 } from "../Union";
 import Union from '../Union/union'
+import { monoidThen, monoidToPromise } from "../_internals";
 
 const Defs = {
   trivials: ["Min"],
   zero: "Min",
+  resolve: ["Min"],
   overrides: {
     concat: {
       Min(o) {
@@ -21,6 +24,12 @@ const Defs = {
       Min() {
         return Min.of(Infinity);
       },
+    },
+    then: {
+      Min: monoidThen
+    },
+    toPromise: {
+      Min: monoidToPromise
     },
   },
 };
@@ -34,7 +43,14 @@ const Min = Union(
   {
     Min: (x) => (isNil(x) ? Infinity : x),
   },
-  [Eq(Defs), Functor(Defs), Semigroup(Defs), Monoid(Defs), Show()]
+  [
+    Eq(Defs), 
+    Functor(Defs), 
+    Semigroup(Defs), 
+    Monoid(Defs), 
+    Thenable(Defs),
+    Show()
+  ]
 ).constructors({
   of: defaultConstructor,
   from: defaultConstructor,
