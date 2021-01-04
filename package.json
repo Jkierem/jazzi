@@ -1,6 +1,6 @@
 {
     "name": "jazzi",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "main": "./dist/cjs/jazzi.cjs.js",
     "module": "./dist/esm/jazzi.esm.js",
     "license": "MIT",
