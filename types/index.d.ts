@@ -1,5 +1,3 @@
-import { any } from "ramda";
-
 declare module "jazzi" {
     
     type Placeholder = import("ramda").Placeholder;
@@ -17,7 +15,6 @@ declare module "jazzi" {
     type MultCases   = Cases<"Mult" | "One">;
     type SumCases    = Cases<"Sum" | "Zero">;
     type MergeCases  = Cases<"Merge" | "Empty">;
-    type SinkCases   = Cases<"Sink">;
     type ReaderCases = Cases<"Reader">;
     type IOCases     = Cases<"IO">;
 
@@ -54,17 +51,29 @@ declare module "jazzi" {
         toString(): string;
     }
 
-    interface Effect<T> {
+    interface Effect<T,Match> {
         /**
          * Runs a function with the inner value of a structure without altering it
          * @param {(x: T) => void} fn function to run
          */
-        effect(fn: (x: T) => void): Effect<T>;
+        effect(fn: (x: T) => void): Effect<T,Match>;
         /**
          * Runs a function with the inner value of a structure without altering it
          * @param {(x: T) => void} fn function to run
          */
-        peak(fn: (x: T) => void): Effect<T>;
+        peak(fn: (x: T) => void): Effect<T,Match>;
+        /**
+         * Runs match function without altering itself. More info see `match`
+         * @param {Match} patterns
+         * @returns structure unchanged
+         */
+        matchEffect(patterns: Match): Effect<T,Match>;
+        /**
+         * Runs match function without altering itself. More info see `match`
+         * @param {Match} patterns
+         * @returns structure unchanged
+         */
+        when(patterns: Match): Effect<T,Match>;
     }
 
     interface Semigroup<A> {
@@ -256,7 +265,7 @@ declare module "jazzi" {
          * Combines a list of monoids
          * @param monoids list of monoids
          */
-        accumulate<A>(monoids: Monoid<A>[]): Monoid<A>;
+        accumulate(monoids: Monoid<any>[]): Monoid<any[]>;
         /**
          * Maps a list of values into a list of monoids and combines them
          * @param values 
@@ -306,7 +315,7 @@ declare module "jazzi" {
     /** Maybe */
     export interface Maybe<A> 
     extends Boxed<A,MaybeCases>, Show,
-            Effect<A>, Monad<A>, Monoid<A>, 
+            Effect<A,MaybeCases>, Monad<A>, Monoid<A>, 
             Filterable<A>, Eq<Maybe<A>>, Applicative<A>
     {
         /**
@@ -342,6 +351,8 @@ declare module "jazzi" {
 
         effect(fn: (x: A) => void): Maybe<A>;
         peak(fn: (x: A) => void): Maybe<A>;
+        matchEffect(patterns: MaybeCases): Maybe<A>;
+        when(patterns: MaybeCases): Maybe<A>;
 
         map<B>(fn: (a: A) => B ): Maybe<B>;
         fmap<B>(fn: (a: A) => B ): Maybe<B>;
@@ -424,7 +435,7 @@ declare module "jazzi" {
         pure<A>(x: A): Maybe<A>;
 
         empty<A>(): Maybe<A>;
-        accumulate<A>(monoids: Maybe<A>[]): Maybe<A>;
+        accumulate(monoids: Maybe<any>[]): Maybe<any[]>;
         foldMap<A>(values: A[]): Maybe<A>;
 
         equals<A>(ma: Maybe<A>, mb: Maybe<A>): boolean;
@@ -437,7 +448,7 @@ declare module "jazzi" {
 
     export interface Result<A,E> 
     extends Boxed<A | E,ResultCases>, Show,
-            Monad<A>, Effect<A>, Filterable<A>,
+            Monad<A>, Effect<A,ResultCases>, Filterable<A>,
             Eq<Result<A,E>>, Applicative<A>, Swap<A,E>,
             FunctorError<E>
     {
@@ -472,6 +483,8 @@ declare module "jazzi" {
 
         effect (fn: (a: A) => void): Result<A,E>;
         peak   (fn: (a: A) => void): Result<A,E>;
+        matchEffect(patterns: ResultCases): Result<A,E>;
+        when(patterns: ResultCases): Result<A,E>;
 
         chain   <B>(fn: (a: A) => Result<B,E>): Result<B,E>;
         bind    <B>(fn: (a: A) => Result<B,E>): Result<B,E>;
@@ -577,7 +590,7 @@ declare module "jazzi" {
          */
         from(x: number): Mult<number>;
         empty(): Mult<number>;
-        accumulate<A>(monoids: Mult<A>[]): Mult<A>;
+        accumulate<A>(monoids: Mult<any>[]): Mult<any>;
         foldMap<A>(values: A[]): Mult<A>;
         equals(ma: Mult<number>, mb: Mult<number>): boolean;
     }
@@ -630,7 +643,7 @@ declare module "jazzi" {
          */
         from(x: number): Sum<number>;
         empty(): Sum<number>;
-        accumulate<A>(monoids: Sum<A>[]): Sum<A>;
+        accumulate(monoids: Sum<any>[]): Sum<any>;
         foldMap<A>(values: A[]): Sum<A>;
         equals(ma: Sum<number>, mb: Sum<number>): boolean;
     }
@@ -683,7 +696,7 @@ declare module "jazzi" {
          */
         from<A>(x: A): Merge<A>;
         empty<A>(): Merge<A>;
-        accumulate<A>(monoids: Merge<A>[]): Merge<A>;
+        accumulate(monoids: Merge<any>[]): Merge<any>;
         foldMap<A>(values: A[]): Merge<A>;
         equals<A>(ma: Merge<A>, mb: Merge<A>): boolean;
     }
@@ -731,78 +744,6 @@ declare module "jazzi" {
     }
   
     export const Reader: ReaderRep
-
-    export interface Sink<A> 
-    extends Boxed<A,SinkCases>, Monad<A>, 
-            Monoid<A>, Show
-    {
-        /**
-         * Receives a Monoid to combine later
-         */
-        tell: (x: A) => Sink<A>;
-        /**
-         * Receives a value to wrap inside a Monoid to be combined later
-         */
-        flush: () => Sink<A>;
-
-        apply: <B>(m: Sink<(a: A) => B>) => Sink<B>;
-        chain: <B>(fn: (a: A) => Sink<B>) => Sink<B>;
-        bind: <B>(fn: (a: A) => Sink<B>) => Sink<B>;
-        flatMap: <B>(fn: (a: A) => Sink<B>) => Sink<B>;
-        /**
-         * Returns Sink of the empty value of the inner Monoid
-         */
-        empty: <B>() => Sink<B>;
-    }
-
-    export interface SinkRep extends
-        BoxedRep<SinkCases>, MonadRep
-    {
-        Sink: <A>(x: A) => Sink<A>,
-        pure: <A>(x: A) => Sink<A>,
-        empty: <A>(x: A) => Sink<A>,
-        /**
-         * Runs a sink over a function
-         */
-        runSink: <A>(fn: Function, sink: Sink<A>) => Sink<A>,
-        /**
-         * Runs a sink over a list of functions
-         */
-        runSeq: <A>(fn: Function[], sink: Sink<A>) => Sink<A>,
-        /**
-         * If Monoid, returns Sink
-         * Otherwise, throws an error
-         * @param {number} x starting value of the sink
-         */
-        from: <A>(x: A) => Sink<A>,
-        /**
-         * If Monoid, returns Sink
-         * Otherwise, throws an error
-         * @param {number} x starting value of the sink
-         */
-        of: <A>(x: A) => Sink<A>,
-        /**
-         * If Monoid, returns Sink
-         * Otherwise, throws an error
-         * @param {number} x starting value of the sink
-         */
-        fromMonoid: <A>(x: A) => Sink<A>,
-        /**
-         * Receives the type representative of a Monoid and returns a sink that, using the empty element as starting value.
-         */
-        fromType: <A>(t: any) => Sink<A>,
-        /**
-         * Creates a sink whether the given value is a Monoid or not
-         */
-        force: <A>(x: A) => Sink<A>,
-        sumSink: () => Sink<Sum<number>>,
-        multSink: () => Sink<Mult<number>>,
-        objectSink: () => Sink<Merge<any>>,
-        arraySink: () => Sink<any[]>,
-        do<A>(fn: any): Sink<A>;
-    }
-
-    export const Sink: SinkRep;
   
     export interface IO<A> 
     extends Boxed<A,IOCases>, Monad<A>
@@ -961,7 +902,7 @@ declare module "jazzi" {
     export const Either: EitherRep;
 
     export interface Ordering
-    extends Eq<undefined>, Enum, Ord, Show {
+    extends Eq<undefined>, Enum, Show {
         equals(e: Ordering): boolean;
         succ(): Ordering | undefined;
         pred(): Ordering | undefined;
@@ -1071,7 +1012,7 @@ declare module "jazzi" {
     export const getTag: (v: any) => string;
 
     type Constructors<T,K> = {
-        [P in T]: function(this: K): any;
+        [P in T]: (this: K) => any;
     }
     /**
      * Creates a sum type than can be extended using typeclasses provided by this library. For more info lookup API in the docs.

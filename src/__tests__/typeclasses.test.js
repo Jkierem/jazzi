@@ -3,6 +3,7 @@ import First from "../First"
 import {
   Enum,
   Eq,
+  Effect,
   Filterable,
   Functor,
   FunctorError,
@@ -246,6 +247,39 @@ describe("typeclasses", () => {
       });
     });
   });
+
+  describe("Effect", () => {
+    const T = Union({
+      name: "T",
+      cases: {
+        Trivial: x => x,
+        Id: x => x
+      },
+      extensions: [
+        Functor({ trivials: ["Trivial"], identities: ["Id"]}),
+        Effect({ trivials: ["Trivial"], identities: ["Id"]})
+      ],
+      constructors: {}
+    })
+    describe("matchEffect",() => {
+      it("should call proper effect without changing structure", () => {
+        const tSpy = Spy();
+        const idSpy = Spy();
+        const pattern = {
+          Trivial: tSpy,
+          Id: idSpy
+        }
+
+        T.Trivial(42).matchEffect(pattern);
+        T.Id(43).matchEffect(pattern);
+
+        expect(tSpy.callCount).toBe(1)
+        expect(tSpy.calledWith(42)).toBeTruthy()
+        expect(idSpy.callCount).toBe(1)
+        expect(idSpy.calledWith(43)).toBeTruthy()
+      })
+    })
+  })
 
   describe("Thenable", () => {
     const Trivial = Union({

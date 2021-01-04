@@ -162,6 +162,8 @@ This typeclass defines a way to look into a structure without altering it. Usual
 | ------ | ----------- |
 | effect :: Effect f => f a ~> (a -> ()) -> f a | runs the given function without altering the structure if trivial. Does nothing if identity |
 | peak   :: Effect f => f a ~> (a -> ()) -> f a | alias of effect |
+| matchEffect :: Cases c, Effect f => f a ~> c f a -> f a | matches against patterns and runs effect function |
+| when :: Cases c, Effect f => f a ~> c f a -> f a | alias of matchEffec |
 
 ## Enum
 
@@ -343,6 +345,23 @@ Swaps the context of the structure. Requires a left and right case. If called on
 | ------ | ----------- |
 | swap :: Swap s => s a ~> () -> s a | returns `left a` if the value is `right a` or `left a` if the value `right a` |
 
+## Thenable
+
+Defines a type that meets with the Thenable spec. This means it has a `then` method. It also provides a `toPromise` method that returns a promise that resolves on resolve cases and rejects on reject cases. Additionally, has a `catch` utility method.
+
+- Definitions:
+    - resolve: string[]
+    - reject : string[]
+- Overrides:
+    - then
+    - toPromise
+
+| method | description |
+| ------ | ----------- |
+| then :: Thenable t => t a ~> (a -> undefined) -> (a -> undefined) -> undefined | calls first argument if resolve case. calls second argument if reject case |
+| catch :: Thenable t => t a ~> (a -> undefined) -> undefined | calls argument if reject case |
+| toPromise :: Thenable t => t a ~> ( ) -> Promise a | returns a promise that resolves on resolve case and rejects on reject case |
+
 ## Box
 
 This is the base type of all structures. When creating a structure using the Union function, Box typeclass is implicitly implemented based on the tags of the union. It has no constructors and cannot be constructed directly. It has the following methods: 
@@ -417,6 +436,9 @@ Implements the following typeclasses:
     - trivials: Just
     - identities: None
     - overrides: show [ None ]
+- Thenable
+    - resolve: [ Just ]
+    - reject: [ None ]
 - (Eq a) => Eq Maybe a
     - trivials: Just
     - empties: None
@@ -584,7 +606,3 @@ Reader monad is used to supply a common value to a group of functions. It is laz
 | local :: Reader r => r a b ~> (a -> c) -> r c b | transforms the enviroment before passing it to the computaions using the given function. |
 
 It also provides `runReader` to run a reader and a `ask` constructor that returns `Reader.of(x => x)`
-
-## Sink
-
-The Sink monad is used to accumulate a monoid value over a group of functions.  

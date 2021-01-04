@@ -1,21 +1,22 @@
 # Jazzi: Juan's Algebraic Data Structures
 
 *Now with Do notation*
+*Now with thenables*
 
-Implementations of common structures using ramda for utilities. Available Structures: 
+Implementations of common structures using ramda for utilities. Available Structures and features: 
 
 - Either
 - IO
 - Maybe
 - Reader
 - Result
-- Sink
 - Useful Monoids: Sum, Mult, Merge
 - Moar Monoids: Max, Min, First, Last
 - A function to create Tagged Unions/Sum types: Union
 - A way to implement typeclasses and use prototype inheritance. More on this on API.md
 - Pre built typeclasses available to use. More on this on API.md 
 - A way to create C++ style Enums but with a haskell-ish feel: the EnumType function
+- All structures are thenable objects and have a toPromise method
 
 All structures share a common set of functions to be used. In terms of nomenclature, all constructor functions start with "from". All structures have a default constructor named "of" and "from" that are the most common use of the structure. They all have a "match" function that is case-insensitive to make matches. Due to the use of objects for matching, Order of cases does not alter the result. Matching has two reserved keys for default cases: "default" and "_"(underscore). "default" precedes over underscore and a matching type precedes over default cases. Matching is done with the name of the variant meaning you match using `Just` instead of `Maybe` and is not possible the other way around. Match will return evaluation of the case with the inner value or `undefined` if no case matches.
 
@@ -62,6 +63,22 @@ Maybe.do(function*(){
 ```
 
 Also all Monads have a `run` and an `unsafeRun` method. This methods make sense for the lazy monads that store computations (`IO`,`Reader`). For the other Monads, it will do nothing.
+
+All structures have a `then` function that complies with the thenable interface. This allows for ease of composition with JS Promises and to be used with async/await syntax. In general, all happy cases return inner value, all adverse cases throw inner value.
+
+```javascript
+const eitherLeftOrRight = Either.from(/*...*/);
+const example = async () => {
+    try {
+        const x = await eitherLeftOrRight
+        console.log(`It was Right ${x}`);
+    } catch(e){
+        console.log(`It was Left ${e}`)
+    }
+}
+```
+
+It also comes with a `toPromise` function that converts any structure to a promise, given that the implement the `Thenable` typeclass.
 
 ## Either
 
@@ -162,41 +179,6 @@ Reader.do(function*(){
 ```
 
 This is simple example but there are tons of uses for the Reader monad.
-
-## Sink
-
-The sink works as an accumulator of Monoids for combining them at a later point in time. The default constructors receive a base Monoid and will start accumulating Monoids through calls to the `tell` and `forward` method. `forward` will attempt to wrap the received value in a Monoid of the current type. If the default constructor receives something that it does not perceive to be a Monoid, it will throw an Error. To force a sink with any value, use `Sink.force` (use at your own risk).
-To run the combination simply call `run` or `get`. Difference between `run` and `get` is that `run` receives a function that expects the sink as an argument while `get` simply combines the current sink. `flush` clears the current combinations. The functions provided by a sink should only be called inside a `run` function and `run` will return a new sink with the accumulated Monoids.
-Unlike other structures, Sink has many utility constructors for the use cases.
-
-```javascript
-Sink.of(42) // Error: Invariant Violation
-
-Sink.of(Sum.of(2)).run(s => {
-    s.tell(Sum.of(20))
-    s.forward(20)
-}).get() // returns Sum 42
-
-Sink.fromType(Mult).run(s => {
-    s.tell(Mult.of(21))
-    s.forward(2)
-}).get() // returns Mult 42
-
-Sink.sumSink().run(x => {
-    x.forward(30)
-    x.forward(12)
-})
-.flush() // clean 
-.get() // returns Zero
-
-Sink.sumSink()    // Uses Sum Monoid
-Sink.multSink()   // Uses Mult Monoid
-Sink.arraySink()  // Uses JS Array as Monoid
-Sink.objectSink() // Uses Merge Monoid
-
-const fn = w => w.forward(21)
-Sink.runSeq([fn,fn], Sink.sumSink()).get() // returns Sum 42
-```
 
 ## Sum, Mult and Merge Monoids
 
