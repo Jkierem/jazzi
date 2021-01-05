@@ -1,5 +1,5 @@
-import { identity, propOr } from "ramda"
-import { currySetTypeclass, defineOverrides, forEachValue } from "../_internals"
+import { identity, propOr } from "https://deno.land/x/ramda@v0.27.2/mod.ts"
+import { currySetTypeclass, defineOverrides, forEachValue } from "../_internals/index.js";
 
 const mark = currySetTypeclass("Thenable")
 

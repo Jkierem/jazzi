@@ -1,5 +1,3 @@
-import { construct } from "ramda";
-
 export { default as Applicative } from "./applicative";
 export { default as Eq } from "./eq";
 export { default as Functor } from "./functor";

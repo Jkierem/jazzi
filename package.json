@@ -17,7 +17,9 @@
         "types"
     ],
     "scripts": {
-        "build": "rollup -c",
+        "build": "yarn build:js && yarn build:deno",
+        "build:js": "rollup -c",
+        "build:deno": "deno run --unstable --allow-read --allow-write ./scripts/build.js ./scripts/symbols.txt ./src ./deno",
         "build:watch": "rollup -c --watch",
         "test": "rm -rf ./coverage && jest --coverage --verbose",
         "test:silent": "rm -rf ./coverage && jest --silent",
