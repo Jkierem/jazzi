@@ -1,7 +1,10 @@
 # Jazzi: Juan's Algebraic Data Structures
 
 *Now with Do notation*
+
 *Now with thenables*
+
+*Now available for deno too*
 
 Implementations of common structures using ramda for utilities. Available Structures and features: 
 
@@ -17,6 +20,38 @@ Implementations of common structures using ramda for utilities. Available Struct
 - Pre built typeclasses available to use. More on this on API.md 
 - A way to create C++ style Enums but with a haskell-ish feel: the EnumType function
 - All structures are thenable objects and have a toPromise method
+
+# Installing
+
+From npm registry
+
+```shell
+npm install jazzi
+// or
+yarn add jazzi
+```
+
+From denoland
+
+```javascript
+import * as jazzi from 'https://deno.land/x/jazzi/index.js'
+```
+
+# Usage
+
+This README.md is a summary of all that is available in jazzi. For more details go to API.md
+
+All functionalities are exported as named exports from the jazzi module
+
+```javascript
+import { Maybe, Either, IO, Reader, foldMap, match } from 'jazzi';
+// or if you use deno
+import { Maybe, Either, IO, Reader, foldMap, match } from 'https://deno.land/x/jazzi/index.js'; 
+```
+
+# Summary
+
+**From this point onwards, all imports are omitted**
 
 All structures share a common set of functions to be used. In terms of nomenclature, all constructor functions start with "from". All structures have a default constructor named "of" and "from" that are the most common use of the structure. They all have a "match" function that is case-insensitive to make matches. Due to the use of objects for matching, Order of cases does not alter the result. Matching has two reserved keys for default cases: "default" and "_"(underscore). "default" precedes over underscore and a matching type precedes over default cases. Matching is done with the name of the variant meaning you match using `Just` instead of `Maybe` and is not possible the other way around. Match will return evaluation of the case with the inner value or `undefined` if no case matches.
 
@@ -55,12 +90,24 @@ just21.flatMap(a => just21.flatMap(b => Maybe.of(a + b)))
 
 // Can be written as
 
+Maybe.do(function*(pure){
+    const a = yield just21
+    const b = yield just21
+    return pure(a + b)
+})
+
+// Which is the same as
+
 Maybe.do(function*(){
     const a = yield just21
     const b = yield just21
-    return Maybe.of(a + b)
+    return Maybe.pure(a + b)
 })
 ```
+
+**Keep in mind**: Do expects that the return value of the generator to be of the same type as the caller of do, so it is advised to use the provided `pure` on return.
+
+**This is sugar for chain**: It will call chain on the `yield`'ed values. Although, due to the nature of JS you *can* chain different monads, I would advise against it.
 
 Also all Monads have a `run` and an `unsafeRun` method. This methods make sense for the lazy monads that store computations (`IO`,`Reader`). For the other Monads, it will do nothing.
 
@@ -78,7 +125,7 @@ const example = async () => {
 }
 ```
 
-It also comes with a `toPromise` function that converts any structure to a promise, given that the implement the `Thenable` typeclass.
+It also comes with a `toPromise` function that converts any structure to a promise, given that they implement the `Thenable` typeclass.
 
 ## Either
 
@@ -224,3 +271,122 @@ foldMap(First,values)   // First 1
 foldMap(Last ,values)   // Last 5
 
 ```
+
+## Creating Tagged Unions/Sum types and Typeclasses
+
+Jazzi provides a way to do this through the `Union` function. Typeclasses are used mostly as a means to recycle code. Types created with Union cannot be extended (working on it). Some typeclasses are avaialable out of the box but they are simply higher order functions that receive definitions to alter the prototypes of the case constructors. This is the definition of the Maybe Functor:
+
+```javascript
+const Maybe = Union({
+    name: "Maybe",
+    cases: {
+        Just: x => x,
+        None: () => {}
+    },
+    constructors: {
+        fromFalsy(x){
+            return x ? this.Just(x) : this.None()
+        }
+    },
+    extensions: [
+        Functor({
+            trivials: ["Just"],
+            identities: ["None"]
+        })
+    ]
+})
+```
+
+This is an example of some typeclass `Loggable` that defines an operation `logValue`:
+
+```javascript
+const Loggable = (defs) => (cases,global) => {
+    const { visible } = defs
+    cases[visible].prototype.logValue = function(){
+        console.log(this.get())
+        return this
+    }
+    cases[invisible].prototype.logValue = function(){
+        return this
+    }
+}
+
+const Boxed = Union({
+    name: "Boxed",
+    cases: {
+        Box: x => x,
+        NotBox: x => x
+    },
+    extensions: [
+        Loggable({ visible: "Box", invisible: "NotBox" })
+    ]
+})
+
+Boxed.Box(42).logValue() // logs 42
+Boxed.NotBox(42).logValue() // does nothing
+```
+
+## Enumerations
+
+If enums want to be used, there is a shorthand for it. Instead of creating an Union an extending the Enum typeclass, the EnumType function does that and adds some extra functionality:
+
+```javascript
+const Nat = EnumType("Natural",["One","Two","Three"]);
+```
+
+EnumTypes are nullary and thus don't provide any constructors. Instead, the cases are properties of the type and are treated as singletons.
+
+```javascript
+const { One, Two, Three } = Nat;
+
+One.compare(Two) // returns Ordering.LT
+```
+
+These are usefull when you need types that don't represent a value other than their type. For validation works well. A real example would be something along these lines:
+
+```javascript
+const ValidationError = EnumType("ValidationError",["TooLong","TooShort","Taken"])
+
+// This will return Left of ValidationError or Right of name
+const validateName = (name) => {
+    return Either.do(function*(pure){
+        yield Either.of(ValidationError.TooLong , name.length > 20)
+        yield Either.of(ValidationError.TooShort, name.length < 7 )
+        return pure(name)
+    })
+}
+
+const verifyAvailable = async (/*....*/) => {
+    // Asume this does async stuff
+}
+
+const doSomethingAsync = async (name) => {
+    try {
+        await validateName(name)
+        await Either.of(ValidationError.Taken   , await verifyAvailable(name) )
+    } catch(e) {
+        e.match({
+            TooShort: () => console.log("Must be longer"),
+            TooLong : () => console.log("Must be shorter"),
+            Taken   : () => console.log("Must be unique")
+        })
+    }
+}
+```
+
+More on this in API.md
+
+## NewTypes
+
+NewTypes are unary Unions with a single variant with the name of the type (which is the first argument of the function). They come with all the utilities of a Union and two extra constructors: of and from. They are aliases of the case constructor. They can be extended like any other union.
+
+```javascript
+// Simple functor
+const Boxed = NewType("Boxed",[
+    Functor({ trivials: ["Boxed"] })
+])
+
+Boxed.of(42).fmap(x => x + 1) // Boxed 43
+```
+
+More on this on API.md

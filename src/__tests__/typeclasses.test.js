@@ -122,6 +122,25 @@ describe("typeclasses", () => {
       });
       expect(l100.unsafeRun()).toBe(100);
     });
+    it("do notation -> should receive pure of type of eager structs", () => {
+      const e84 = Eager.do(function* (pure) {
+        const a = yield meager;
+        const b = yield meager;
+        return pure(a + b);
+      });
+      expect(e84).toTypeMatch("Eager");
+      expect(e84.get()).toBe(84);
+    })
+    it("do notation -> should receive pure of type of lazy structs", () => {
+      const mlazy = Lazy.Lazy(50);
+      const l100 = Lazy.do(function* (pure) {
+        const a = yield mlazy;
+        const b = yield mlazy;
+        return pure(a + b);
+      });
+      expect(l100).toTypeMatch("Lazy");
+      expect(l100.unsafeRun()).toBe(100);
+    })
   });
 
   describe("Functor", () => {

@@ -1,3 +1,5 @@
+import { any } from "ramda";
+
 declare module "jazzi" {
     
     type Placeholder = import("ramda").Placeholder;
@@ -1010,10 +1012,6 @@ declare module "jazzi" {
      * @param {any} v Union type value
      */
     export const getTag: (v: any) => string;
-
-    type Constructors<T,K> = {
-        [P in T]: (this: K) => any;
-    }
     /**
      * Creates a sum type than can be extended using typeclasses provided by this library. For more info lookup API in the docs.
      * @param name Name used for the type
@@ -1037,6 +1035,13 @@ declare module "jazzi" {
      * @param cases Cases that inhabit the Enum. 
      */
     export function EnumType<K extends string>(name: string, cases: readonly K[]): EnumTypeRep<K>;
+    type NewTypeType<K extends string> = Record<K | "from" | "of", ((value: any) => any)>
+    /**
+     * Constructs a NewType union
+     * @param name name of the NewType
+     * @param extensions typeclasses to implement
+     */
+    export function NewType(name: string, extensions?: ((cases: any, globals: any) => void)[]): NewTypeType<typeof name>
 
     export function Applicative(defs: { trivials: string[], identities: string[], overrides?: { apply?: any } }) : (cases: any, globals: any) => void;
     export function Bifunctor(defs: { first: string, second: string, overrides?: { bimap?: any } }) : (cases: any, globals: any) => void;

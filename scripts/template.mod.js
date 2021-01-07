@@ -21,7 +21,7 @@ const loadSymbols = (symbolPath) => {
       .reduce((acc,[key,value]) => ({ ...acc , [key] : value }),{})
 }
 
-const fixImports = (data,file) => {
+const fixImports = (data) => {
   return data.replaceAll(/from ["'].*["'];?\s?/gm,(str) => {
     const path = last(str.trim().replaceAll(/["';]/g,"").split("from "));
     const isFile = Boolean(path.match(/(\/[a-z][^\/]*)$/))
@@ -31,10 +31,10 @@ const fixImports = (data,file) => {
       return str
     } else {
       if( isFolder ){
-        return `from "${path}/index.js";\n`
+        return `from "${path}/index.js";`
       }
       if( isFile ){
-        return `from "${path}.js";\n`
+        return `from "${path}.js";`
       }
     }
   })

@@ -35,8 +35,8 @@ const cases = {
 // This is the array of typeclasses that the union implements
 // Each typeclass receives the definitions and returns a function that
 // alters the prototype of the case constructor functions
-// A typeclass has the following signature (in typescript notation):
-// typeclass: (definitions) => (cases,globals) => void
+// A typeclass has the following signature:
+// typeclass: (definitions) -> (cases,globals) -> void
 // where 
 //  definitions are the required definitions for the implementation
 //  cases is an object with constructor functions for each case
@@ -75,6 +75,7 @@ const constructors = {
     of(x){ x ? this.Just(x) : this.None() }
 }
 
+// This is the partial definition of Maybe
 // < 1.2.x
 const Maybe = Union("Maybe",cases,extensions,config).constructors(constructors)
 // Since 1.3.x
@@ -89,6 +90,22 @@ const Maybe = Union({
 Maybe.of(41).map(x => x + 1)   // Just 42
 Maybe.of(null).map(x => x + 1) // None
 Maybe.Just(42).show()          // [Maybe => Just 42]
+```
+
+A more lightweight way of constructing types is NewType. This is a Union with a single case constructor. It implements two extra constructors: of and from. They are aliases of the case constructor. It comes with all the functionalities of Union but with a less cluttered interface for when that is wanted.
+
+```javascript
+// Simple functor effect monad
+const Boxed = NewType("Boxed",[
+    Functor({ trivials: ["Boxed"] }),
+    Effect({ trivials: ["Boxed"] }),
+    Monad({ pure: "Boxed", trivials: ["Boxed" ]})
+])
+
+Boxed.of(42)
+.fmap(x => x + 1)          // returns Box 43
+.effect(console.log)       // logs 43 and returns Box 43
+.chain(x => Box.of(x + 4)) // returns Box 47
 ```
 
 The following typeclasses are available:
@@ -163,7 +180,7 @@ This typeclass defines a way to look into a structure without altering it. Usual
 | effect :: Effect f => f a ~> (a -> ()) -> f a | runs the given function without altering the structure if trivial. Does nothing if identity |
 | peak   :: Effect f => f a ~> (a -> ()) -> f a | alias of effect |
 | matchEffect :: Cases c, Effect f => f a ~> c f a -> f a | matches against patterns and runs effect function |
-| when :: Cases c, Effect f => f a ~> c f a -> f a | alias of matchEffec |
+| when        :: Cases c, Effect f => f a ~> c f a -> f a | alias of matchEffec |
 
 ## Enum
 
@@ -277,7 +294,8 @@ Also defines a method on the type
 
 | method | description |
 | ------ | ----------- |
-| pure :: a -> m a | constructs a monadic value |
+| pure :: Monad m => a -> m a | constructs a monadic value |
+| do :: Monad m => m a ~> ((a -> m a) -> m a)* -> m a | do notation. Receives a generator function and returns the result of said generator function. The generator will receive the `pure` function of the type do is called on. `yield`'ed monadic values return the inner value. This is sugar for chaining |
 
 ## Semigroup
 
@@ -525,8 +543,7 @@ Result marks the possibility of an Error. The default constructor returns Err wh
 
 | method | description |
 | ------ | ----------- |
-| fold :: Result f => f a b ~> (a -> c) -> (b -> d) -> b \| d | returns the evaluation of the first function with the inner value as ar |
-gument if `Err`. Returns the evaluation of the second function with the inner value if `Right` |
+| fold :: Result f => f a b ~> (a -> c) -> (b -> d) -> b \| d | returns the evaluation of the first function with the inner value as argument if `Err`. Returns the evaluation of the second function with the inner value if `Right` |
 | filter :: Result f => f a b ~> (a -> Boolean) -> f a b | **override of filter**: if it is `Ok a` and the predicate returns false, returns `Err a`. Otherwise returns the structure unchanged |
 
 Implements the following typeclasses: 

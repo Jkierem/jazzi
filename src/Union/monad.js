@@ -56,11 +56,11 @@ const Monad = (defs) => setTypeclass("Monad",(cases,globals) => {
         }
         if( lazy ){
             return new cases[pure]((...args) => {
-                gen = fn()
+                gen = fn(this.pure)
                 return runDo().unsafeRun(...args)
             })
         } else {
-            gen = fn();
+            gen = fn(this.pure);
             return runDo()
         }
     }
