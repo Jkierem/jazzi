@@ -172,7 +172,9 @@ Has three more constructors:
 IO stores a computation and will not run it unless `unsafeRun` is called on it while allowing us to work with the result of said computation and sequencing with other IOs. IO is a lazy monad so mapping and chaining will not execute the computation. The default constructor expects a function but if a value is received, it will wrap it in a nullary function.
 
 ```javascript
-const ioLog = str => IO.of(() => console.log(str));
+const ioLog = IO.unary(console.log);
+// Shorthand for:
+// const ioLog = str => IO.of(() => console.log(str));
 
 const log42 = IO.of(20)
 .map(x => x + 1)

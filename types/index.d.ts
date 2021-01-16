@@ -768,6 +768,9 @@ declare module "jazzi" {
         from<A>(fn: Extractable<A>): IO<A>;
         pure<A>(fn: Extractable<A>): IO<A>;
         do<A>(fn: any): IO<A>;
+        forward<A>(fn: (...args: any[]) => A): (...args: any[]) => IO<A>;
+        through<A>(fn: (...args: any[]) => A): (...args: any[]) => IO<A>;
+        unary<A,B>(fn: (a: A) => B): (a: A) => IO<B>;
     }
 
     export const IO: IORep;

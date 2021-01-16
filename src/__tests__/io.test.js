@@ -56,7 +56,7 @@ describe("IO",() => {
     })
 
     describe("constructors",() => {
-        it("should return evaluation of the given function, forwarding arguments", () => {
+        it("should return evaluation of the given function", () => {
             const times2 = Spy(x => x * 2)
             const io42 = IO.of(21).map(times2)
             expect(times2.called).toBeFalsy();
@@ -66,6 +66,23 @@ describe("IO",() => {
 
         it("should wrap a value in a function", () => {
             expect(IO.of(42).unsafeRun()).toBe(42)
+        })
+
+        it('should return a function that returns IO, forwarding arguments to said function',() => {
+            const ioSpy = Spy()
+            const ioConst = IO.forward(ioSpy);
+            expect(ioConst(41,42)).toTypeMatch("IO");
+            expect(ioSpy.called).toBeFalsy();
+            ioConst(41,42).run()
+            expect(ioSpy.calledWith(41,42)).toBeTruthy()
+        })
+        it('should return an unary function that returns IO, forwarding arguments to said function', () => {
+            const ioSpy = Spy()
+            const ioConst = IO.unary(ioSpy);
+            expect(ioConst(42)).toTypeMatch("IO");
+            expect(ioSpy.called).toBeFalsy();
+            ioConst(42).run()
+            expect(ioSpy.calledWith(42)).toBeTruthy()
         })
     })
 })

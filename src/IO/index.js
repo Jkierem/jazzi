@@ -58,6 +58,10 @@ function defaultIO(x) {
   return this.IO(x);
 }
 
+function passThrough(fn) {
+  return (...args) => this.IO(() => fn(...args))
+}
+
 const IO = Union(
   "IO",
   {
@@ -74,6 +78,9 @@ const IO = Union(
 ).constructors({
   of: defaultIO,
   from: defaultIO,
+  forward: passThrough,
+  through: passThrough,
+  unary(fn){ return (x) => this.IO(() => fn(x))}
 });
 
 export default IO;
