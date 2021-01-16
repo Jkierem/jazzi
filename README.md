@@ -303,7 +303,7 @@ This is an example of some typeclass `Loggable` that defines an operation `logVa
 
 ```javascript
 const Loggable = (defs) => (cases,global) => {
-    const { visible } = defs
+    const { visible, invisible } = defs
     cases[visible].prototype.logValue = function(){
         console.log(this.get())
         return this
@@ -330,7 +330,7 @@ Boxed.NotBox(42).logValue() // does nothing
 
 ## Enumerations
 
-If enums want to be used, there is a shorthand for it. Instead of creating an Union an extending the Enum typeclass, the EnumType function does that and adds some extra functionality:
+If enums want to be used, there is a shorthand for it. Instead of creating an Union and implementing the Enum typeclass, the EnumType function does that and adds some extra functionality:
 
 ```javascript
 const Nat = EnumType("Natural",["One","Two","Three"]);
@@ -359,7 +359,7 @@ const validateName = (name) => {
 }
 
 const verifyAvailable = async (/*....*/) => {
-    // Asume this does async stuff
+    // Assume this does async stuff
 }
 
 const doSomethingAsync = async (name) => {
