@@ -19,6 +19,13 @@ export const extractWith = (data) => (value) => ifElse(
 
 const mapKeys = curryN(2,(fn,obj) => fromPairs(toPairs(obj).map(([key, val]) => [ fn(key), val ])))
 
+const getFirstCaseSensitive = (ps,obj) => {
+    const mappedObj = mapKeys(toLower,obj)
+    return compose(
+        prop(__,mappedObj),
+        o => find(compose( complement(isNil), prop(__,o)))(ps),
+    )(mappedObj)
+}
 const getFirstCaseInsensitive = (ps,obj) => {
     const mappedObj = mapKeys(toLower,obj)
     const props = ps.map(toLower)
@@ -29,6 +36,7 @@ const getFirstCaseInsensitive = (ps,obj) => {
 }
 
 export const getCase = (name,obj) => getFirstCaseInsensitive([name,"default","_"],obj)
+export const getCaseSensitive = (name,obj) => getFirstCaseSensitive([name,"default","_"],obj)
 
 export const safeMatch = (val,cases) => val?.match?.(cases) || cases?.default?.(val) || cases?._?.(val)
 

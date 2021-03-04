@@ -1,4 +1,4 @@
-import { isNil } from "ramda";
+import { isNil } from "../_internals";
 import {
   Applicative,
   Foldable,

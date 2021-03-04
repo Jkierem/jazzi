@@ -1,5 +1,5 @@
 import { curryN, includes } from "https://deno.land/x/ramda@v0.27.2/mod.ts";
-import { getType, getTypeclass, getTypeclasses, getVariant, safeMatch } from "../_internals/index.js";
+import { extractWith, getCaseSensitive, getType, getTypeclass, getTypeclasses, getVariant, safeMatch } from "../_internals/index.js";
 
 /**
  * Type match a value
@@ -30,3 +30,15 @@ export const succ = (en) => en.succ()
 export const pred = (en) => en.pred()
 
 export const getTag = v => getVariant(v)
+
+export const stringSwitch = (str,_patt) => {
+    return extractWith([])(getCaseSensitive(str,_patt))
+}
+
+export const stringMatcher = (str) => {
+    return {
+        match: (patterns) => {
+            return extractWith([])(getCaseSensitive(str,patterns));
+        }
+    }
+}
