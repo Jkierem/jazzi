@@ -134,6 +134,12 @@ declare module "jazzi" {
          */
         apply<B>(ap: Applicative<(a: A) => B>): Applicative<B>;
         /**
+         * Applies the given applicative (`ap`) with inner value
+         * @param ap Applicative to be applied
+         * @returns applied Applicative
+         */
+        applyRight<B>(ap: Applicative<(a: A) => B>): Applicative<B>;
+        /**
          * Applies the value inside the given applicative (`ap`) to the inner value of `this`
          * @param ap Applicative to use for application
          * @returns applied Applicative
@@ -360,6 +366,7 @@ declare module "jazzi" {
         fmap<B>(fn: (a: A) => B ): Maybe<B>;
 
         apply<B>(a: Maybe<(a: A) => B>): Maybe<B>;
+        applyRight<B>(a: Maybe<(a: A) => B>): Maybe<B>;
         applyLeft<B,C>(this: Maybe<(b: B) => C>,ap: Maybe<B>): Maybe<C>;
 
         chain   <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
@@ -482,6 +489,8 @@ declare module "jazzi" {
         filter(pred: (a: A) => boolean): Result<A,E>;
 
         apply <B>(ap: Result<(a: A) => B,E>): Result<B,E>;
+        applyRight<B>(a: Result<(a: A) => B,E>): Result<B,E>;
+        applyLeft<B,C>(this: Result<(b: B) => C,E>,ap: Result<B,E>): Result<C,E>;
 
         effect (fn: (a: A) => void): Result<A,E>;
         peak   (fn: (a: A) => void): Result<A,E>;
@@ -718,6 +727,7 @@ declare module "jazzi" {
         map <B>(fn: (a: A) => B): Reader<E,B>;
 
         apply<B>(m: Reader<E,(a:A) => B>): Reader<E,B>;
+        applyRight<B>(m: Reader<E,(a:A) => B>): Reader<E,B>;
         applyLeft<B,C>(this: Reader<E,(b: B) => C>,ap: Reader<E,B>): Reader<E,C>;
         
         chain   <B>(fn: (a: A) => Reader<E,B>): Reader<E,B>;
@@ -755,6 +765,7 @@ declare module "jazzi" {
         flatMap<B>(fn : (x: A) => IO<B>): IO<B>;
 
         apply<B>(ap: IO<(a: A) => B>): IO<B>;
+        applyRight<B>(ap: IO<(a: A) => B>): IO<B>;
         applyLeft<B,C>(this: IO<(b: B) => C>,ap: IO<B>): IO<C>;
 
         map <B>(fn: (a:A) => B): IO<B>;
@@ -803,6 +814,7 @@ declare module "jazzi" {
         flatMap<B>(fn : (x: R) => Either<L,B>): Either<L,B>;
 
         apply<B>(ap: Either<any,(a: R) => B>): Either<L,B>;
+        applyRight<B>(ap: Either<any,(a: R) => B>): Either<L,B>;
         applyLeft<B,C>(this: Either<L,(b: B) => C>,ap: Either<L,B>): Either<L,C>;
 
         map <B>(fn: (a:R) => B): Either<L,B>;
@@ -939,10 +951,10 @@ declare module "jazzi" {
         equals(e: EnumTypeValue): boolean;
         succ(): EnumTypeValue | undefined;
         pred(): EnumTypeValue | undefined;
-        compare: (o: EnumTypeValue) => Ordering;
-        lessThanOrEqual: (o: EnumTypeValue) => boolean;
-        greaterThan: (o: EnumTypeValue) => boolean;
-        greaterThanOrEqual: (o: EnumTypeValue) => boolean;
+        compare: (o: Ord) => Ordering;
+        lessThanOrEqual: (o: Ord) => boolean;
+        greaterThan: (o: Ord) => boolean;
+        greaterThanOrEqual: (o: Ord) => boolean;
         show: () => string;
         toString: () => string;
     }
@@ -974,12 +986,12 @@ declare module "jazzi" {
      * @param {any} value
      * @param {any} typeclass 
      */
-    export const hasInstance: (tc: any | string,val: any) => boolean;
+    export const hasInstance: (tc: any,val: any) => boolean;
     /**
      * Calls foldMap of the given type
      * @param t Monoid type
      * @param values values to be foldMapped
-     */
+     */              
     export const foldMap: <M extends MonoidRep>(t: M, values: any[]) => any;
     /**
      * Calls show on the given value
@@ -1015,6 +1027,73 @@ declare module "jazzi" {
      * @param {any} v Union type value
      */
     export const getTag: (v: any) => string;
+    /**
+     * Receives a string and returns a matcher object. Uses the match function of Unions where the provided string is the type. Unlike match, it is case sensitive
+     */
+    export const stringMatcher: (str: any) => { match: (patterns: { [P: string]: () => any }) => any};
+    /**
+     * Receives a string and an object, calling the property inside the object
+     */
+    export const stringSwitch: (str: any, patterns?: any) => any;
+    /**
+     * Calls map on `obj` using `fn` as argument. Auto-curryed
+     * @param fn
+     * @param obj
+     */
+    export function map<A,B>(fn: (a: A) => B, obj: { map: (fn: (a: A) => B) => any } ): any;
+    export function map<A,B>(fn: (a: A) => B): (obj: { map: (fn: (a: A) => B) => any } ) => any;
+    /**
+     * Functor version of map. Calls fmap on `functor` using `fn` as argument. Auto-curryed.
+     * @param fn
+     * @param functor
+     */
+    export function fmap<A,B>(fn: (a: A) => B, functor: Functor<A> ): Functor<B>;
+    export function fmap<A,B>(fn: (a: A) => B): (functor: Functor<A> ) => Functor<B>;
+    /**
+     * Calls `apply` on `right` with `left` as argument. Auto-curryed
+     * @param left 
+     * @param right 
+     * @alias applyRight
+     */
+    export function ap<A,B>(left: Applicative<A>, right: Applicative<(a: A) => B>): Applicative<B>;
+    export function ap<A,B>(left: Applicative<A>): (right: Applicative<(a: A) => B>) => Applicative<B>;
+    /**
+     * Calls `apply` on `right` with `left` as argument. Auto-curryed
+     * @param left 
+     * @param right 
+     * @alias ap
+     */
+    export function applyRight<A,B>(left: Applicative<A>, right: Applicative<(a: A) => B>): Applicative<B>;
+    export function applyRight<A,B>(left: Applicative<A>): (right: Applicative<(a: A) => B>) => Applicative<B>;
+    /**
+     * Calls `apply` on `left` with `right` as argument. Auto-curryed
+     * @param left 
+     * @param right 
+     * @alias ap
+     */
+    export function applyLeft<A,B>(left: Applicative<(a: A) => B>, right: Applicative<A>): Applicative<B>;
+    export function applyLeft<A,B>(left: Applicative<(a: A) => B>): (right: Applicative<A>) => Applicative<B>;
+    /**
+     * Calls `bind` on `monad`. Performs monadic composition using `fn`. Auto-curryed
+     * @param fn
+     * @param monad
+     */
+    export function bind<A,B>(fn: (a: A) => Monad<B>, monad: Monad<A>): Monad<B>;
+    export function bind<A,B>(fn: (a: A) => Monad<B>): (monad: Monad<A>) => Monad<B>;
+    /**
+     * Calls `chain` on `monad`. Performs monadic composition using `fn`. Auto-curryed
+     * @param fn
+     * @param monad
+     */
+    export function chain<A,B>(fn: (a: A) => Monad<B>, monad: Monad<A>): Monad<B>;
+    export function chain<A,B>(fn: (a: A) => Monad<B>): (monad: Monad<A>) => Monad<B>;
+    /**
+     * Calls `flatMap` on `monad`. Performs monadic composition using `fn`. Auto-curryed
+     * @param fn
+     * @param monad
+     */
+    export function flatMap<A,B>(fn: (a: A) => Monad<B>, monad: Monad<A>): Monad<B>;
+    export function flatMap<A,B>(fn: (a: A) => Monad<B>): (monad: Monad<A>) => Monad<B>;
     /**
      * Creates a sum type than can be extended using typeclasses provided by this library. For more info lookup API in the docs.
      * @param name Name used for the type

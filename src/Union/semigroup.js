@@ -25,12 +25,14 @@ const Semigroup = (defs) => setTypeclass("Semigroup",(cases) => {
             })
         }
         cases[trivial].prototype.concat = concat
+        cases[trivial].prototype.sconcat = concat
     })
     identities.forEach(empt => {
         function concat(m){
             return m
         }
         cases[empt].prototype.concat = concat
+        cases[empt].prototype.sconcat = concat
     })
     forEachValue((override,key) => {
         cases[key].prototype.concat = override

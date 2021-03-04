@@ -1,4 +1,3 @@
-import { isNil } from "ramda";
 import {
   Eq,
   Functor,
@@ -8,7 +7,7 @@ import {
   Thenable,
 } from "../Union";
 import Union from '../Union/union'
-import { monoidThen, monoidToPromise } from "../_internals";
+import { isNil, monoidThen, monoidToPromise } from "../_internals";
 
 const Defs = {
   trivials: ["Min"],

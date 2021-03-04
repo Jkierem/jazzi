@@ -19,12 +19,14 @@ const Applicative = (defs) => mark((cases) => {
     const identities = propOr([],"identities",defs);
     const overrides = propOr({},"overrides",defs);
     trivials.forEach(trivial => {
-        cases[trivial].prototype.apply = function(other){
+        function ap(other){
             return other?.match?.({
                 [trivial]: (fn) => this.map(fn),
                 _: () => other
             })
         }
+        cases[trivial].prototype.apply = ap
+        cases[trivial].prototype.applyRight = ap
         cases[trivial].prototype.applyLeft = function(other){
             return other.apply(this);
         }
@@ -32,9 +34,10 @@ const Applicative = (defs) => mark((cases) => {
     identities.forEach(empt => {
         function id(){ return this }
         cases[empt].prototype.apply = id
+        cases[empt].prototype.applyRight = id
         cases[empt].prototype.applyLeft = id
     })
-    defineOverrides("apply",[],overrides,cases)
+    defineOverrides("apply",["applyRight"],overrides,cases)
 })
 
 mark(Applicative);
