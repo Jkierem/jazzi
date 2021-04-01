@@ -1,3 +1,4 @@
+// @deno-types="./index.d.ts"
 export { default as Either } from "./Either/index.js";
 export { default as First } from "./First/index.js";
 export { default as IO } from "./IO/index.js";

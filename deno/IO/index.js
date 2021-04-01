@@ -8,7 +8,7 @@ import {
   Thenable,
 } from "../Union/index.js";
 import Union from "../Union/union.js";
-import { compose } from "https://deno.land/x/ramda@v0.27.2/mod.ts";
+import compose from "https://deno.land/x/ramda@v0.27.2/source/compose.js";
 
 const IODefs = {
   trivials: ["IO"],

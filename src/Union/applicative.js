@@ -1,4 +1,4 @@
-import { propOr } from "ramda";
+import propOr from "ramda/src/propOr";
 import { currySetTypeclass as setTypeclass, defineOverrides } from "../_internals"
 
 const mark = setTypeclass("Applicative")

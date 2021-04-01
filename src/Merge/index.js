@@ -1,4 +1,5 @@
-import { equals, mergeAll } from "ramda";
+import equals from "ramda/src/equals";
+import mergeAll from "ramda/src/mergeAll";
 import {
   Eq,
   Functor,

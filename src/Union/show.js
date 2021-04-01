@@ -1,4 +1,4 @@
-import { propOr } from "ramda";
+import propOr from "ramda/src/propOr";
 import { getVariant, getInnerValue, setTypeclass, getTypeName } from "../_internals"
 
 /**

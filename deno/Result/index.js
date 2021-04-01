@@ -1,4 +1,4 @@
-import { equals as rEquals } from "https://deno.land/x/ramda@v0.27.2/mod.ts";
+import { default as rEquals } from "https://deno.land/x/ramda@v0.27.2/source/equals.js";
 import {
   Applicative,
   Bifunctor,

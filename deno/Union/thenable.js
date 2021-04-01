@@ -1,7 +1,6 @@
-import { identity, propOr } from "https://deno.land/x/ramda@v0.27.2/mod.ts"
-import { currySetTypeclass, defineOverrides, forEachValue } from "../_internals/index.js";
-
-const mark = currySetTypeclass("Thenable")
+import identity from "https://deno.land/x/ramda@v0.27.2/source/identity.js";
+import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
+import { setTypeclass, defineOverrides, forEachValue } from "../_internals/index.js";
 
 /**
  * 
@@ -49,4 +48,6 @@ const Thenable = (defs) => mark((cases) => {
 
 })
 
-export default mark(Thenable);
+setTypeclass("Thenable",Thenable)
+
+export default Thenable;

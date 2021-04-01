@@ -1,4 +1,5 @@
-import { equals as eq, propOr } from "ramda"
+import { default as eq } from "ramda/src/equals";
+import propOr from "ramda/src/propOr";
 import { forEachValue } from "../_internals"
 import { currySetTypeclass, getVariant } from "../_internals"
 

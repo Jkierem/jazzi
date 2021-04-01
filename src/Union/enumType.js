@@ -1,4 +1,4 @@
-import { assoc } from "ramda";
+import assoc from "ramda/src/assoc";
 import Union from "./union";
 import Show from "./show";
 import Enum from "./enum";

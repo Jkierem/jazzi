@@ -1,4 +1,5 @@
-import { fromPairs, toPairs } from 'https://deno.land/x/ramda@v0.27.2/mod.ts'
+import fromPairs from "https://deno.land/x/ramda@v0.27.2/source/fromPairs.js";
+import toPairs from "https://deno.land/x/ramda@v0.27.2/source/toPairs.js";
 import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass, setTypeName } from "../_internals/index.js";
 import Show from "./show.js";
 

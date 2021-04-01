@@ -1,8 +1,7 @@
 {
     "name": "jazzi",
     "version": "1.4.5",
-    "main": "./dist/cjs/jazzi.cjs.js",
-    "module": "./dist/esm/jazzi.esm.js",
+    "module": "./dist/jazzi.cjs.js",
     "license": "MIT",
     "types": "types/index.d.ts",
     "publishConfig": {
@@ -18,9 +17,9 @@
     ],
     "scripts": {
         "build": "yarn build:js && yarn build:deno",
-        "build:js": "rollup -c",
-        "build:deno": "deno run --unstable --allow-read --allow-write ./scripts/build.js ./scripts/symbols.txt ./src ./deno",
-        "build:watch": "rollup -c --watch",
+        "build:js": "webpack --mode production",
+        "build:deno": "deno run --unstable --allow-read --allow-write ./scripts/build.js",
+        "build:watch": "webpack --mode development --watch",
         "test": "rm -rf ./coverage && jest --coverage --verbose",
         "test:silent": "rm -rf ./coverage && jest --silent",
         "test:watch": "jest --verbose --watch",
@@ -33,16 +32,13 @@
         "@babel/cli": "^7.5.5",
         "@babel/core": "^7.5.5",
         "@babel/preset-env": "^7.5.5",
-        "@rollup/plugin-babel": "^5.0.2",
-        "@rollup/plugin-node-resolve": "^7.0.0",
         "babel-jest": "^24.9.0",
         "babel-loader": "^8.0.6",
         "babel-polyfill": "^6.26.0",
         "jest": "^24.9.0",
-        "rollup": "^1.30.0",
         "sinon": "^7.4.1",
-        "webpack": "^4.39.3",
-        "webpack-cli": "^3.3.7",
+        "webpack": "^5.24.3",
+        "webpack-cli": "^4.5.0",
         "webpack-dev-server": "^3.8.0"
     },
     "jest": {

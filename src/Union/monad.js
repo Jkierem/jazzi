@@ -1,5 +1,6 @@
-import { prop, propOr } from "ramda";
-import { defineOverrides, forEachValue } from "../_internals";
+import propOr from "ramda/src/propOr";
+import prop from "ramda/src/prop";
+import { defineOverrides } from "../_internals";
 import { setTypeclass } from "../_internals"
 
 /**
