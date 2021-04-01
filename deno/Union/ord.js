@@ -1,4 +1,5 @@
-import { assoc, propOr } from 'https://deno.land/x/ramda@v0.27.2/mod.ts'
+import assoc from "https://deno.land/x/ramda@v0.27.2/source/assoc.js";
+import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
 import { getVariant, forEachValue } from "../_internals/index.js";
 import Enum from "./enum.js";
 import Eq from "./eq.js";

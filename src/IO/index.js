@@ -8,7 +8,7 @@ import {
   Thenable,
 } from "../Union";
 import Union from '../Union/union'
-import { compose } from "ramda";
+import compose from "ramda/src/compose";
 
 const IODefs = {
   trivials: ["IO"],

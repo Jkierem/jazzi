@@ -1,7 +1,5 @@
-import { propOr } from "ramda";
-import { currySetTypeclass } from "../_internals"
-
-const mark = currySetTypeclass("Foldable")
+import propOr from "ramda/src/propOr";
+import { setTypeclass } from "../_internals"
 
 /**
  * Adds apply method to proto
@@ -19,4 +17,6 @@ const Foldable = (defs) => mark((cases) => {
     })
 })
 
-export default mark(Foldable)
+setTypeclass("Foldable",Foldable)
+
+export default Foldable

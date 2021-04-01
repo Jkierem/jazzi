@@ -1,4 +1,5 @@
-import { includes, propOr } from "https://deno.land/x/ramda@v0.27.2/mod.ts"
+import includes from "https://deno.land/x/ramda@v0.27.2/source/includes.js";
+import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
 import { defineOverrides, forEachValue, setTypeclass, splitBy } from "../_internals/index.js";
 import { hasInstance } from "../_tools/index.js";
 

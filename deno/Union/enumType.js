@@ -1,4 +1,4 @@
-import { assoc } from "https://deno.land/x/ramda@v0.27.2/mod.ts";
+import assoc from "https://deno.land/x/ramda@v0.27.2/source/assoc.js";
 import Union from "./union.js";
 import Show from "./show.js";
 import Enum from "./enum.js";

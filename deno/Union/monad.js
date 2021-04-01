@@ -1,5 +1,6 @@
-import { prop, propOr } from "https://deno.land/x/ramda@v0.27.2/mod.ts";
-import { defineOverrides, forEachValue } from "../_internals/index.js";
+import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
+import prop from "https://deno.land/x/ramda@v0.27.2/source/prop.js";
+import { defineOverrides } from "../_internals/index.js";
 import { setTypeclass } from "../_internals/index.js";
 
 /**

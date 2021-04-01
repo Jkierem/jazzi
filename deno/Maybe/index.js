@@ -1,4 +1,7 @@
-import { equals as rEquals, isNil, isEmpty, empty } from "https://deno.land/x/ramda@v0.27.2/mod.ts";
+import { default as rEquals } from "https://deno.land/x/ramda@v0.27.2/source/equals.js";
+import isEmpty from "https://deno.land/x/ramda@v0.27.2/source/isEmpty.js";
+import empty from "https://deno.land/x/ramda@v0.27.2/source/empty.js";
+import { isNil } from "../_internals/index.js";
 import { match as globalMatch } from "../_tools/index.js";
 import {
   Functor,

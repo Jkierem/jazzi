@@ -1,4 +1,5 @@
-import { fromPairs, toPairs } from 'ramda'
+import fromPairs from "ramda/src/fromPairs";
+import toPairs from "ramda/src/toPairs";
 import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass, setTypeName } from '../_internals'
 import Show from './show'
 

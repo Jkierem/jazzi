@@ -1,7 +1,5 @@
-import { propOr } from "https://deno.land/x/ramda@v0.27.2/mod.ts";
-import { currySetTypeclass } from "../_internals/index.js";
-
-const mark = currySetTypeclass("Foldable")
+import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
+import { setTypeclass } from "../_internals/index.js";
 
 /**
  * Adds apply method to proto
@@ -19,4 +17,6 @@ const Foldable = (defs) => mark((cases) => {
     })
 })
 
-export default mark(Foldable)
+setTypeclass("Foldable",Foldable)
+
+export default Foldable

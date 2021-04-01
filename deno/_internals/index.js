@@ -1,48 +1,37 @@
-import { 
-    ifElse, is, apply, identity, 
-    __, toPairs, toLower, curryN, 
-    compose, find, fromPairs, isNil, 
-    prop, complement, any, equals, map, isEmpty 
-} from 'https://deno.land/x/ramda@v0.27.2/mod.ts'
+import identity from "https://deno.land/x/ramda@v0.27.2/source/identity.js";
+import any from "https://deno.land/x/ramda@v0.27.2/source/any.js";
+import equals from "https://deno.land/x/ramda@v0.27.2/source/equals.js";
+import map from "https://deno.land/x/ramda@v0.27.2/source/map.js";
+import isEmpty from "https://deno.land/x/ramda@v0.27.2/source/isEmpty.js";
 
-/**
- * @description if the value given is a function, 
- * applies it with "data" as arguments and returns the result. 
- * Otherwise, it is equal to R.identity
- * @param {any} data arguments for apply
- */
-export const extractWith = (data) => (value) => ifElse(
-    is(Function), 
-    apply(__,data), 
-    identity
-)(value)
+const fromPairs = (pairs) => pairs.reduce((acc,[key,val]) => {
+    acc[key] = val;
+    return acc;
+} ,{})
 
-const mapKeys = curryN(2,(fn,obj) => fromPairs(toPairs(obj).map(([key, val]) => [ fn(key), val ])))
+const toPairs = (obj) => Object.keys(obj).map((key) => [ key, obj[key]]);
+
+const mapKeys = (fn,obj) => {
+    const run = (fn,obj) => fromPairs(toPairs(obj).map(([key, val]) => [ fn(key), val ]))
+    if(obj === undefined){
+        return (obj) => run(fn,obj)
+    }
+    return run(fn,obj)
+}
+
+const toLower = str => str.toLowerCase();
 
 const getFirstCaseSensitive = (ps,obj) => {
     const mappedObj = mapKeys(toLower,obj)
-    return compose(
-        prop(__,mappedObj),
-        o => find(compose( complement(isNil), prop(__,o)))(ps),
-    )(mappedObj)
+    const matched = ps.find(p => !isNil(mappedObj[p]))
+    return mappedObj[matched]
 }
+
 const getFirstCaseInsensitive = (ps,obj) => {
     const mappedObj = mapKeys(toLower,obj)
-    const props = ps.map(toLower)
-    return compose(
-        prop(__,mappedObj),
-        o => find(compose( complement(isNil), prop(__,o)))(props),
-    )(mappedObj)
+    const matched = ps.map(toLower).find(p => !isNil(mappedObj[p]))
+    return mappedObj[matched]
 }
-
-export const getCase = (name,obj) => getFirstCaseInsensitive([name,"default","_"],obj)
-export const getCaseSensitive = (name,obj) => getFirstCaseSensitive([name,"default","_"],obj)
-
-export const safeMatch = (val,cases) => val?.match?.(cases) || cases?.default?.(val) || cases?._?.(val)
-
-export const splitBy = (fn,arr) => arr.reduce(([left,right],next) => { 
-    return fn(next) ? [ left, [...right, next]] : [ [...left,next], right]
-},[[],[]])
 
 /**
  * Assigns a value to a key for the given object, returning the same object, mutating it.
@@ -53,6 +42,30 @@ const mutate = (key) => (val,obj) => {
     obj[key] = val;
     return obj
 }
+const prop = (key) => (obj) => obj?.[key];
+
+/**
+ * @description if the value given is a function, 
+ * applies it with "data" as arguments and returns the result. 
+ * Otherwise, it is equal to identity
+ * @param {any} data arguments for apply
+ */
+export const extractWith = (data) => (value) => {
+    if( typeof value === "function" ){
+        return value(...data)
+    }
+    return value;
+}
+
+export const includes = (val,arr) => Boolean(arr.find(x => x === val))
+export const isNil = x => x === undefined || x === null;
+
+export const getCase = (name,obj) => getFirstCaseInsensitive([name,"default","_"],obj)
+export const getCaseSensitive = (name,obj) => getFirstCaseSensitive([name,"default","_"],obj)
+export const safeMatch = (val,cases) => val?.match?.(cases) || cases?.default?.(val) || cases?._?.(val)
+export const splitBy = (fn,arr) => arr.reduce(([left,right],next) => { 
+    return fn(next) ? [ left, [...right, next]] : [ [...left,next], right]
+},[[],[]])
 
 export const InnerValue = Symbol("@@value");
 export const getInnerValue = prop(InnerValue)

@@ -1,4 +1,4 @@
-import { propOr } from "https://deno.land/x/ramda@v0.27.2/mod.ts"
+import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
 import { forEachValue } from "../_internals/index.js";
 import { setTypeclass } from "../_internals/index.js";
 
@@ -25,12 +25,14 @@ const Semigroup = (defs) => setTypeclass("Semigroup",(cases) => {
             })
         }
         cases[trivial].prototype.concat = concat
+        cases[trivial].prototype.sconcat = concat
     })
     identities.forEach(empt => {
         function concat(m){
             return m
         }
         cases[empt].prototype.concat = concat
+        cases[empt].prototype.sconcat = concat
     })
     forEachValue((override,key) => {
         cases[key].prototype.concat = override

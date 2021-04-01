@@ -1,8 +1,8 @@
-import identity from 'ramda/source/identity';
-import any from 'ramda/source/any';
-import equals from 'ramda/source/equals';
-import map from 'ramda/source/map';
-import isEmpty from 'ramda/source/isEmpty';
+import identity from 'ramda/src/identity';
+import any from 'ramda/src/any';
+import equals from 'ramda/src/equals';
+import map from 'ramda/src/map';
+import isEmpty from 'ramda/src/isEmpty';
 
 const fromPairs = (pairs) => pairs.reduce((acc,[key,val]) => {
     acc[key] = val;

@@ -1,4 +1,4 @@
-import { equals as rEquals } from "ramda";
+import { default as rEquals } from "ramda/src/equals";
 import {
   Applicative,
   Bifunctor,

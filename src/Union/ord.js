@@ -1,4 +1,5 @@
-import { assoc, propOr } from 'ramda'
+import assoc from "ramda/src/assoc";
+import propOr from "ramda/src/propOr";
 import { getVariant, forEachValue } from '../_internals'
 import Enum from './enum'
 import Eq from './eq'

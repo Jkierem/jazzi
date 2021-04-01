@@ -1,7 +1,6 @@
-import { identity, propOr } from "ramda"
-import { currySetTypeclass, defineOverrides, forEachValue } from "../_internals"
-
-const mark = currySetTypeclass("Thenable")
+import identity from "ramda/src/identity";
+import propOr from "ramda/src/propOr";
+import { setTypeclass, defineOverrides, forEachValue } from "../_internals"
 
 /**
  * 
@@ -49,4 +48,6 @@ const Thenable = (defs) => mark((cases) => {
 
 })
 
-export default mark(Thenable);
+setTypeclass("Thenable",Thenable)
+
+export default Thenable;

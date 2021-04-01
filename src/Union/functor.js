@@ -1,4 +1,5 @@
-import { includes, propOr } from "ramda"
+import includes from "ramda/src/includes";
+import propOr from "ramda/src/propOr";
 import { defineOverrides, forEachValue, setTypeclass, splitBy } from "../_internals";
 import { hasInstance } from "../_tools"
 

@@ -1,4 +1,4 @@
-import { propOr } from "ramda"
+import propOr from "ramda/src/propOr";
 import { forEachValue } from "../_internals";
 import { setTypeclass } from "../_internals"
 

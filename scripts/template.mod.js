@@ -28,7 +28,7 @@ const fixImports = (data) => {
     const isFolder = Boolean(path.match(/(\/[A-Z_][^\/]*)$/))
     const isUrl = Boolean(path.startsWith("https"))
     if( isUrl ){
-      return str
+      return path.match(/.[jt]s;$/gm) ? `from "${path}";` : `from "${path}.js";`
     } else {
       if( isFolder ){
         return `from "${path}/index.js";`
@@ -68,7 +68,7 @@ const template = ({
                   console.log("Porcessing: ", file.path)
                 }
                 const rawData = await Deno.readTextFile(file.path)
-                const data = fixImports(interpolate(rawData),file)
+                const data = fixImports(interpolate(rawData))
                 const target = replaceDestination(resolve(file.path));
                 if(debug){
                   console.log("Writing: ", target)

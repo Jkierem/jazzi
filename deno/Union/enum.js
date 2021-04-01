@@ -1,4 +1,4 @@
-import { propOr } from "https://deno.land/x/ramda@v0.27.2/mod.ts";
+import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
 import { forEachValue, getVariant } from "../_internals/index.js";
 
 const Enum = (defs) => (cases,globals) => {

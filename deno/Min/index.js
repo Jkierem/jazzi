@@ -1,4 +1,3 @@
-import { isNil } from "https://deno.land/x/ramda@v0.27.2/mod.ts";
 import {
   Eq,
   Functor,
@@ -8,7 +7,7 @@ import {
   Thenable,
 } from "../Union/index.js";
 import Union from "../Union/union.js";
-import { monoidThen, monoidToPromise } from "../_internals/index.js";
+import { isNil, monoidThen, monoidToPromise } from "../_internals/index.js";
 
 const Defs = {
   trivials: ["Min"],

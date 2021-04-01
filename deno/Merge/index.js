@@ -1,4 +1,5 @@
-import { equals, mergeAll } from "https://deno.land/x/ramda@v0.27.2/mod.ts";
+import equals from "https://deno.land/x/ramda@v0.27.2/source/equals.js";
+import mergeAll from "https://deno.land/x/ramda@v0.27.2/source/mergeAll.js";
 import {
   Eq,
   Functor,
