@@ -67,10 +67,16 @@ export const splitBy = (fn,arr) => arr.reduce(([left,right],next) => {
     return fn(next) ? [ left, [...right, next]] : [ [...left,next], right]
 },[[],[]])
 
+/**
+ * Inner Value
+ */
 export const InnerValue = Symbol("@@value");
 export const getInnerValue = prop(InnerValue)
 export const setInnerValue = mutate(InnerValue);
 
+/**
+ * Type Rep
+ */
 export const Type = Symbol("@@type");
 export const getType = prop(Type);
 export const setType = (t, val) => {
@@ -79,25 +85,34 @@ export const setType = (t, val) => {
     })
 };
 
+/**
+ * Union/Type Name
+ */
 export const TypeName = Symbol("@@typename");
 export const getTypeName = prop(TypeName)
 export const setTypeName = mutate(TypeName)
 
+/**
+ * Case/Variant Name
+ */
 export const Variant = Symbol("@@variant");
 export const getVariant = prop(Variant)
 export const setVariant = mutate(Variant)
 
+/**
+ * Used to mark a typeclass with its' name
+ */
 export const Typeclass = Symbol("@@typeclass");
 export const getTypeclass = prop(Typeclass);
 export const setTypeclass = mutate(Typeclass);
 export const currySetTypeclass = t => x => setTypeclass(t,x)
 
+/**
+ * Stores implemented marked typeclasses
+ */
 export const Typeclasses = Symbol("@@typeclasses");
 export const getTypeclasses = prop(Typeclasses);
 export const setTypeclasses = mutate(Typeclasses);
-
-export const Internal = Symbol("@@internal");
-export const getInternal = prop(Internal)
 
 /* istanbul ignore next : spy works believe me*/
 export const Spy = (fn = x => x) => {
@@ -106,7 +121,17 @@ export const Spy = (fn = x => x) => {
     let _spy = (...args) => {
         callCount++;
         const res = fn(...args)
-        calls.push({args, result: res});
+        calls.push({
+            args, 
+            result: res, 
+            callTime: Date.now(),
+            calledBefore(otherCall){
+                return this.callTime - otherCall.callTime < 0
+            },
+            calledAfter(otherCall){
+                return this.callTime - otherCall.callTime >= 0
+            }
+        });
         return res;
     }
 
@@ -174,8 +199,4 @@ export function monoidToPromise(){
     return new Promise((res,rej) => {
         isEmpty(this) ? rej(this.get()) : res(this.get());
     })
-}
-
-export const createOperator = what => (...args) => (observable) => {
-    return observable[what](...args);
 }

@@ -67,10 +67,16 @@ export const splitBy = (fn,arr) => arr.reduce(([left,right],next) => {
     return fn(next) ? [ left, [...right, next]] : [ [...left,next], right]
 },[[],[]])
 
+/**
+ * Inner Value
+ */
 export const InnerValue = Symbol("@@value");
 export const getInnerValue = prop(InnerValue)
 export const setInnerValue = mutate(InnerValue);
 
+/**
+ * Type Rep
+ */
 export const Type = Symbol("@@type");
 export const getType = prop(Type);
 export const setType = (t, val) => {
@@ -79,19 +85,31 @@ export const setType = (t, val) => {
     })
 };
 
+/**
+ * Union/Type Name
+ */
 export const TypeName = Symbol("@@typename");
 export const getTypeName = prop(TypeName)
 export const setTypeName = mutate(TypeName)
 
+/**
+ * Case/Variant Name
+ */
 export const Variant = Symbol("@@variant");
 export const getVariant = prop(Variant)
 export const setVariant = mutate(Variant)
 
+/**
+ * Used to mark a typeclass with its' name
+ */
 export const Typeclass = Symbol("@@typeclass");
 export const getTypeclass = prop(Typeclass);
 export const setTypeclass = mutate(Typeclass);
 export const currySetTypeclass = t => x => setTypeclass(t,x)
 
+/**
+ * Stores implemented marked typeclasses
+ */
 export const Typeclasses = Symbol("@@typeclasses");
 export const getTypeclasses = prop(Typeclasses);
 export const setTypeclasses = mutate(Typeclasses);

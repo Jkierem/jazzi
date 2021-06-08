@@ -1,4 +1,4 @@
-import { extractWith, getCaseSensitive, getType, getTypeclass, getTypeclasses, getVariant, safeMatch, includes } from "../_internals/index.js";
+import { extractWith, getCaseSensitive, getType, getTypeclass, getTypeclasses, getVariant as _getVariant, safeMatch, includes, getTypeName as getTN } from "../_internals/index.js";
 
 /**
  * Type match a value
@@ -15,7 +15,20 @@ export const unwrap = x => x?.unwrap ? x.unwrap() : x ;
  * Returns variant name of the given value
  * @param {any} v 
  */
-export const getTag = v => getVariant(v)
+export const getTag = v => _getVariant(v)
+export const getVariant = _getVariant
+/**
+ * Returns the name of the union this value belongs to
+ * @param {any} v 
+ * @returns {string} TypeName
+ */
+export const getTypeName = v => getTN(v)
+/**
+ * Returns the type representative of this value
+ * @param {any} v 
+ * @returns Type representative
+ */
+export const getTypeRep = v => getType(v);
 /**
  * Returns true if value implements the provided typeclass or typeclass name
  * @param {any} value
@@ -28,6 +41,8 @@ export const fromEnum = en => getType(en).fromEnum(en)
 export const toEnum = (en,i) => en.toEnum(i)
 export const succ = (en) => en.succ()
 export const pred = (en) => en.pred()
+export const next = (en) => en.next()
+export const previous = (en) => en.previous()
 export const map = (fn,obj) => obj === undefined ? (obj) => obj.map(fn)  : obj.map(fn);
 export const fmap = (fn,fctor) => fctor === undefined ? (fctor) => fctor.fmap(fn)  : fctor.fmap(fn);
 

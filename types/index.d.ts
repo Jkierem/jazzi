@@ -1063,11 +1063,13 @@ declare module "jazzi" {
     export const previous: (e: any) => any;
     /**
      * Returns the variant string representation of a given value
+     * @alias getVariant
      * @param {any} v Union type value
      */
     export const getTag: (v: any) => string;
     /**
      * Returns the variant string representation of a given value
+     * @alias getTag
      * @param {any} v Union type value
      */
     export const getVariant: (v: any) => string;
@@ -1076,7 +1078,13 @@ declare module "jazzi" {
      * @param {any} v 
      * @returns {string} TypeName
      */
-    export const getType: (v: any) => string;
+    export const getTypeName: (v: any) => string;
+    /**
+     * Returns the type representative of this value
+     * @param {any} v 
+     * @returns Type representative
+     */
+    export const getTypeRep: (v: any) => any;
     /**
      * Receives a string and returns a matcher object. Uses the match function of Unions where the provided string is the type. 
      * Unlike match, it is case sensitive
