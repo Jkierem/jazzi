@@ -966,6 +966,37 @@ declare module "jazzi" {
         toEnum(i: number): EnumTypeValue | undefined;
     }
 
+    interface BoxedEnumTypeValue<T,Match>
+    extends Eq<T>, Ord, Enum, Show, Boxed<T,Match>, Functor<T> {
+        match(patterns: any): any
+        equals(e: BoxedEnumTypeValue<T,Match>): boolean;
+        succ(): BoxedEnumTypeValue<undefined,Match> | undefined;
+        pred(): BoxedEnumTypeValue<undefined,Match> | undefined;
+        compare: (o: Ord) => Ordering;
+        lessThanOrEqual: (o: Ord) => boolean;
+        greaterThan: (o: Ord) => boolean;
+        greaterThanOrEqual: (o: Ord) => boolean;
+        show: () => string;
+        toString: () => string;
+        next(): BoxedEnumTypeValue<T,Match> | undefined;
+        previous(): BoxedEnumTypeValue<T,Match> | undefined;
+    }
+
+    type BoxedEnumTypeValueConst<Match> = <T>(x: T) => BoxedEnumTypeValue<T,Match>
+
+    type BoxedEnumTypeRep<Variants extends string | number | symbol,T> = 
+    Record<Variants, BoxedEnumTypeValueConst<Cases<Variants>>> & 
+    BoxedRep<Cases<Variants>> & EnumRep & EqRep & {
+        equals(ea: BoxedEnumTypeValue<T,Cases<Variants>>, eb: BoxedEnumTypeValue<T,Cases<Variants>>): boolean;
+        pred(v: BoxedEnumTypeValue<T,Cases<Variants>>): BoxedEnumTypeValue<undefined, Cases<Variants>> | undefined;
+        succ(v: BoxedEnumTypeValue<T,Cases<Variants>>): BoxedEnumTypeValue<undefined, Cases<Variants>> | undefined;
+        previous(v: BoxedEnumTypeValue<T,Cases<Variants>>): BoxedEnumTypeValue<T, Cases<Variants>> | undefined;
+        next(v: BoxedEnumTypeValue<T,Cases<Variants>>): BoxedEnumTypeValue<T, Cases<Variants>> | undefined;
+        range(start: BoxedEnumTypeValue<any,Cases<Variants>>, end: BoxedEnumTypeValue<any,Cases<Variants>>): BoxedEnumTypeValue<undefined,Cases<Variants>>[];
+        fromEnum(en: BoxedEnumTypeValue<T,Cases<Variants>>): number;
+        toEnum(i: number): BoxedEnumTypeValue<undefined,Cases<Variants>> | undefined;
+    }
+
     /* Standalone utilities */
 
     /**
@@ -1011,22 +1042,44 @@ declare module "jazzi" {
      */
     export const toEnum: (en: any, i: number) => any;
     /**
-     * Return the succesor of an Enum value. Undefined on no sucessor
+     * Return the succesor of an Enum value. Undefined if no sucessor
      * @param {any} e Enum value
      */
     export const succ: (e: any) => any;
     /**
-     * Return the predecessor of an Enum value. Undefined on no predecessor
+     * Return the predecessor of an Enum value. Undefined if no predecessor
      * @param {any} e Enum value
      */
     export const pred: (e: any) => any;
+    /**
+     * Return the succesor of a Boxed Enum value, without loosing the inner value. Undefined if no sucessor
+     * @param {any} e Boxed Enum value
+     */
+    export const next: (e: any) => any;
+    /**
+     * Return the predecessor of a Boxed Enum value, without loosing the inner value. Undefined if no predecessor
+     * @param {any} e Boxed Enum value
+     */
+    export const previous: (e: any) => any;
     /**
      * Returns the variant string representation of a given value
      * @param {any} v Union type value
      */
     export const getTag: (v: any) => string;
     /**
-     * Receives a string and returns a matcher object. Uses the match function of Unions where the provided string is the type. Unlike match, it is case sensitive
+     * Returns the variant string representation of a given value
+     * @param {any} v Union type value
+     */
+    export const getVariant: (v: any) => string;
+    /**
+     * Returns the name of the union this value belongs to
+     * @param {any} v 
+     * @returns {string} TypeName
+     */
+    export const getType: (v: any) => string;
+    /**
+     * Receives a string and returns a matcher object. Uses the match function of Unions where the provided string is the type. 
+     * Unlike match, it is case sensitive
      */
     export const stringMatcher: (str: any) => { match: (patterns: { [P: string]: () => any }) => any};
     /**
@@ -1115,6 +1168,14 @@ declare module "jazzi" {
      * @param cases Cases that inhabit the Enum. 
      */
     export function EnumType<K extends string>(name: string, cases: readonly K[]): EnumTypeRep<K>;
+    /**
+     * Creates a boxed enum type which is an Union that implements Eq, Ord, Enum, Functor, and Show.
+     * Unlike an enum type, a boxed enum type may contain a value.
+     * @param name BoxedEnum name
+     * @param cases Cases that inhabit the Enum. 
+     */
+    export function BoxedEnumType<K extends string>(name: string, cases: readonly K[]): BoxedEnumTypeRep<K,any>;
+
     type NewTypeType<K extends string> = Record<K | "from" | "of", ((value: any) => any)>
     /**
      * Constructs a NewType union
@@ -1125,6 +1186,7 @@ declare module "jazzi" {
 
     export function Applicative(defs: { trivials: string[], identities: string[], overrides?: { apply?: any } }) : (cases: any, globals: any) => void;
     export function Bifunctor(defs: { first: string, second: string, overrides?: { bimap?: any } }) : (cases: any, globals: any) => void;
+    export function BoxedEnum(defs: {}): (cases: any, globals: any) => void;
     export function Effect(defs: { trivials: string[], identities: string[], overrides?: { effect?: any } }) : (cases: any, globals: any) => void;
     export function Enum(defs: { order?: string[], overrides?:{ toEnum: (a: any) => any, fromEnum: (a: any) => any } }): (cases: any, globals: any) => void;
     export function Eq(defs: { trivials: string[], empties: string[], overrides?: { equals?: any } }) : (cases: any, globals: any) => void;
@@ -1138,4 +1200,5 @@ declare module "jazzi" {
     export function Semigroup(defs: { trivials: string[], identities: string[], overrides?: { concat?: any } }) : (cases: any, globals: any) => void;
     export function Show(defs: { overrides?: { show?: any } }) : (cases: any, globals: any) => void;
     export function Swap(defs: { left: string, right: string, overrides?: { swap?: any } }) : (cases: any, globals: any) => void;
+    export function Thenable(defs: { resolve: string[], reject: string[], overrides: { toPromise?: { [x: string] : () => Promise<any> } } }): (cases: any, globals: any) => void;
 }

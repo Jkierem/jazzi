@@ -94,7 +94,10 @@ export const currySetTypeclass = t => x => setTypeclass(t,x)
 
 export const Typeclasses = Symbol("@@typeclasses");
 export const getTypeclasses = prop(Typeclasses);
-export const setTypeclasses = mutate(Typeclasses)
+export const setTypeclasses = mutate(Typeclasses);
+
+export const Internal = Symbol("@@internal");
+export const getInternal = prop(Internal)
 
 /* istanbul ignore next : spy works believe me*/
 export const Spy = (fn = x => x) => {
@@ -171,4 +174,8 @@ export function monoidToPromise(){
     return new Promise((res,rej) => {
         isEmpty(this) ? rej(this.get()) : res(this.get());
     })
+}
+
+export const createOperator = what => (...args) => (observable) => {
+    return observable[what](...args);
 }

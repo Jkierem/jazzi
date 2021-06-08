@@ -8,6 +8,7 @@ export { default as Maybe } from "./Maybe/index.js";
 export { default as Merge } from "./Merge/index.js";
 export { default as Min } from "./Min/index.js";
 export { default as Mult } from "./Mult/index.js";
+export { default as Observable } from "./Observable/index.js";
 export { default as Reader } from "./Reader/index.js";
 export { default as Result } from "./Result/index.js";
 export { default as Sum } from "./Sum/index.js";

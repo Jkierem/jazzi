@@ -1,6 +1,8 @@
 import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
 import { setTypeclass } from "../_internals/index.js";
 
+const mark = x => setTypeclass("Foldable",x)
+
 /**
  * Adds apply method to proto
  * @param {{ 
