@@ -94,7 +94,7 @@ export const currySetTypeclass = t => x => setTypeclass(t,x)
 
 export const Typeclasses = Symbol("@@typeclasses");
 export const getTypeclasses = prop(Typeclasses);
-export const setTypeclasses = mutate(Typeclasses)
+export const setTypeclasses = mutate(Typeclasses);
 
 /* istanbul ignore next : spy works believe me*/
 export const Spy = (fn = x => x) => {
@@ -103,7 +103,17 @@ export const Spy = (fn = x => x) => {
     let _spy = (...args) => {
         callCount++;
         const res = fn(...args)
-        calls.push({args, result: res});
+        calls.push({
+            args, 
+            result: res, 
+            callTime: Date.now(),
+            calledBefore(otherCall){
+                return this.callTime - otherCall.callTime < 0
+            },
+            calledAfter(otherCall){
+                return this.callTime - otherCall.callTime >= 0
+            }
+        });
         return res;
     }
 

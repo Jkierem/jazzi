@@ -1,6 +1,8 @@
 import propOr from "ramda/src/propOr";
 import { setTypeclass } from "../_internals"
 
+const mark = x => setTypeclass("Foldable",x)
+
 /**
  * Adds apply method to proto
  * @param {{ 

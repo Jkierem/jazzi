@@ -2,6 +2,8 @@ import identity from "ramda/src/identity";
 import propOr from "ramda/src/propOr";
 import { setTypeclass, defineOverrides, forEachValue } from "../_internals"
 
+const mark = x => setTypeclass("Thenable",x)
+
 /**
  * 
  * @param {{
