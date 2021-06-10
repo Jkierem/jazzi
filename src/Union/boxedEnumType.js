@@ -6,6 +6,7 @@ import Eq from "./eq";
 import Ord from "./ord";
 import Functor from "./functor";
 import Effect from "./effect"
+import BoxedEnum from "./boxedEnum"
 
 /**
  * Creates an enum type that can contain a value. Also a functor.
