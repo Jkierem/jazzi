@@ -1,7 +1,7 @@
 {
     "name": "jazzi",
     "version": "1.5.1",
-    "module": "./dist/jazzi.cjs.js",
+    "main": "./dist/jazzi.cjs.js",
     "license": "MIT",
     "types": "types/index.d.ts",
     "publishConfig": {

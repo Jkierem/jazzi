@@ -17,7 +17,7 @@ describe("Reader Monad",() => {
             expect(read42.run(2)).toBe(42);
             expect(spy.called).toBeTruthy();
         })
-        it("moinad -> chain readers", () => {
+        it("monad -> chain readers", () => {
             const log = something => Reader.of(logger => logger.log(something))
             const logSomething = () => log("something").chain(() => log("else"));
             const spy = { log: Spy() };

@@ -6,6 +6,7 @@ import Eq from "./eq.js";
 import Ord from "./ord.js";
 import Functor from "./functor.js";
 import Effect from "./effect.js";
+import BoxedEnum from "./boxedEnum.js";
 
 /**
  * Creates an enum type that can contain a value. Also a functor.

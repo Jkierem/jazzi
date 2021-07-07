@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Reader from './Reader.mod.ts';
 
 type Config = { 
