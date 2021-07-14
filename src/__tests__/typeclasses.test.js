@@ -13,7 +13,7 @@ import {
   Union,
 } from "../Union";
 import { extractWith } from "../_internals";
-import { Spy } from '../_internals/test-utils'
+import { Spy } from "../__test-utils";
 import { fromEnum } from "../_tools";
 
 const trivialImpl = (...tcs) => {

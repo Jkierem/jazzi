@@ -1,5 +1,5 @@
 import IO from "../IO"
-import { Spy } from "../_internals/test-utils"
+import { Spy } from "../__test-utils";
 
 describe("IO",() => {
     describe("methods",() => {

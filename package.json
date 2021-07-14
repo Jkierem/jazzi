@@ -1,6 +1,6 @@
 {
     "name": "jazzi",
-    "version": "1.5.2",
+    "version": "1.6.0",
     "main": "./dist/jazzi.cjs.js",
     "license": "MIT",
     "types": "types/index.d.ts",
@@ -20,6 +20,7 @@
         "build:js": "webpack --mode production",
         "build:deno": "deno run --unstable --allow-read --allow-write ./scripts/build.js",
         "build:watch": "webpack --mode development --watch",
+        "clean": "rm -rf ./dist && rm -rf ./deno",
         "test": "rm -rf ./coverage && jest --coverage --verbose",
         "test:silent": "rm -rf ./coverage && jest --silent",
         "test:watch": "jest --verbose --watch",

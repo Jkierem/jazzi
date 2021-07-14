@@ -1,5 +1,5 @@
 import Reader from '../Reader'
-import { Spy } from '../_internals/test-utils';
+import { Spy } from "../__test-utils";
 
 describe("Reader Monad",() => {
     describe("methods",() => {

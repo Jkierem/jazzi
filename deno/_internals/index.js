@@ -1,7 +1,4 @@
 import identity from "https://deno.land/x/ramda@v0.27.2/source/identity.js";
-import any from "https://deno.land/x/ramda@v0.27.2/source/any.js";
-import equals from "https://deno.land/x/ramda@v0.27.2/source/equals.js";
-import map from "https://deno.land/x/ramda@v0.27.2/source/map.js";
 import isEmpty from "https://deno.land/x/ramda@v0.27.2/source/isEmpty.js";
 
 const fromPairs = (pairs) => pairs.reduce((acc,[key,val]) => {
@@ -11,13 +8,7 @@ const fromPairs = (pairs) => pairs.reduce((acc,[key,val]) => {
 
 const toPairs = (obj) => Object.keys(obj).map((key) => [ key, obj[key]]);
 
-const mapKeys = (fn,obj) => {
-    const run = (fn,obj) => fromPairs(toPairs(obj).map(([key, val]) => [ fn(key), val ]))
-    if(obj === undefined){
-        return (obj) => run(fn,obj)
-    }
-    return run(fn,obj)
-}
+const mapKeys = (fn,obj) => fromPairs(toPairs(obj).map(([key, val]) => [ fn(key), val ]))
 
 const toLower = str => str.toLowerCase();
 
@@ -113,57 +104,6 @@ export const currySetTypeclass = t => x => setTypeclass(t,x)
 export const Typeclasses = Symbol("@@typeclasses");
 export const getTypeclasses = prop(Typeclasses);
 export const setTypeclasses = mutate(Typeclasses);
-
-/* istanbul ignore next : spy works believe me*/
-export const Spy = (fn = x => x) => {
-    let callCount = 0;
-    let calls = []
-    let _spy = (...args) => {
-        callCount++;
-        const res = fn(...args)
-        calls.push({
-            args, 
-            result: res, 
-            callTime: Date.now(),
-            calledBefore(otherCall){
-                return this.callTime - otherCall.callTime < 0
-            },
-            calledAfter(otherCall){
-                return this.callTime - otherCall.callTime >= 0
-            }
-        });
-        return res;
-    }
-
-    Object.defineProperty(_spy,"called",{
-        get: () => callCount > 0
-    })
-
-    Object.defineProperty(_spy,"callCount",{
-        get: () => callCount
-    })
-    Object.defineProperty(_spy,"calls",{
-        get: () => calls
-    })
-
-    _spy.calledWith = (...args) => any(equals(args),map(prop("args"))(calls));
-    _spy.returned = (val) => any(equals(val),map(prop("result"))(calls));
-
-    _spy.reset = () => {
-        callCount = 0 
-        calls = []
-    }
-
-    _spy.debug = () => {
-        return {
-            callCount: _spy.callCount,
-            calls: _spy.calls,
-            called: _spy.called,
-        }
-    }
-
-    return _spy
-}
 
 /**
  * iterates over values of an object

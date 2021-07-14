@@ -28,6 +28,12 @@ const Monad = (defs) => setTypeclass("Monad",(cases,globals) => {
         cases[trivial].prototype.chain   = chain
         cases[trivial].prototype.bind    = chain
         cases[trivial].prototype.flatMap = chain
+
+        function join(){
+            return this.get()
+        }
+        cases[trivial].prototype.join = join
+        cases[trivial].prototype.flat = join
     })
     identities.forEach(empt => {
         function chain(){
@@ -36,6 +42,8 @@ const Monad = (defs) => setTypeclass("Monad",(cases,globals) => {
         cases[empt].prototype.chain   = chain
         cases[empt].prototype.bind    = chain
         cases[empt].prototype.flatMap = chain
+        cases[empt].prototype.flat = chain
+        cases[empt].prototype.join = chain
     })
     Object.keys(cases).forEach(key => {
         function run(){ return this }
@@ -44,6 +52,7 @@ const Monad = (defs) => setTypeclass("Monad",(cases,globals) => {
     })
     defineOverrides("chain",["bind","flatMap"],overrides,cases)
     defineOverrides("run",["unsafeRun"],overrides,cases)
+    defineOverrides("join",["flat"],overrides,cases)
     globals.pure = (...args) => new cases[pure](...args)
     globals.do = function(fn){
         let gen = undefined;
