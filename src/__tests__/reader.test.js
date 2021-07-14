@@ -1,5 +1,5 @@
 import Reader from '../Reader'
-import { Spy } from '../_internals';
+import { Spy } from '../_internals/test-utils';
 
 describe("Reader Monad",() => {
     describe("methods",() => {
@@ -24,6 +24,13 @@ describe("Reader Monad",() => {
             logSomething().run(spy)
             expect(spy.log.calledWith("something")).toBeTruthy()
             expect(spy.log.calledWith("else")).toBeTruthy()
+        })
+        it("monad -> join", () => {
+            const readerReader = Reader.of(e1 => Reader.of(_ => e1.call(42)))
+            const env = { call: Spy() }
+            readerReader.join().run(env)
+            expect(env.call.calledOnce).toBeTruthy()
+            expect(env.call.calledWith(42)).toBeTruthy()
         })
         it("applicative -> apply is lazy",() => {
             const spy = Spy(x => x + 1)

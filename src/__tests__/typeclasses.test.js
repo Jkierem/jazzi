@@ -12,7 +12,8 @@ import {
   Thenable,
   Union,
 } from "../Union";
-import { extractWith, Spy } from "../_internals";
+import { extractWith } from "../_internals";
+import { Spy } from '../_internals/test-utils'
 import { fromEnum } from "../_tools";
 
 const trivialImpl = (...tcs) => {
@@ -104,6 +105,12 @@ describe("typeclasses", () => {
       expect(mlazy.unsafeRun()).toBe(mlazy);
       expect(meager.unsafeRun()).toBe(meager);
     });
+
+    it("join -> should break structure in eager", () => {
+      const meager = Eager.Eager(Eager.Eager(42))
+      expect(meager.join()).toTypeMatch("Eager")
+      expect(meager.join().get()).toBe(42)
+    })
 
     it("do notation -> should work as if chaining on eager structs", () => {
       const e84 = Eager.do(function* () {

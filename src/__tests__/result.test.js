@@ -1,6 +1,6 @@
 import Maybe from '../Maybe'
 import Result from '../Result'
-import { Spy } from '../_internals';
+import { Spy } from '../_internals/test-utils';
 
 describe("Result", () => {
     describe("methods", () => {

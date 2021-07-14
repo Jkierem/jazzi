@@ -2,7 +2,7 @@ import Maybe from '../Maybe'
 import Result from '../Result'
 import isEmpty from 'ramda/src/isEmpty'
 import Sum from '../Sum'
-import { Spy } from '../_internals'
+import { Spy } from '../_internals/test-utils'
 
 describe("Maybe", () => {
     describe("methods", () => {

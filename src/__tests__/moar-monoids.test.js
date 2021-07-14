@@ -6,7 +6,7 @@ import Min from "../Min"
 import Mult from "../Mult"
 import Merge from "../Merge"
 import Sum from "../Sum"
-import { Spy } from "../_internals"
+import { Spy } from "../_internals/test-utils"
 import { foldMap } from "../_tools"
 
 const thenTest = (Type,val=42) => {

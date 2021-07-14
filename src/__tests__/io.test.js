@@ -1,5 +1,5 @@
 import IO from "../IO"
-import { Spy } from "../_internals"
+import { Spy } from "../_internals/test-utils"
 
 describe("IO",() => {
     describe("methods",() => {
@@ -21,7 +21,9 @@ describe("IO",() => {
         })
         it("IO Monad", () => {
             const io42 = IO.of(21).chain(x => IO.of(x * 2));
+            const ioio42 = IO.of(IO.of(42));
             expect(io42.unsafeRun()).toBe(42)
+            expect(ioio42.join().run()).toBe(42)
         })
         it("IO Show", () => {
             const id = Spy()

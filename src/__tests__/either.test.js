@@ -1,5 +1,5 @@
 import { Either, Maybe, Result } from "../";
-import { Spy } from "../_internals";
+import { Spy } from "../_internals/test-utils";
 
 describe("Either", () => {
   describe("methods", () => {

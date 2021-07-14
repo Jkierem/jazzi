@@ -26,6 +26,11 @@ const IODefs = {
         return IO.pure((...args) => fn(this.unsafeRun(...args)).unsafeRun());
       },
     },
+    join: {
+      IO(){
+        return IO.pure((...args) => this.unsafeRun(...args).unsafeRun())
+      }
+    },
     apply: {
       IO(ioFn) {
         return IO.pure((...args) => ioFn.get()(this.get()(...args)));

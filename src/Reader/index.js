@@ -31,6 +31,11 @@ const Defs = {
         return Reader.Reader((...env) => fn(this.run(...env)).run(...env));
       },
     },
+    join: {
+      Reader(){
+        return Reader.Reader((...env) => this.run(...env).run(...env));
+      }
+    },
     apply: {
       Reader(readerFn) {
         return Reader.Reader((...env) => readerFn.get()(this.run(...env)));
