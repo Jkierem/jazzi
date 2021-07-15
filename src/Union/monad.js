@@ -46,7 +46,7 @@ const Monad = (defs) => setTypeclass("Monad",(cases,globals) => {
         cases[empt].prototype.join = chain
     })
     Object.keys(cases).forEach(key => {
-        function run(){ return this }
+        function run(){ return this.get() }
         cases[key].prototype.run       = run;
         cases[key].prototype.unsafeRun = run;
     })

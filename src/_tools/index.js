@@ -51,6 +51,8 @@ export const ap = _apImpl
 export const applyRight = _apImpl
 export const applyLeft = (left, right) => right === undefined ? (right) => right.apply(left) : right.apply(left)
 
+export const join = (monad) => monad.join();
+export const flat = (monad) => monad.join();
 export const bind = (fn, monad) => monad === undefined ? (monad) => monad.bind(fn) : monad.bind(fn)
 export const chain = (fn, monad) => monad === undefined ? (monad) => monad.chain(fn) : monad.chain(fn)
 export const flatMap = (fn, monad) => monad === undefined ? (monad) => monad.flatMap(fn) : monad.flatMap(fn)

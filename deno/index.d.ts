@@ -147,6 +147,14 @@ declare module "jazzi" {
 
     interface Monad<A> extends Functor<A>, Applicative<A> {
         /**
+         * Flattens a nested monad
+         */
+        join(): A extends Monad<infer B> ? Monad<B> : A;
+        /**
+         * Flattens a nested monad
+         */
+        flat(): A extends Monad<infer B> ? Monad<B> : A;
+        /**
          * Performs monad composition using `fn`
          * @param fn 
          */
@@ -1153,6 +1161,16 @@ declare module "jazzi" {
      */
     export function flatMap<A,B>(fn: (a: A) => Monad<B>, monad: Monad<A>): Monad<B>;
     export function flatMap<A,B>(fn: (a: A) => Monad<B>): (monad: Monad<A>) => Monad<B>;
+    /**
+     * calls `join` on `monad`. Flattens a nested monad
+     * @param monad 
+     */
+    export function join<A>(monad: Monad<A>): A extends Monad<infer B>? Monad<B> : A ;
+    /**
+     * calls `join` on `monad`. Flattens a nested monad
+     * @param monad 
+     */
+    export function flat<A>(monad: Monad<A>): A extends Monad<infer B>? Monad<B> : A ;
     /**
      * Creates a sum type than can be extended using typeclasses provided by this library. For more info lookup API in the docs.
      * @param name Name used for the type

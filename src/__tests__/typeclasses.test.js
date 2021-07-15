@@ -100,10 +100,11 @@ describe("typeclasses", () => {
     ]})
 
     const meager = Eager.Eager(42);
-    it("unsafeRun -> should do nothing unless provided implementation", () => {
-      const mlazy = Lazy2.Lazy(() => 50);
-      expect(mlazy.unsafeRun()).toBe(mlazy);
-      expect(meager.unsafeRun()).toBe(meager);
+    it("unsafeRun -> should be same as get unless provided implementation", () => {
+      const inner = () => 50
+      const mlazy = Lazy2.Lazy(inner);
+      expect(mlazy.unsafeRun()).toBe(inner);
+      expect(meager.unsafeRun()).toBe(42);
     });
 
     it("join -> should break structure in eager", () => {

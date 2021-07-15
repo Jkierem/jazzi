@@ -24,7 +24,7 @@
         "test": "rm -rf ./coverage && jest --coverage --verbose",
         "test:silent": "rm -rf ./coverage && jest --silent",
         "test:watch": "jest --verbose --watch",
-        "prepublish": "yarn build"
+        "prepublish": "yarn clean && yarn build"
     },
     "dependencies": {
         "ramda": "0.27.0"
