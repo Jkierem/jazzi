@@ -12,6 +12,8 @@ const mapKeys = (fn,obj) => fromPairs(toPairs(obj).map(([key, val]) => [ fn(key)
 
 const toLower = str => str.toLowerCase();
 
+const trim = str => str.trim()
+
 const getFirstCaseSensitive = (ps,obj) => {
     const mappedObj = mapKeys(toLower,obj)
     const matched = ps.find(p => !isNil(mappedObj[p]))
@@ -51,6 +53,19 @@ export const extractWith = (data) => (value) => {
 export const includes = (val,arr) => Boolean(arr.find(x => x === val))
 export const isNil = x => x === undefined || x === null;
 
+export const expandCases = (obj) => {
+    return fromPairs(toPairs(obj).flatMap(([key,value]) => {
+        if(key.includes("|")){
+            return key
+                .split("|")
+                .map(trim)
+                .filter(Boolean)
+                .map(k => [k,value])
+        } else {
+            return [[key,value]]
+        }
+    }))
+}
 export const getCase = (name,obj) => getFirstCaseInsensitive([name,"default","_"],obj)
 export const getCaseSensitive = (name,obj) => getFirstCaseSensitive([name,"default","_"],obj)
 export const safeMatch = (val,cases) => val?.match?.(cases) || cases?.default?.(val) || cases?._?.(val)

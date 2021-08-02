@@ -8,7 +8,6 @@ import {
   EnumType,
   Show,
 } from "../Union";
-import { getCase } from "../_internals";
 import {
   foldMap,
   fromEnum,
@@ -21,7 +20,7 @@ import {
   unwrap,
 } from "../_tools";
 
-describe("Utils", () => {
+describe("Union tools", () => {
   // Box is the simplest definition of an union
   const Boxed = Union({
     name: "Box", 
@@ -37,6 +36,7 @@ describe("Utils", () => {
   });
   const TooMuch = Boxed.of(Boxed.of(Boxed.of(42)));
   const P = EnumType("Nat", ["Zero", "One", "Two", "Three"]);
+
   describe("Union types", () => {
     it("should have a way to break nested unions", () => {
       expect(TooMuch.unwrap()).toBe(42);
@@ -125,28 +125,35 @@ describe("Utils", () => {
       expect(Boxed41.get()).toEqual(41);
     });
   });
-  describe("getCase", () => {
-    it("should be case insensitive", () => {
-      const cases = {
-        hey: 5,
-      };
-      expect(getCase("HeY", cases)).toBe(getCase("hey", cases));
-    });
 
-    it("should fallback to default, then _", () => {
-      const cases1 = {
-        value: "what",
-        default: "default",
-        _: "_",
-      };
-      const cases2 = {
-        value: "what",
-        _: "_",
-      };
-      const notMatch = "anything";
+  describe("Variant matching", () => {
+    describe("match", () => {
+      it("should expand cases when using the pipe operator", () => {
+        const pattern = { "One | Two": 42 , _: 41 }
+        const oneMatch = P.One.match(pattern)
+        const twoMatch = P.Two.match(pattern)
 
-      expect(getCase(notMatch, cases1)).toBe("default");
-      expect(getCase(notMatch, cases2)).toBe("_");
-    });
-  });
+        expect(oneMatch).toBe(42)
+        expect(twoMatch).toBe(42)
+      })
+      it("should guarantee last defined case wins", () => {
+        const pattern = { "One | Two": 42, One: 41, _: 40 }
+        const oneMatch = P.One.match(pattern)
+        const twoMatch = P.Two.match(pattern)
+
+        expect(oneMatch).toBe(41)
+        expect(twoMatch).toBe(42)
+      })
+    })
+    describe("simpleMatch", () => {
+      it("should match with cases as-is", () => {
+        const pattern = { "One | Two": 42 , _: 41 }
+        const oneMatch = P.One.simpleMatch(pattern)
+        const twoMatch = P.Two.simpleMatch(pattern)
+
+        expect(oneMatch).toBe(41)
+        expect(twoMatch).toBe(41)
+      })
+    })
+  })
 });

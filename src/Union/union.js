@@ -1,6 +1,6 @@
 import fromPairs from "ramda/src/fromPairs";
 import toPairs from "ramda/src/toPairs";
-import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass, setTypeName } from '../_internals'
+import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass, setTypeName, expandCases } from '../_internals'
 import Show from './show'
 
 const mapObj = fn => obj => fromPairs(toPairs(obj).map(fn))
@@ -18,6 +18,9 @@ const Box = (config) => (cases) => {
             return getInnerValue(this)
         }
         cases[trivial].prototype.match = function(patterns){
+            return extractWith([this.get()])(getCase(getVariant(this),expandCases(patterns)));
+        }
+        cases[trivial].prototype.simpleMatch = function(patterns){
             return extractWith([this.get()])(getCase(getVariant(this),patterns));
         }
 
