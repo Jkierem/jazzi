@@ -1,6 +1,6 @@
 import fromPairs from "https://deno.land/x/ramda@v0.27.2/source/fromPairs.js";
 import toPairs from "https://deno.land/x/ramda@v0.27.2/source/toPairs.js";
-import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass, setTypeName } from "../_internals/index.js";
+import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass, setTypeName, expandCases } from "../_internals/index.js";
 import Show from "./show.js";
 
 const mapObj = fn => obj => fromPairs(toPairs(obj).map(fn))
@@ -18,6 +18,9 @@ const Box = (config) => (cases) => {
             return getInnerValue(this)
         }
         cases[trivial].prototype.match = function(patterns){
+            return extractWith([this.get()])(getCase(getVariant(this),expandCases(patterns)));
+        }
+        cases[trivial].prototype.simpleMatch = function(patterns){
             return extractWith([this.get()])(getCase(getVariant(this),patterns));
         }
 
