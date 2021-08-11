@@ -127,6 +127,13 @@ const Either = Union(
   defaultTo(left) {
     return (right) => (right ? this.Right(right) : this.Left(left));
   },
+  attempt(fn,...args){
+    try {
+      return this.Right(fn(...args))
+    } catch(e) {
+      return this.Left(e)
+    }
+  },
 });
 
 export default Either;
