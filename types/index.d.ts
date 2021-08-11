@@ -920,6 +920,12 @@ declare module "jazzi" {
          */
         collectRights<L,R>(lrs: Either<L,R>[]): Either<L,R[]>;
         do<A,B>(fn: any): Either<A,B>;
+        /**
+         * Creates an Either value from a function that may throw an Error. Return Right of the return value of the function or Left of the thrown error
+         * @param fn 
+         */
+        attempt<A,R>(fn: () => R): Either<Error, R>;
+        attempt<A,R>(fn: (...args: A[]) => R, ...args?: A[]): Either<any, R>;
     }
 
     export const Either: EitherRep;
