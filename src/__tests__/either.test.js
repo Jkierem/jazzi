@@ -125,6 +125,8 @@ describe("Either", () => {
       ["fromMaybe", "None", "Left", Maybe.None()],
       ["fromResult", "Ok", "Right", Result.Ok(42)],
       ["fromResult", "Err", "Left", Result.Err(42)],
+      ["attempt", "function that doesn't throw", "Right", () => 42],
+      ["attempt", "function that throws", "Left", () => { throw 42 }],
     ].forEach(([cons, desc, type, ...args]) => {
       it(`${cons} called with a ${desc} value should return ${type}`, () => {
         expect(Either[cons](...args)).toTypeMatch(type);
@@ -136,5 +138,16 @@ describe("Either", () => {
       expect(defaultTo42(false).get()).toBe(42);
       expect(defaultTo42(43).get()).toBe(43);
     });
+
+    it("attempt should return Right Value", () => {
+      const right42 = Either.attempt((a,b) => a+b, 40, 2)
+      expect(right42.get()).toBe(42)
+      expect(right42).toTypeMatch("Right")
+    })
+    it("attempt should return Left Error", () => {
+      const left42 = Either.attempt(() => { throw 42 })
+      expect(left42.get()).toBe(42)
+      expect(left42).toTypeMatch("Left")
+    })
   });
 });
