@@ -1,5 +1,4 @@
 import propOr from "ramda/src/propOr";
-import prop from "ramda/src/prop";
 import { defineOverrides, currySetTypeclass as setTypeclass } from "../_internals";
 
 const mark = setTypeclass("Bifunctor")
@@ -16,8 +15,8 @@ const mark = setTypeclass("Bifunctor")
  * @returns {(cases: any) => void}
  */
 const Bifunctor = (defs) => mark((cases) => {
-    const first = prop("first",defs);
-    const second = prop("second",defs);
+    const first = propOr(false,"first",defs);
+    const second = propOr(false,"second",defs);
     const overrides = propOr({},"overrides",defs);
     function trivialFirst(f,g){
         return new cases[first](f(this.get()))
@@ -25,8 +24,12 @@ const Bifunctor = (defs) => mark((cases) => {
     function trivialSecond(f,g){
         return new cases[second](g(this.get()))
     }
-    cases[first].prototype.bimap = trivialFirst;
-    cases[second].prototype.bimap = trivialSecond;
+    if( first ){
+        cases[first].prototype.bimap = trivialFirst;
+    }
+    if( second ){
+        cases[second].prototype.bimap = trivialSecond;
+    }
     defineOverrides("bimap",[],overrides,cases)
 })
 

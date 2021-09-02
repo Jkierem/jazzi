@@ -95,10 +95,10 @@ Maybe.Just(42).show()          // [Maybe => Just 42]
 A more lightweight way of constructing types is NewType. This is a Union with a single case constructor. It implements two extra constructors: of and from. They are aliases of the case constructor. It comes with all the functionalities of Union but with a less cluttered interface for when that is wanted.
 
 ```javascript
-// Simple functor effect monad
+// Simple functor tap monad
 const Boxed = NewType("Boxed",[
     Functor({ trivials: ["Boxed"] }),
-    Effect({ trivials: ["Boxed"] }),
+    Tap({ trivials: ["Boxed"] }),
     Monad({ pure: "Boxed", trivials: ["Boxed" ]})
 ])
 
@@ -106,6 +106,36 @@ Boxed.of(42)
 .fmap(x => x + 1)          // returns Box 43
 .effect(console.log)       // logs 43 and returns Box 43
 .chain(x => Box.of(x + 4)) // returns Box 47
+```
+
+An even shorter version of NewType is AutoType. AutoType assumes the most simple definition for any provided typeclass.
+
+```javascript
+// Auto functor tap monad
+const Boxed = AutoType("Boxed",[Functor, Tap, Monad])
+
+Boxed.of(42)
+.fmap(x => x + 1)          // returns Box 43
+.effect(console.log)       // logs 43 and returns Box 43
+.chain(x => Box.of(x + 4)) // returns Box 47
+```
+
+AutoType just receives the typeclasses as it will generate a definition object from the type name
+
+```javascript
+const autoDef = (name) => ({
+    trivials: [name],
+    pure: [name],
+    resolve: [name],
+    order: [name],
+    first: name,
+    config: { noHelpers: true },
+    overrides: {
+        fold: {
+            [name](fn){ return fn(this.get()) }
+        }
+    }
+})
 ```
 
 The following typeclasses are available:
@@ -165,7 +195,7 @@ Defines a bimap method for a structure that has a defined first and second cases
 |--------|-------------|
 | bimap :: Bifunctor f => f a c ~> (a -> b) -> (c -> d) -> f b d | maps using the first function if first, second function if second. |
 
-## Effect
+## Tap
 
 This typeclass defines a way to look into a structure without altering it. Usually runs tasks considered as side effects hence the name. It requires the definition of trivial cases and identity cases if the default implementation wants to be used.
 
@@ -177,10 +207,11 @@ This typeclass defines a way to look into a structure without altering it. Usual
 
 | method | description |
 | ------ | ----------- |
-| effect :: Effect f => f a ~> (a -> ()) -> f a | runs the given function without altering the structure if trivial. Does nothing if identity |
-| peak   :: Effect f => f a ~> (a -> ()) -> f a | alias of effect |
-| matchEffect :: Cases c, Effect f => f a ~> c f a -> f a | matches against patterns and runs effect function |
-| when        :: Cases c, Effect f => f a ~> c f a -> f a | alias of matchEffec |
+| tap :: Tap f => f a ~> (a -> ()) -> f a | runs the given function without altering the structure if trivial. Does nothing if identity |
+| peak   :: Tap f => f a ~> (a -> ()) -> f a | alias of tap |
+| effect   :: Tap f => f a ~> (a -> ()) -> f a | alias of tap |
+| matchEffect :: Cases c, Tap f => f a ~> c f a -> f a | matches against patterns and runs effect function |
+| when        :: Cases c, Tap f => f a ~> c f a -> f a | alias of matchEffec |
 
 ## Enum
 
@@ -270,11 +301,11 @@ Defines a type that has a fold method. There is no default implementation. Must 
 
 | method | description |
 | ------ | ----------- |
-| fold :: Foldable f => f a -> (a -> b -> b) -> b | folds the structure. Result is a special case of folds |
+| fold :: Foldable f => f a b -> (a -> c) -> (b -> d) -> c \| d | folds the structure. Used to break the structure |
 
 ## Monad
 
-Defines a monadic type with a pure and a chain method. Like other typeclasses, needs the definitions of trivial and identity cases. Trivial chain case returns the value of evaluating the given function. Identity chain cases do nothing and return the structure unchanged. Requires to have a pure case defined.
+Defines a monadic type with a pure, join and a chain method. Like other typeclasses, needs the definitions of trivial and identity cases. Trivial chain case returns the value of evaluating the given function. Identity chain cases do nothing and return the structure unchanged. Requires to have a pure case defined.
 
 - Definitions: 
     - trivials: string[]
@@ -289,6 +320,7 @@ Defines a monadic type with a pure and a chain method. Like other typeclasses, n
 | chain :: Monad m => m a ~> (a -> m b) -> m b | calls the provided function with the inner value. Expects the function to return a Monad of the same type |
 | bind :: Monad m => m a ~> (a -> m b) -> m b | alias of chain |
 | flatMap :: Monad m => m a ~> (a -> m b) -> m b | alias of chain |
+| join :: Monad m => m (m a) ~> () -> m a | breaks nested monad one level deep |
 
 Also defines a method on the type 
 
@@ -415,7 +447,6 @@ Maybe should be used when communicating the posibility of a falsy value is expec
 | fromNullish :: a -> Maybe a   | returns None on null or undefined. Just otherwise |
 | fromEmpty :: a -> Maybe a     | returns None if the value provided is the empty value for the type. Just otherwise. Uses ramda's isEmpty function |
 | fromPredicate :: (a -> Boolean) -> a -> Maybe a | returns Just if the predicate returns a truthy value. None otherwise. The second argument is used to evaluate the predicate and construct the Just. Equivalent to `Maybe.of(predicate(a)).map(() => a)` |
-| fromResult :: Result a => a -> Maybe a | returns Just on a Ok. None on a Err |
 | isEmpty :: Maybe a -> Boolean | returns true on None. False otherwise |
 | match :: (Cases a, Maybe b) => a -> b -> c | returns the result of evaluating the cases with the provided value |
 | equals :: a -> b -> Boolean | returns whether two values are equal. Reference to ramda's equals function |
@@ -436,7 +467,7 @@ Implements the following typeclasses:
 - Functor
     - trivials: Just
     - identities: None
-- Effect
+- Tap
     - trivials: Just
     - identities: None
 - Monad
@@ -479,13 +510,12 @@ Either represents a value than can be of two possibilities (Left or Right). By c
 
 | type functions | description |
 | -------------- | ----------- |
-| of :: a -> b -> Either a b | returns `Right b` if `b` is not undefined or null. Otherwise `Left a` |
+| of :: a -> Either a a | returns `Right a` if `a` is not undefined or null. Otherwise `Left a` |
 | from :: a -> b -> Either a b | returns `Right b` if `b` is not undefined or null. Otherwise `Left a` |
 | fromNullish :: a -> b -> Either a b | returns `Right b` if `b` is not undefined or null. Otherwise `Left a` |
 | fromFalsy :: a -> b -> Either a b | returns `Right b` if `b` is truthy. Otherwise `Left a` |
 | fromPredicate :: (a -> Boolean) -> a -> Either a a | returns `Right a` if the predicate returns true. Otherwise `Left a`. The second argument is optional and used to evaluate |
 | fromMaybe :: Maybe m => m a -> Either a a | returns `Right a` if Just. Otherwise `Left undefined` |
-| fromResult :: Result m => m a b -> Either a b | returns `Right a` if Ok. Otherwise `Left b` |
 | defaultTo :: a -> b -> Either a b | Curryed version of `of`. returns `Right b` if `b` is not undefined or null. Otherwise `Left a` |
 | lefts :: Either f => [f a b] -> [f a b] | Receives an array of Eithers and returns an array of all the Eithers that where Left |
 | rights :: Either f => [f a b] -> [f a b] | Receives an array of Eithers and returns an array of all the Eithers that where Right |
@@ -517,62 +547,6 @@ Definitions for typeclasses:
 - left: Left
 - right: Right
 - errors: Left
-
-## Result
-
-```
-Result<A,B> = Ok<A> | Err<B>
-```
-
-Result marks the possibility of an Error. The default constructor returns Err when the received value throws an Error and Ok of the evaluation otherwise. Result can be seen as an opinionated case of Either. Also, a Result may have a fold operation but since it is so different from the Foldable definition, it does not implement the typeclass.
-
-| type functions       | description                                 |
-| -------------------- | ------------------------------------------- |
-| Ok :: a -> Ok a      | Ok constructor |
-| Err :: a -> Err a    | Err constructor |
-| of :: (() -> a) -> Result a   | returns Err on thrown Error. Ok otherwise |
-| from :: (() -> a) -> Result a | returns Err on thrown Error. Ok otherwise |
-| fromError :: a -> Result a    | returns Err on Error Object. Ok otherwise |
-| fromFalsy :: a -> Result a    | returns Err on falsy value. Ok otherwise  |
-| fromPredicate :: (a -> Boolean) -> a -> Result a | returns Ok if the predicate returns a truthy value. Err otherwise. The second argument is used to evaluate the predicate and to construct the Result. Equivalent to `Result.fromFalsy(predicate(a)).map(() => a).mapEror(() => a)` |
-| fromMaybe :: Maybe a => a -> Result a | returns Ok on a Just. Err of undefined on a None |
-| fromEither :: Either f => f a b -> Result a b | returns Ok on a Right. Err on a Left |
-| attempt :: (() -> a) -> Result a | returns Ok if the functions returns. Err if the function throws |
-
-### Ok and Err
-
-| method | description |
-| ------ | ----------- |
-| fold :: Result f => f a b ~> (a -> c) -> (b -> d) -> b \| d | returns the evaluation of the first function with the inner value as argument if `Err`. Returns the evaluation of the second function with the inner value if `Right` |
-| filter :: Result f => f a b ~> (a -> Boolean) -> f a b | **override of filter**: if it is `Ok a` and the predicate returns false, returns `Err a`. Otherwise returns the structure unchanged |
-
-Implements the following typeclasses: 
-
-- Bifunctor
-    
-- Effect
-- Filterable
-- Eq
-- Functor
-- FunctorError
-- Applicative
-- Monad
-- Swap
-- Show
-
-Definitions for typeclasses:
-
-- first: Ok
-- second: Err
-- pure: Ok
-- right: Ok
-- left: Err
-- errors: Err
-- trivials: Ok
-- identities: Err
-- overrides: 
-    - filter: Ok
-    - equals: Err
 
 ## IO
 

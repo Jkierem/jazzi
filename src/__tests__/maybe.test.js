@@ -1,5 +1,4 @@
 import Maybe from '../Maybe'
-import Result from '../Result'
 import isEmpty from 'ramda/src/isEmpty'
 import Sum from '../Sum'
 import { Spy } from "../__test-utils";
@@ -189,8 +188,6 @@ describe("Maybe", () => {
             ["fromEmpty"  , "non-empty object",{ a: 42 }, "just" ],
             ["fromEmpty"  , "non-empty array", [ 42 ]   , "just" ],
             ["fromEmpty"  , "something else" , null     , "just" ],
-            ["fromResult" , "Result.Ok"      , Result.Ok(42), "just"],
-            ["fromResult" , "Result.Err"     , Result.Err(42), "none"]
         ].forEach(([cons,label,val,type]) => {
             it(`${cons} should create a ${type} with ${label}`,() => {
                 expect(Maybe[cons](val)).toTypeMatch(type);

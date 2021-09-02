@@ -1,6 +1,4 @@
 declare module "jazzi" {
-    
-    type Placeholder = import("ramda").Placeholder;
     type Extractable<A> = A | (() => A)
     type Extractable1<A,B> = B | ((a: A) => B)
 
@@ -11,7 +9,6 @@ declare module "jazzi" {
 
     type MaybeCases  = Cases<"Just" | "None">;
     type EitherCases = Cases<"Left" | "Right">;
-    type ResultCases = Cases<"Ok" | "Err">;
     type MultCases   = Cases<"Mult" | "One">;
     type SumCases    = Cases<"Sum" | "Zero">;
     type MergeCases  = Cases<"Merge" | "Empty">;
@@ -51,29 +48,34 @@ declare module "jazzi" {
         toString(): string;
     }
 
-    interface Effect<T,Match> {
+    interface Tap<T,Match> {
         /**
          * Runs a function with the inner value of a structure without altering it
          * @param {(x: T) => void} fn function to run
          */
-        effect(fn: (x: T) => void): Effect<T,Match>;
+        effect(fn: (x: T) => void): Tap<T,Match>;
         /**
          * Runs a function with the inner value of a structure without altering it
          * @param {(x: T) => void} fn function to run
          */
-        peak(fn: (x: T) => void): Effect<T,Match>;
+        peak(fn: (x: T) => void): Tap<T,Match>;
+        /**
+         * Runs a function with the inner value of a structure without altering it
+         * @param {(x: T) => void} fn function to run
+         */
+        tap(fn: (x: T) => void): Tap<T,Match>;
         /**
          * Runs match function without altering itself. More info see `match`
          * @param {Match} patterns
          * @returns structure unchanged
          */
-        matchEffect(patterns: Match): Effect<T,Match>;
+        matchEffect(patterns: Match): Tap<T,Match>;
         /**
          * Runs match function without altering itself. More info see `match`
          * @param {Match} patterns
          * @returns structure unchanged
          */
-        when(patterns: Match): Effect<T,Match>;
+        when(patterns: Match): Tap<T,Match>;
     }
 
     interface Semigroup<A> {
@@ -104,16 +106,14 @@ declare module "jazzi" {
          * @returns mapped functor
          */
         fmap<B>(fn: (a: A) => B ): Functor<B>;
-        /**
-         * Attempts to perform a natural transformation by calling `of` method on the argument. *Not actually a proper natural transformation*
-         * @param typeRep 
-         */
-        natural<B>(typeRep: { of: (a: A) => B }): B;
-        /**
-         * Attempts to perform a natural transformation by calling `of` method on the argument. *Not actually a proper natural transformation*
-         * @param typeRep 
-         */
-        to<B>(typeRep: { of: (a: A) => B }): B;
+    }
+
+    interface Natural<A> {
+         /**
+          * Attempts to perform a natural transformation by calling `natural` method on the argument. *Not actually a proper natural transformation*
+          * @param typeRep 
+          */
+         to<B>(typeRep: { natural: (a: A) => B }): B;
     }
 
     interface FunctorError<A> {
@@ -249,6 +249,12 @@ declare module "jazzi" {
         greaterThanOrEqual: (o: Ord) => boolean;
     }
 
+    interface Thenable<Resolve,Reject> {
+        toPromise(): Promise<Resolve>;
+        then(onResolve: (value: Resolve) => void, onReject: (value: Reject) => void): void;
+        catch(onReject: (value: Reject) => void): void
+    }
+
     /** Type Representatives */
 
     interface MonadRep { 
@@ -294,6 +300,13 @@ declare module "jazzi" {
          */
         match(patterns: Match): any; 
     }
+    interface NaturalRep {
+        /**
+         * Method for transforming into the type.
+         * @param data 
+         */
+        natural<A>(data: A): Natural<A> ;
+    }
 
     interface EnumRep {
         /**
@@ -329,8 +342,9 @@ declare module "jazzi" {
     /** Maybe */
     export interface Maybe<A> 
     extends Boxed<A,MaybeCases>, Show,
-            Effect<A,MaybeCases>, Monad<A>, Monoid<A>, 
-            Filterable<A>, Eq<Maybe<A>>, Applicative<A>
+            Tap<A,MaybeCases>, Monad<A>, Monoid<A>, 
+            Filterable<A>, Eq<Maybe<A>>, Applicative<A>,
+            Thenable<A,undefined>, Natural<A>
     {
         /**
          * If Just, returns application of argument or argument. 
@@ -365,6 +379,7 @@ declare module "jazzi" {
 
         effect(fn: (x: A) => void): Maybe<A>;
         peak(fn: (x: A) => void): Maybe<A>;
+        tap(fn: (x: A) => void): Maybe<A>;
         matchEffect(patterns: MaybeCases): Maybe<A>;
         when(patterns: MaybeCases): Maybe<A>;
 
@@ -383,14 +398,38 @@ declare module "jazzi" {
 
         empty(): Maybe<A>;
 
+        /**
+         * If Just and the predicate returns true for the inner value, returns it unchanged.
+         * If Just and the predicate returns false for the inner value, returns none.
+         * If None, returns None
+         * @param fn 
+         */
         filter(fn: (a: A) => boolean): Maybe<A>;
 
         equals(e: Maybe<A>): boolean;
+
+        fold<B,C>(onNone: () => B, onJust: (a: A) => C): B | C;
+
+        /**
+         * Returns a promise that resolves with inner value if Just or rejects with undefined if None
+         */
+        toPromise(): Promise<A>;
+        /**
+         * Call onResolve if Just. Call onReject if None
+         * @param onResolve 
+         * @param onReject 
+         */
+        then(onResolve: (value: A) => void, onReject: (err: undefined) => void): void;
+        /**
+         * Calls onReject if None
+         * @param onReject 
+         */
+        catch(onReject: (err: undefined) => void): void
     }
 
     interface MaybeRep
     extends BoxedRep<MaybeCases>, 
-            MonadRep, MonoidRep, EqRep
+            MonadRep, MonoidRep, EqRep, NaturalRep
     {
         /**
          * Just constructor
@@ -437,11 +476,6 @@ declare module "jazzi" {
          */
         fromPredicate<A>(pred: (a: A) => boolean, val?: A ): Maybe<A>;
         /**
-         * If Ok returns Just.
-         * If Err returns None.
-         */
-        fromResult<T>(r: Result<T,any>): Maybe<T>;
-        /**
          * Returns true if inner value is considered an empty value.
          * @param x inner value
          */
@@ -455,118 +489,19 @@ declare module "jazzi" {
 
         equals<A>(ma: Maybe<A>, mb: Maybe<A>): boolean;
         do<A>(fn: any): Maybe<A>;
+        
+        natural<A>(data: A): Maybe<A>;
     }
 
     export const Maybe: MaybeRep;
-
-    /** Result */
-
-    export interface Result<A,E> 
-    extends Boxed<A | E,ResultCases>, Show,
-            Monad<A>, Effect<A,ResultCases>, Filterable<A>,
-            Eq<Result<A,E>>, Applicative<A>, Swap<A,E>,
-            FunctorError<E>
-    {
-        /**
-         * Returns argument or evaluation of argument if Ok. Inner value otherwise
-         * @param fn 
-         */
-        onOk  <B>(fn: B | ((x: A) => B)): B;
-        /**
-         * Returns argument or evaluation of argument if Err. Inner value otherwise
-         * @param fn 
-         */
-        onErr <B>(fn: B | ((x: E) => B)): B;
-        isOk  (): boolean;
-        isErr (): boolean;
-
-        mapError <B>(fn: (b: E) => B): Result<A,B>;
-        bimap <B,Z>( fnOk:  (a: A) => B,fnErr: (a: E) => Z ): Result<B,Z>;
-        fold  <B,Z>( fnErr: (a: E) => Z,fnOk:  (a: A) => B ): Result<B,Z>;
-        swap(): Result<A,E>;
-        swapIf(fn: (a: any) => boolean): Result<any,any>;
-        swapOn(fn: (a: any) => boolean): Result<any,any>;
-
-        /**
-         * Receives a predicate and returns the filtered structure.
-         * If Ok and predicate fails, returns an Err. Nothing otherwise
-         * @param pred 
-         */
-        filter(pred: (a: A) => boolean): Result<A,E>;
-
-        apply <B>(ap: Result<(a: A) => B,E>): Result<B,E>;
-        applyRight<B>(a: Result<(a: A) => B,E>): Result<B,E>;
-        applyLeft<B,C>(this: Result<(b: B) => C,E>,ap: Result<B,E>): Result<C,E>;
-
-        effect (fn: (a: A) => void): Result<A,E>;
-        peak   (fn: (a: A) => void): Result<A,E>;
-        matchEffect(patterns: ResultCases): Result<A,E>;
-        when(patterns: ResultCases): Result<A,E>;
-
-        chain   <B>(fn: (a: A) => Result<B,E>): Result<B,E>;
-        bind    <B>(fn: (a: A) => Result<B,E>): Result<B,E>;
-        flatMap <B>(fn: (a: A) => Result<B,E>): Result<B,E>;
-
-        equals(b: Result<A,E>): boolean;
-
-        map <B>(fn: (a:A) => B): Result<B,E>;
-        fmap<B>(fn: (a:A) => B): Result<B,E>;
-    }
-
-    interface ResultRep 
-    extends BoxedRep<ResultCases>, MonadRep, EqRep
-    {
-        Ok <A>(val: A): Result<A,any>;
-        Err<E>(err: E): Result<any,E>;
-        /**
-         * Receives a function. Returns Ok if the function evaluates. Err if it throws.
-         * @param fn 
-         */
-        of<A>(fn: A): Result<A,Error>;
-        /**
-         * Receives a function. Returns Ok if the function evaluates. Err if it throws.
-         * @param fn 
-         */
-        from<A>(fn: A): Result<A,Error>;
-        /**
-         * Returns Err if it receives an Error. Ok otherwise.
-         * @param val 
-         */
-        fromError<A>(val: A): Result<A,Error>;
-        /**
-         * Returns Err if it receives a falsy value. Ok otherwise.
-         * @param val 
-         */
-        fromFalsy<A>(val: A): Result<A,A>;
-        /**
-         * If predicate evaluates to true returns Ok of second argument. Err otherwise
-         * @param x inner value
-         */
-        fromPredicate<A>(pred: (a: A) => boolean, val?: A ): Result<A,A>;
-        /**
-         * If Just returns Ok.
-         * If None returns Err.
-         */
-        fromMaybe<A,E>(val: Maybe<A>, onNothing: Extractable<E>): Result<A,E>;
-        /**
-         * Receives a function. Returns Ok if the function evaluates. Err if it throws.
-         * @param fn 
-         */
-        attempt<A>(fn: (a:any) => A): Result<A,Error>;
-        
-        pure<A>(x: A): Result<A,any>;
-
-        equals<A,E>(ma: Result<A,E>, mb: Result<A,E>): boolean;
-        do<A,B>(fn: any): Result<A,B>;
-    }
-    export const Result: ResultRep
 
     /**
      * Monoid of numbers under multiplication
      */
     export interface Mult<A> 
     extends Boxed<A,MultCases>, Show,
-            Monoid<A>, Functor<A>, EqRep
+            Monoid<A>, Functor<A>, EqRep,
+            Thenable<A,1>
     {
         onMult <B>(fn: Extractable1<A,B>): B ;
         onOne  <B>(fn: Extractable1<A,B>): B ;
@@ -619,7 +554,8 @@ declare module "jazzi" {
      */
     export interface Sum<A> 
     extends Boxed<A,SumCases>, Show,
-            Monoid<A>, Functor<A>, Eq<A>
+            Monoid<A>, Functor<A>, Eq<A>,
+            Thenable<A,0>
     {
         onSum <B>(fn: Extractable1<A,B>): B ;
         onZero<B>(fn: Extractable1<A,B>): B ;
@@ -672,7 +608,8 @@ declare module "jazzi" {
      */
     export interface Merge<A> 
     extends Boxed<A,MergeCases>, Show,
-            Monoid<A>, Functor<A>, Eq<A>
+            Monoid<A>, Functor<A>, Eq<A>,
+            Thenable<A,{}>
     {
         onMerge<B>(fn: Extractable1<A,B>): B ;
         onEmpty<B>(fn: Extractable1<A,B>): B ;
@@ -721,7 +658,8 @@ declare module "jazzi" {
     export const Merge: MergeRep;
 
     export interface Reader<E,A>
-    extends Boxed<(a: E) => A,ReaderCases>, Show, Functor<A>, Applicative<A>
+    extends Boxed<(a: E) => A,ReaderCases>, Show, 
+            Functor<A>, Applicative<A>, Thenable<A, never>
     {
         /**
          * Transforms the received enviroment with `fn`
@@ -764,7 +702,7 @@ declare module "jazzi" {
     export const Reader: ReaderRep
   
     export interface IO<A> 
-    extends Boxed<A,IOCases>, Monad<A>
+    extends Boxed<A,IOCases>, Monad<A>, Thenable<A,never>
     {
         chain  <B>(fn : (x: A) => IO<B>): IO<B>;
         bind   <B>(fn : (x: A) => IO<B>): IO<B>;
@@ -794,7 +732,8 @@ declare module "jazzi" {
 
     export interface Either<L,R> 
     extends Boxed<L | R, EitherCases>, Monad<R>,
-            Swap<L,R>, FunctorError<L>, Show
+            Swap<L,R>, FunctorError<L>, Show,
+            Thenable<R,L>
     {
         onRight: <B>(fn: B | ((x: R) => B)) => B;
         onLeft:  <B>(fn: B | ((x: L) => B)) => B;
@@ -845,12 +784,12 @@ declare module "jazzi" {
         Left<L>(l: L): Either<L,any>;
         Right<R>(r: R): Either<any,R>;
         /**
-         * Returns Left of `l` if `r` is null or undefined
+         * Returns Left of `r` if `r` is null or undefined
          * Returns Right of `r` otherwise
          * @param l 
          * @param r 
          */
-        of<L,R>(l: L, r: R): Either<L,R>;
+        of<R>(r: R): Either<R,R>;
         /**
          * Returns Left of `l` if `r` is null or undefined
          * Returns Right of `r` otherwise
@@ -885,12 +824,6 @@ declare module "jazzi" {
          * @param m 
          */
         fromMaybe<A>(m: Maybe<A>): Either<any,A>;
-         /**
-         * Right if Ok
-         * Left if Err
-         * @param m 
-         */
-        fromResult<L,R>(m: Result<R,L>): Either<L,R>;
         /**
          * Curryed version of `Either.of`
          */
@@ -925,7 +858,7 @@ declare module "jazzi" {
          * @param fn 
          */
         attempt<A,R>(fn: () => R): Either<Error, R>;
-        attempt<A,R>(fn: (...args: A[]) => R, ...args?: A[]): Either<any, R>;
+        attempt<A,R>(fn: (...args: A[]) => R, ...args: A[]): Either<any, R>;
     }
 
     export const Either: EitherRep;
@@ -1178,6 +1111,13 @@ declare module "jazzi" {
      */
     export function flat<A>(monad: Monad<A>): A extends Monad<infer B>? Monad<B> : A ;
     /**
+     * Calls `to` on `natural`. Attempts a natural transformation. Auto-curryed
+     * @param fn
+     * @param monad
+     */
+     export function to<A,B>(type: { natural: (a: A) => B}, natural: Natural<A>): Natural<B>;
+     export function to<A,B>(type: { natural: (a: A) => B}): (natural: Natural<A>) => Natural<B>;
+    /**
      * Creates a sum type than can be extended using typeclasses provided by this library. For more info lookup API in the docs.
      * @param name Name used for the type
      * @param cases Cases that make up the union. It's an object with functions as values. 
@@ -1214,23 +1154,34 @@ declare module "jazzi" {
      * @param name name of the NewType
      * @param extensions typeclasses to implement
      */
-    export function NewType(name: string, extensions?: ((cases: any, globals: any) => void)[]): NewTypeType<typeof name>
+    export function NewType(name: string, extensions?: ((cases: any, globals: any) => void)[]): NewTypeType<typeof name>;
+    type AutoTypeDef<Name extends string> = {
+        trivials?: [Name],
+        pure?: [Name],
+        resolve?: [Name],
+        order?: [Name],
+        first?: Name,
+        right?: Name,
+        config?: { noHelpers: true },
+        overrides?: any
+    }
+    export function AutoType(name: string, extensions?: ((definitions: AutoTypeDef<typeof name>) => (cases: any, globals: any) => void)[]): NewTypeType<typeof name>;
 
-    export function Applicative(defs: { trivials: string[], identities: string[], overrides?: { apply?: any } }) : (cases: any, globals: any) => void;
-    export function Bifunctor(defs: { first: string, second: string, overrides?: { bimap?: any } }) : (cases: any, globals: any) => void;
+    export function Applicative(defs: { trivials?: string[], identities?: string[], overrides?: { apply?: any } }) : (cases: any, globals: any) => void;
+    export function Bifunctor(defs: { first?: string, second?: string, overrides?: { bimap?: any } }) : (cases: any, globals: any) => void;
     export function BoxedEnum(defs: {}): (cases: any, globals: any) => void;
-    export function Effect(defs: { trivials: string[], identities: string[], overrides?: { effect?: any } }) : (cases: any, globals: any) => void;
+    export function Tap(defs: { trivials?: string[], identities?: string[], overrides?: { effect?: any }, remove?: { matchEffect: boolean } }) : (cases: any, globals: any) => void;
     export function Enum(defs: { order?: string[], overrides?:{ toEnum: (a: any) => any, fromEnum: (a: any) => any } }): (cases: any, globals: any) => void;
-    export function Eq(defs: { trivials: string[], empties: string[], overrides?: { equals?: any } }) : (cases: any, globals: any) => void;
-    export function Filterable(defs: { trivials: string[], identities: string[], overrides?: { filter?: any } }) : (cases: any, globals: any) => void;
-    export function Foldable(defs: { overrides: { filter: any } }) : (cases: any) => void;
-    export function Functor(defs: { trivials: string[], identities: string[], overrides?: { fmap?: any } }) : (cases: any, globals: any) => void;
-    export function FunctorError(defs: { errors: string[], overrides?: { mapError?: any } }) : (cases: any, globals: any) => void;
-    export function Monad(defs: { pure: string, trivials: string[], identities: string[], overrides?: { chain?: any } }) : (cases: any, globals: any) => void;
-    export function Monoid(defs: { zero: string, trivials: string[], identities: string[], overrides?: { empty?: any, mappend?: any } }) : (cases: any, globals: any) => void;
+    export function Eq(defs: { trivials?: string[], empties?: string[], overrides?: { equals?: any } }) : (cases: any, globals: any) => void;
+    export function Filterable(defs: { trivials?: string[], identities?: string[], overrides?: { filter?: any } }) : (cases: any, globals: any) => void;
+    export function Foldable(defs: { overrides: { fold: any } }) : (cases: any) => void;
+    export function Functor(defs: { trivials?: string[], identities?: string[], overrides?: { fmap?: any }, remove?: { natural: boolean } }) : (cases: any, globals: any) => void;
+    export function FunctorError(defs: { errors?: string[], overrides?: { mapError?: any } }) : (cases: any, globals: any) => void;
+    export function Monad(defs: { pure?: string, trivials?: string[], identities?: string[], overrides?: { chain?: any } }) : (cases: any, globals: any) => void;
+    export function Monoid(defs: { zero?: string, trivials?: string[], identities?: string[], overrides?: { empty?: any, mappend?: any } }) : (cases: any, globals: any) => void;
     export function Ord(defs: { order?: string[], overrides?: { lessThanOrEqual?(this: any, a: any): boolean , compare?(this: any,a: any): Ordering } }): (cases: any, globals: any) => void;
-    export function Semigroup(defs: { trivials: string[], identities: string[], overrides?: { concat?: any } }) : (cases: any, globals: any) => void;
+    export function Semigroup(defs: { trivials?: string[], identities?: string[], overrides?: { concat?: any } }) : (cases: any, globals: any) => void;
     export function Show(defs: { overrides?: { show?: any } }) : (cases: any, globals: any) => void;
-    export function Swap(defs: { left: string, right: string, overrides?: { swap?: any } }) : (cases: any, globals: any) => void;
-    export function Thenable(defs: { resolve: string[], reject: string[], overrides: { toPromise?: { [x: string] : () => Promise<any> } } }): (cases: any, globals: any) => void;
+    export function Swap(defs: { left?: string, right?: string, overrides?: { swap?: any } }) : (cases: any, globals: any) => void;
+    export function Thenable(defs: { resolve?: string[], reject?: string[], overrides: { toPromise?: { [x: string] : () => Promise<any> } } }): (cases: any, globals: any) => void;
 }

@@ -1,10 +1,12 @@
 import assoc from "https://deno.land/x/ramda@v0.27.2/source/assoc.js";
 import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
-import { getVariant, forEachValue } from "../_internals/index.js";
+import { getVariant, forEachValue, setTypeclass } from "../_internals/mod.js";
 import Enum from "./enum.js";
 import Eq from "./eq.js";
 import Show from "./show.js";
 import Union from "./union.js";
+
+const mark = x => setTypeclass("Ord",x)
 
 const rawCases = ["LT","EQ","GT"]
 const Ordering = Union("Ordering",{
@@ -28,7 +30,7 @@ const Ordering = Union("Ordering",{
 ]).constructors({})
 
 function Ord(defs){ 
-    return (cases) => {
+    return mark((cases) => {
         const order = propOr([],"order",defs)
         const overrides = propOr({},"overrides",defs);
         const ltBased      = overrides?.lessThanOrEqual || false;
@@ -80,8 +82,11 @@ function Ord(defs){
                 return !this.compare(o).isLT()
             }
         },cases)
-    }
+    })
 }
+
+mark(Ord)
+
 export default Ord
 
 export { Ordering }

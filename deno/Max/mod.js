@@ -1,4 +1,4 @@
-import { isNil } from "../_internals/index.js";
+import { isNil } from "../_internals/mod.js";
 import {
   Eq,
   Functor,
@@ -6,9 +6,9 @@ import {
   Semigroup,
   Show,
   Thenable,
-} from "../Union/index.js";
+} from "../Union/mod.js";
 import Union from "../Union/union.js";
-import { monoidThen, monoidToPromise } from "../_internals/index.js";
+import { monoidThen, monoidToPromise } from "../_internals/mod.js";
 
 const Defs = {
   trivials: ["Max"],

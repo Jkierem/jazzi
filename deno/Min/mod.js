@@ -5,9 +5,9 @@ import {
   Semigroup,
   Show,
   Thenable,
-} from "../Union/index.js";
+} from "../Union/mod.js";
 import Union from "../Union/union.js";
-import { isNil, monoidThen, monoidToPromise } from "../_internals/index.js";
+import { isNil, monoidThen, monoidToPromise } from "../_internals/mod.js";
 
 const Defs = {
   trivials: ["Min"],

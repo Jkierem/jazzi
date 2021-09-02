@@ -1,4 +1,4 @@
-import { Either, Maybe, Result } from "../";
+import { Either, Maybe } from "../";
 import { Spy } from "../__test-utils";
 
 describe("Either", () => {
@@ -113,18 +113,16 @@ describe("Either", () => {
 
   describe("constructors", () => {
     [
-      ["of", "truthy", "Right", "left value", 42],
-      ["of", "not nullish", "Right", "left", false],
-      ["of", "undefined", "Left", "left", undefined],
-      ["of", "null", "Left", "left", null],
+      ["of", "truthy", "Right", 42],
+      ["of", "not nullish", "Right", false],
+      ["of", "undefined", "Left", undefined],
+      ["of", "null", "Left", null],
       ["fromFalsy", "truthy", "Right", "left", 42],
       ["fromFalsy", "falsy", "Left", "left", false],
       ["fromPredicate", "truthy return", "Right", (x) => x == 42, 42],
       ["fromPredicate", "falsy return", "Left", (x) => x == 42, 43],
       ["fromMaybe", "Just", "Right", Maybe.Just(42)],
       ["fromMaybe", "None", "Left", Maybe.None()],
-      ["fromResult", "Ok", "Right", Result.Ok(42)],
-      ["fromResult", "Err", "Left", Result.Err(42)],
       ["attempt", "function that doesn't throw", "Right", () => 42],
       ["attempt", "function that throws", "Left", () => { throw 42 }],
     ].forEach(([cons, desc, type, ...args]) => {

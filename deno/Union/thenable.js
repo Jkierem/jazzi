@@ -1,6 +1,6 @@
 import identity from "https://deno.land/x/ramda@v0.27.2/source/identity.js";
 import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
-import { setTypeclass, defineOverrides, forEachValue } from "../_internals/index.js";
+import { setTypeclass, defineOverrides, forEachValue } from "../_internals/mod.js";
 
 const mark = x => setTypeclass("Thenable",x)
 

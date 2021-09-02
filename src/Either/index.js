@@ -109,7 +109,7 @@ const Either = Union(
     EitherType(),
   ]
 ).constructors({
-  of: defaultConstructor,
+  of(x){ return defaultConstructor.bind(this)(x,x) },
   from: defaultConstructor,
   fromNullish: defaultConstructor,
   fromFalsy(l, r) {
@@ -120,9 +120,6 @@ const Either = Union(
   },
   fromMaybe(m) {
     return m.match({ Just: this.Right, None: this.Left });
-  },
-  fromResult(m) {
-    return m.match({ Ok: this.Right, Err: this.Left });
   },
   defaultTo(left) {
     return (right) => (right ? this.Right(right) : this.Left(left));

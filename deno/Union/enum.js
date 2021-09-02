@@ -1,7 +1,9 @@
 import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
-import { forEachValue, getVariant } from "../_internals/index.js";
+import { forEachValue, getVariant, setTypeclass } from "../_internals/mod.js";
 
-const Enum = (defs) => (cases,globals) => {
+const mark = x => setTypeclass("Enum",x)
+
+const Enum = (defs) => mark((cases,globals) => {
     const order = propOr(undefined,"order",defs);
     const defaultOrder = Object.keys(cases);
     const overrides = propOr({},"overrides",defs)
@@ -47,6 +49,8 @@ const Enum = (defs) => (cases,globals) => {
         }
         return res
     }
-}
+})
+
+mark(Enum)
 
 export default Enum

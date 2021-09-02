@@ -5,37 +5,37 @@ import {
   Semigroup,
   Show,
   Thenable,
-} from "../Union/index.js";
+} from "../Union/mod.js";
 import Union from "../Union/union.js";
-import { monoidThen, monoidToPromise } from "../_internals/index.js";
+import { monoidThen, monoidToPromise } from "../_internals/mod.js";
 
 const Defs = {
-  trivials: ["Last"],
-  zero: "Last",
-  resolve: ["Last"],
+  trivials: ["First"],
+  zero: "First",
+  resolve: ["First"],
   overrides: {
     concat: {
-      Last(o) {
-        return o;
+      First(o) {
+        return this.get() === undefined ? o : this;
       },
     },
     then: {
-      Last: monoidThen,
+      First: monoidThen
     },
     toPromise: {
-      Last: monoidToPromise
+      First: monoidToPromise
     }
   },
 };
 
 function defaultConstructor(x) {
-  return this.Last(x);
+  return this.First(x);
 }
 
-const Last = Union(
-  "Last",
+const First = Union(
+  "First",
   {
-    Last: (x) => x,
+    First: (x) => x,
   },
   [
     Eq(Defs), 
@@ -50,4 +50,4 @@ const Last = Union(
   from: defaultConstructor,
 });
 
-export default Last;
+export default First;

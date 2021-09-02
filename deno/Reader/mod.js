@@ -1,6 +1,6 @@
-import { Applicative, Functor, Monad, Show, Thenable } from "../Union/index.js";
+import { Applicative, Functor, Monad, Show, Thenable } from "../Union/mod.js";
 import Union from "../Union/union.js";
-import { extractWith, getType } from "../_internals/index.js";
+import { extractWith, getType } from "../_internals/mod.js";
 
 const ReaderMonad = () => (cases, global) => {
   cases.Reader.prototype.local = function (fn) {

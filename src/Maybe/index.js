@@ -11,7 +11,8 @@ import {
   Semigroup,
   Show,
   Monoid,
-  Effect,
+  Tap,
+  Foldable,
   Filterable,
   Thenable,
 } from "../Union";
@@ -55,6 +56,10 @@ const MaybeDefs = {
       Just(fn) {
         return Maybe.fromPredicate(fn, this.get());
       },
+    },
+    fold: {
+      Just(onNone,onJust){ return onJust(this.get()) },
+      None(onNone,onJust){ return onNone() }
     }
   },
 };
@@ -71,7 +76,7 @@ const Maybe = Union(
   },
   [
     Functor(MaybeDefs),
-    Effect(MaybeDefs),
+    Tap(MaybeDefs),
     Eq(MaybeDefs),
     Monad(MaybeDefs),
     Monoid(MaybeDefs),
@@ -80,6 +85,7 @@ const Maybe = Union(
     Filterable(MaybeDefs),
     Thenable(MaybeDefs),
     Show(MaybeDefs),
+    Foldable(MaybeDefs),
     MaybeType(),
   ]
 ).constructors({
@@ -97,12 +103,6 @@ const Maybe = Union(
   },
   fromPredicate(pred, val) {
     return pred(val) ? this.Just(val) : this.None();
-  },
-  fromResult(r) {
-    return r?.match?.({
-      Ok: this.Just,
-      Err: this.None,
-    });
   },
   isEmpty(x) {
     return x?.isNone() || isEmpty(x?.get?.()) || false;

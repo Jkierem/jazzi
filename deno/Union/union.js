@@ -1,6 +1,6 @@
 import fromPairs from "https://deno.land/x/ramda@v0.27.2/source/fromPairs.js";
 import toPairs from "https://deno.land/x/ramda@v0.27.2/source/toPairs.js";
-import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass, setTypeName, expandCases } from "../_internals/index.js";
+import { setType, setInnerValue, getInnerValue, setVariant, extractWith, getVariant, getCase, setTypeclasses, getTypeclass, setTypeName, expandCases } from "../_internals/mod.js";
 import Show from "./show.js";
 
 const mapObj = fn => obj => fromPairs(toPairs(obj).map(fn))
@@ -86,5 +86,26 @@ export const NewType = (name,exts=[]) => Union(name,
         from(...args){ return this[name](...args) }
     })
 
+export const createAutoDefinition = (name) => ({
+    trivials: [name],
+    pure: [name],
+    resolve: [name],
+    order: [name],
+    first: name,
+    config: {
+        noHelpers: true,
+    },
+    overrides: {
+        fold: {
+            [name](fn){ return fn(this.get()) }
+        }
+    }
+})
+
+export const AutoType = (name, exts=[]) => {
+    const autoDef = createAutoDefinition(name)
+    const filledDefs = exts.map(ext => ext(autoDef))
+    return NewType(name, filledDefs)
+}
 
 export default Union;

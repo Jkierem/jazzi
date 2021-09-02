@@ -3,9 +3,9 @@ export default {
     input: "./src",
     output: "./deno",
     typeInput: "types/index.d.ts",
-    typeOutput: "deno/index.d.ts",
+    typeOutput: "deno/mod.d.ts",
     files: [
-        ["deno/index.js","./index.d.ts"]
+        ["deno/mod.js","./mod.d.ts"]
     ],
     debug: false,
     dry: false

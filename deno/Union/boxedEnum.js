@@ -1,4 +1,4 @@
-import { forEachValue, isNil, setTypeclass } from "../_internals/index.js";
+import { forEachValue, isNil, setTypeclass } from "../_internals/mod.js";
 
 const mark = x => setTypeclass("BoxedEnum",x)
 

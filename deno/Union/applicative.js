@@ -1,5 +1,5 @@
 import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
-import { currySetTypeclass as setTypeclass, defineOverrides } from "../_internals/index.js";
+import { currySetTypeclass as setTypeclass, defineOverrides } from "../_internals/mod.js";
 
 const mark = setTypeclass("Applicative")
 

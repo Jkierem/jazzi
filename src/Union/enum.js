@@ -1,7 +1,9 @@
 import propOr from "ramda/src/propOr";
-import { forEachValue, getVariant } from "../_internals";
+import { forEachValue, getVariant, setTypeclass } from "../_internals";
 
-const Enum = (defs) => (cases,globals) => {
+const mark = x => setTypeclass("Enum",x)
+
+const Enum = (defs) => mark((cases,globals) => {
     const order = propOr(undefined,"order",defs);
     const defaultOrder = Object.keys(cases);
     const overrides = propOr({},"overrides",defs)
@@ -47,6 +49,8 @@ const Enum = (defs) => (cases,globals) => {
         }
         return res
     }
-}
+})
+
+mark(Enum)
 
 export default Enum

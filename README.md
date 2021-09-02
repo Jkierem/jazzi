@@ -12,13 +12,12 @@ Implementations of common structures using ramda for utilities. Available Struct
 - IO
 - Maybe
 - Reader
-- Result
 - Useful Monoids: Sum, Mult, Merge
 - Moar Monoids: Max, Min, First, Last
 - A function to create Tagged Unions/Sum types: Union
 - A way to implement typeclasses and use prototype inheritance. More on this on API.md
 - Pre built typeclasses available to use. More on this on API.md 
-- A way to create C++ style Enums but with a haskell-ish feel: the EnumType function
+- A way to create Enums with a haskell-ish feel: the EnumType function
 - All structures are thenable objects and have a toPromise method
 
 # Installing
@@ -127,22 +126,6 @@ const example = async () => {
 
 It also comes with a `toPromise` function that converts any structure to a promise, given that they implement the `Thenable` typeclass.
 
-## Either
-
-Either represents a value that can be one of two possibilities, either `Left` or `Right` (badum tssss). By convention `Left` is treated as the error case and `Right` as the happy path but they are just two possibilities. The default constructor receives a left value `l` and right value `r` where if `r` is neither null nor undefined then we get `Right r` otherwise we get a `Left l`. There is a curried version of the `fromFalsy` constructor that was made for convenience.
-
-```javascript
-const default42 = Either.defaultTo(42);
-defaultTo42(undefined) // returns Left 42
-defaultTo42(6 * 9) // return Right (6 * 9)
-```
-
-It also has useful map functions for both left and right. The map functions are:
-
-- Right maps: `map`     ,`ifRight` , `mapRight`
-- Left  maps: `mapError`,`ifLeft`  , `mapLeft`
-
-
 ## Maybe
 
 Maybe represents the possibility of the absensce of value. `Just` for values, `None` for no values. The default constructor returns `Just` of truthy values and `None` otherwise. Unlike Either where `Left` and `Right` both behave like functors, `None` does not behave like a functor, rather `map` of a `None` simply returns the structure unchanged.
@@ -152,20 +135,23 @@ Maybe.of(42)    // Just 42
 Maybe.of(false) // None
 ```
 
-## Result
+## Either
 
-Result represents the result of a computation that could fail, with `Ok` meaning all went well and `Err` as something went wrong. The default constructor receives a function that may throw an error, returning `Ok` of the result or `Err` of the error. Like `Either`, it has a `mapError` function for handling adversity. 
+Either represents a value that can be one of two possibilities, either `Left` or `Right` (badum tssss). By convention `Left` is treated as the error case and `Right` as the happy path but they are just two possibilities. The `from` constructor receives a left value `l` and right value `r` where if `r` is neither null nor undefined then we get `Right r` otherwise we get a `Left l`. There is a curried version of the `fromFalsy` constructor that was made for convenience. The `of` constructor is the same as calling the `from` constructor but passing the same value as both arguments
 
 ```javascript
-Result.of(() => 42) // returns Ok 42
-Result.of(() => { throw 42 }) // returns Err 42
+const default42 = Either.defaultTo(42);
+defaultTo42(undefined) // returns Left 42
+defaultTo42(6 * 9) // returns Right (6 * 9)
+
+const Right42 = Either.attempt(() => 42) // returns Right 42 
+const Left42 = Either.attempt(() => { throw 42 }) // returns Left 42 
 ```
 
-Has three more constructors:
+It also has useful map functions for both left and right. The map functions are:
 
-- `fromFalsy`: `Ok` on truthy, `Err` on falsy
-- `fromError`: `Ok` on anything other than Error, `Err Error` of Error
-- `attempt`  : alias of `of`
+- Right maps: `map`     ,`ifRight` , `mapRight`
+- Left  maps: `mapError`,`ifLeft`  , `mapLeft`
 
 ## IO
 
@@ -375,6 +361,8 @@ const doSomethingAsync = async (name) => {
     }
 }
 ```
+
+If you need an EnumType that can hold a value, there is also BoxedEnumType
 
 More on this in API.md
 

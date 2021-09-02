@@ -1,12 +1,12 @@
-import { extractWith, getInnerValue } from "../_internals/index.js";
+import { extractWith, getInnerValue } from "../_internals/mod.js";
 import {
   Monad,
   Applicative,
   Functor,
   Show,
-  Effect,
+  Tap,
   Thenable,
-} from "../Union/index.js";
+} from "../Union/mod.js";
 import Union from "../Union/union.js";
 import compose from "https://deno.land/x/ramda@v0.27.2/source/compose.js";
 
@@ -78,7 +78,7 @@ const IO = Union(
     Monad(IODefs),
     Thenable(IODefs),
     Show(IODefs),
-    Effect(IODefs),
+    Tap(IODefs),
   ]
 ).constructors({
   of: defaultIO,

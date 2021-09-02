@@ -4,7 +4,7 @@ import {
   Applicative,
   Functor,
   Show,
-  Effect,
+  Tap,
   Thenable,
 } from "../Union";
 import Union from '../Union/union'
@@ -78,7 +78,7 @@ const IO = Union(
     Monad(IODefs),
     Thenable(IODefs),
     Show(IODefs),
-    Effect(IODefs),
+    Tap(IODefs),
   ]
 ).constructors({
   of: defaultIO,

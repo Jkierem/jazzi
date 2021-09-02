@@ -5,7 +5,7 @@ import Enum from "./enum.js";
 import Eq from "./eq.js";
 import Ord from "./ord.js";
 import Functor from "./functor.js";
-import Effect from "./effect.js";
+import Tap from "./tap.js";
 import BoxedEnum from "./boxedEnum.js";
 
 /**
@@ -23,7 +23,7 @@ const BoxedEnumType = (name,rawCases) => {
             Ord({ order: rawCases }),
             Enum({ order: rawCases }),
             Functor({ trivials: rawCases }),
-            Effect({ trivials: rawCases }),
+            Tap({ trivials: rawCases }),
             Show({ trivials: rawCases }),
             BoxedEnum()
         ]

@@ -86,5 +86,26 @@ export const NewType = (name,exts=[]) => Union(name,
         from(...args){ return this[name](...args) }
     })
 
+export const createAutoDefinition = (name) => ({
+    trivials: [name],
+    pure: [name],
+    resolve: [name],
+    order: [name],
+    first: name,
+    config: {
+        noHelpers: true,
+    },
+    overrides: {
+        fold: {
+            [name](fn){ return fn(this.get()) }
+        }
+    }
+})
+
+export const AutoType = (name, exts=[]) => {
+    const autoDef = createAutoDefinition(name)
+    const filledDefs = exts.map(ext => ext(autoDef))
+    return NewType(name, filledDefs)
+}
 
 export default Union;

@@ -1,6 +1,6 @@
 import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
-import { forEachValue } from "../_internals/index.js";
-import { setTypeclass } from "../_internals/index.js";
+import { forEachValue } from "../_internals/mod.js";
+import { setTypeclass } from "../_internals/mod.js";
 
 /**
  * Adds concat method to proto

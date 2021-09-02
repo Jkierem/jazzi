@@ -1,7 +1,7 @@
 import includes from "https://deno.land/x/ramda@v0.27.2/source/includes.js";
 import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
-import { defineOverrides, forEachValue, setTypeclass, splitBy } from "../_internals/index.js";
-import { hasInstance } from "../_tools/index.js";
+import { defineOverrides, forEachValue, setTypeclass, splitBy } from "../_internals/mod.js";
+import { hasInstance } from "../_tools/mod.js";
 
 /**
  * Adds map and fmap method to proto
@@ -32,18 +32,7 @@ const Functor = (defs) => setTypeclass("Functor",(cases) => {
         cases[empt].prototype.fmap = idFmap
         cases[empt].prototype.map = idFmap
     })
-    forEachValue((variant) => {
-        function NatTrans(other){
-            if( hasInstance(Functor,other) ){
-                return this.map(other.of).get()
-            }
-            throw Error("Cannot transform into a non-Functor")
-        }
-        variant.prototype.natural = NatTrans;
-        variant.prototype.to      = NatTrans;
-    },cases)
     defineOverrides("fmap",["map"],overrides,cases);
-    defineOverrides("natural",["to"],overrides,cases);
 })
 
 setTypeclass("Functor",Functor)

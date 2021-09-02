@@ -32,18 +32,7 @@ const Functor = (defs) => setTypeclass("Functor",(cases) => {
         cases[empt].prototype.fmap = idFmap
         cases[empt].prototype.map = idFmap
     })
-    forEachValue((variant) => {
-        function NatTrans(other){
-            if( hasInstance(Functor,other) ){
-                return this.map(other.of).get()
-            }
-            throw Error("Cannot transform into a non-Functor")
-        }
-        variant.prototype.natural = NatTrans;
-        variant.prototype.to      = NatTrans;
-    },cases)
     defineOverrides("fmap",["map"],overrides,cases);
-    defineOverrides("natural",["to"],overrides,cases);
 })
 
 setTypeclass("Functor",Functor)

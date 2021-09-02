@@ -31,7 +31,7 @@ describe("IO",() => {
             expect(ioId.show()).toBe("[IO => () => _]")
             expect(id.called).toBeFalsy();
         })
-        it("IO Effect", () => {
+        it("IO Tap", () => {
             const plusOne = Spy(x => x + 1);
             const io42 = IO.of(42).peak(plusOne)
             expect(plusOne.called).toBeFalsy()

@@ -3,7 +3,7 @@ import First from "../First"
 import {
   Enum,
   Eq,
-  Effect,
+  Tap,
   Filterable,
   Functor,
   FunctorError,
@@ -11,10 +11,11 @@ import {
   NewType,
   Thenable,
   Union,
+  Natural,
 } from "../Union";
 import { extractWith } from "../_internals";
 import { Spy } from "../__test-utils";
-import { fromEnum } from "../_tools";
+import { fromEnum, hasInstance } from "../_tools";
 
 const trivialImpl = (...tcs) => {
   const defs = {
@@ -151,14 +152,12 @@ describe("typeclasses", () => {
     })
   });
 
-  describe("Functor", () => {
+  describe("Natural", () => {
     describe("natural transformation", () => {
-      const Trivial = NewType("Trivial", [Functor({ trivials: ["Trivial"] })]);
-      const Trivial2 = NewType("Trivial2", [
-        Functor({ trivials: ["Trivial2"] }),
-      ]);
+      const Trivial  = NewType("Trivial", [Natural()]);
+      const Trivial2 = NewType("Trivial2", [Natural()]);
       it("should change structure and leave value unchanged", () => {
-        const t42 = Trivial.of(42).natural(Trivial2);
+        const t42 = Trivial.of(42).to(Trivial2);
         expect(t42).toTypeMatch("Trivial2");
         expect(t42.get()).toBe(42);
       });
@@ -275,7 +274,7 @@ describe("typeclasses", () => {
     });
   });
 
-  describe("Effect", () => {
+  describe("Tap", () => {
     const T = Union({
       name: "T",
       cases: {
@@ -284,7 +283,7 @@ describe("typeclasses", () => {
       },
       extensions: [
         Functor({ trivials: ["Trivial"], identities: ["Id"]}),
-        Effect({ trivials: ["Trivial"], identities: ["Id"]})
+        Tap({ trivials: ["Trivial"], identities: ["Id"]})
       ],
       constructors: {}
     })

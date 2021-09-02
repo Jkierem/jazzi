@@ -1,7 +1,7 @@
 import { default as eq } from "https://deno.land/x/ramda@v0.27.2/source/equals.js";
 import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
-import { forEachValue } from "../_internals/index.js";
-import { currySetTypeclass, getVariant } from "../_internals/index.js";
+import { forEachValue } from "../_internals/mod.js";
+import { currySetTypeclass, getVariant } from "../_internals/mod.js";
 
 const mark = currySetTypeclass("Eq")
 

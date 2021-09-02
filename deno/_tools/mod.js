@@ -1,4 +1,4 @@
-import { extractWith, getCaseSensitive, getType, getTypeclass, getTypeclasses, getVariant as _getVariant, safeMatch, includes, getTypeName as getTN } from "../_internals/index.js";
+import { extractWith, getCaseSensitive, getType, getTypeclass, getTypeclasses, getVariant as _getVariant, safeMatch, includes, getTypeName as getTN } from "../_internals/mod.js";
 
 /**
  * Type match a value
@@ -56,6 +56,7 @@ export const flat = (monad) => monad.join();
 export const bind = (fn, monad) => monad === undefined ? (monad) => monad.bind(fn) : monad.bind(fn)
 export const chain = (fn, monad) => monad === undefined ? (monad) => monad.chain(fn) : monad.chain(fn)
 export const flatMap = (fn, monad) => monad === undefined ? (monad) => monad.flatMap(fn) : monad.flatMap(fn)
+export const to = (other, nat) => nat === undefined ? (nat) => nat.to(other) : nat.to(other)
 
 export const stringSwitch = (str,_patt) => {
     return extractWith([])(getCaseSensitive(str,_patt))

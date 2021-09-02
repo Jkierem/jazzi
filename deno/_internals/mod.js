@@ -14,7 +14,7 @@ const toLower = str => str.toLowerCase();
 
 const trim = str => str.trim()
 
-const getFirstCaseSensitive = (ps,obj) => {
+export const getFirstCaseSensitive = (ps,obj) => {
     const mappedObj = mapKeys(toLower,obj)
     const matched = ps.find(p => !isNil(mappedObj[p]))
     return mappedObj[matched]

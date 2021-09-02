@@ -1,20 +1,21 @@
-import propOr from "ramda/src/propOr";
-import { defineOverrides, currySetTypeclass as setTypeclass, forEachValue } from "../_internals"
+import propOr from "https://deno.land/x/ramda@v0.27.2/source/propOr.js";
+import { defineOverrides, currySetTypeclass as setTypeclass, forEachValue } from "../_internals/mod.js";
 
-const mark = setTypeclass("Effect")
+const mark = setTypeclass("Tap")
 
 /**
  * Adds effect and peak method to proto
  * @param {{ 
  *  trivials: string[], 
  *  identities: string[],
+ *  remove?: { matchEffect: boolean }, 
  *  overrides?: {
- *      effect?: any;
+ *      tap?: any;
  *  }
  * }} defs 
  * @returns {(cases: any) => void}
  */
-const Effect = (defs) => mark((cases) => {
+const Tap = (defs) => mark((cases) => {
     const trivials = propOr([],"trivials",defs);
     const identities = propOr([],"identities",defs);
     const overrides = propOr({},"overrides",defs);
@@ -27,6 +28,7 @@ const Effect = (defs) => mark((cases) => {
         }
         cases[trivial].prototype.effect = trivialEffect
         cases[trivial].prototype.peak = trivialEffect
+        cases[trivial].prototype.tap = trivialEffect
     })
 
     identities.forEach(empt => {
@@ -35,8 +37,8 @@ const Effect = (defs) => mark((cases) => {
         }
         cases[empt].prototype.effect = idEffect
         cases[empt].prototype.peak = idEffect
+        cases[empt].prototype.tap = idEffect
     })
-
     forEachValue((variant) => {
         function baseImpl(pat){
             this.match(pat)
@@ -46,9 +48,9 @@ const Effect = (defs) => mark((cases) => {
         variant.prototype.when = baseImpl;
     },cases)
 
-    defineOverrides("effect",["peak"],overrides,cases)
+    defineOverrides("tap",["peak","effect"],overrides,cases)
 })
 
-mark(Effect)
+mark(Tap)
 
-export default Effect
+export default Tap

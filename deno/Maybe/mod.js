@@ -1,8 +1,8 @@
 import { default as rEquals } from "https://deno.land/x/ramda@v0.27.2/source/equals.js";
 import isEmpty from "https://deno.land/x/ramda@v0.27.2/source/isEmpty.js";
 import empty from "https://deno.land/x/ramda@v0.27.2/source/empty.js";
-import { isNil } from "../_internals/index.js";
-import { match as globalMatch } from "../_tools/index.js";
+import { isNil } from "../_internals/mod.js";
+import { match as globalMatch } from "../_tools/mod.js";
 import {
   Functor,
   Monad,
@@ -11,10 +11,11 @@ import {
   Semigroup,
   Show,
   Monoid,
-  Effect,
+  Tap,
+  Foldable,
   Filterable,
   Thenable,
-} from "../Union/index.js";
+} from "../Union/mod.js";
 import Union from "../Union/union.js";
 
 const MaybeType = () => (cases) => {
@@ -55,6 +56,10 @@ const MaybeDefs = {
       Just(fn) {
         return Maybe.fromPredicate(fn, this.get());
       },
+    },
+    fold: {
+      Just(onNone,onJust){ return onJust(this.get()) },
+      None(onNone,onJust){ return onNone() }
     }
   },
 };
@@ -71,7 +76,7 @@ const Maybe = Union(
   },
   [
     Functor(MaybeDefs),
-    Effect(MaybeDefs),
+    Tap(MaybeDefs),
     Eq(MaybeDefs),
     Monad(MaybeDefs),
     Monoid(MaybeDefs),
@@ -80,6 +85,7 @@ const Maybe = Union(
     Filterable(MaybeDefs),
     Thenable(MaybeDefs),
     Show(MaybeDefs),
+    Foldable(MaybeDefs),
     MaybeType(),
   ]
 ).constructors({
@@ -97,12 +103,6 @@ const Maybe = Union(
   },
   fromPredicate(pred, val) {
     return pred(val) ? this.Just(val) : this.None();
-  },
-  fromResult(r) {
-    return r?.match?.({
-      Ok: this.Just,
-      Err: this.None,
-    });
   },
   isEmpty(x) {
     return x?.isNone() || isEmpty(x?.get?.()) || false;

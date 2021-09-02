@@ -31,7 +31,7 @@ const fixImports = (data) => {
       return path.match(/.[jt]s;$/gm) ? `from "${path}";` : `from "${path}.js";`
     } else {
       if( isFolder ){
-        return `from "${path}/index.js";`
+        return `from "${path}/mod.js";`
       }
       if( isFile ){
         return `from "${path}.js";`
@@ -69,7 +69,7 @@ const template = ({
                 }
                 const rawData = await Deno.readTextFile(file.path)
                 const data = fixImports(interpolate(rawData))
-                const target = replaceDestination(resolve(file.path));
+                const target = replaceDestination(resolve(file.path)).replace("index","mod");
                 if(debug){
                   console.log("Writing: ", target)
                 }

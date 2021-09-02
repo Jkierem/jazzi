@@ -1,10 +1,12 @@
 import assoc from "ramda/src/assoc";
 import propOr from "ramda/src/propOr";
-import { getVariant, forEachValue } from '../_internals'
+import { getVariant, forEachValue, setTypeclass } from '../_internals'
 import Enum from './enum'
 import Eq from './eq'
 import Show from './show'
 import Union from './union'
+
+const mark = x => setTypeclass("Ord",x)
 
 const rawCases = ["LT","EQ","GT"]
 const Ordering = Union("Ordering",{
@@ -28,7 +30,7 @@ const Ordering = Union("Ordering",{
 ]).constructors({})
 
 function Ord(defs){ 
-    return (cases) => {
+    return mark((cases) => {
         const order = propOr([],"order",defs)
         const overrides = propOr({},"overrides",defs);
         const ltBased      = overrides?.lessThanOrEqual || false;
@@ -80,8 +82,11 @@ function Ord(defs){
                 return !this.compare(o).isLT()
             }
         },cases)
-    }
+    })
 }
+
+mark(Ord)
+
 export default Ord
 
 export { Ordering }
