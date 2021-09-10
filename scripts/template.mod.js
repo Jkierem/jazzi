@@ -28,13 +28,13 @@ const fixImports = (data) => {
     const isFolder = Boolean(path.match(/(\/[A-Z_][^\/]*)$/))
     const isUrl = Boolean(path.startsWith("https"))
     if( isUrl ){
-      return path.match(/.[jt]s;$/gm) ? `from "${path}";` : `from "${path}.js";`
+      return path.match(/.[jt]s;$/gm) ? `from "${path}";\n` : `from "${path}.js";\n`
     } else {
       if( isFolder ){
-        return `from "${path}/mod.js";`
+        return `from "${path}/mod.js";\n`
       }
       if( isFile ){
-        return `from "${path}.js";`
+        return `from "${path}.js";\n`
       }
     }
   })
