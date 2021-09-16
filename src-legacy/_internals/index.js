@@ -12,8 +12,6 @@ const mapKeys = (fn,obj) => fromPairs(toPairs(obj).map(([key, val]) => [ fn(key)
 
 const toLower = str => str.toLowerCase();
 
-const trim = str => str.trim()
-
 export const getFirstCaseSensitive = (ps,obj) => {
     const mappedObj = mapKeys(toLower,obj)
     const matched = ps.find(p => !isNil(mappedObj[p]))
@@ -58,7 +56,7 @@ export const expandCases = (obj) => {
         if(key.includes("|")){
             return key
                 .split("|")
-                .map(trim)
+                .map(x => x.trim())
                 .filter(Boolean)
                 .map(k => [k,value])
         } else {

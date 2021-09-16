@@ -44,9 +44,8 @@ export const Spy = (fn = x => x) => {
         get: () => callCount === 3
     })
 
-    _spy.calledWith = (...args) => any(equals(args),map(prop("args"))(calls));
-    _spy.returned = (val) => any(equals(val),map(prop("result"))(calls));
-
+    _spy.calledWith = (...args) => calls.map(prop("args")).some(equals(args));
+    _spy.returned = (val) => calls.map(prop("result")).some(equals(val));
     _spy.reset = () => {
         callCount = 0 
         calls = []
