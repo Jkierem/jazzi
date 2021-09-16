@@ -1,4 +1,3 @@
-import __ from "ramda/src/__";
 import Sum from "../Sum";
 import {
   Union,

@@ -16,10 +16,9 @@
         "types"
     ],
     "scripts": {
-        "build": "yarn build:js && yarn build:deno",
-        "build:js": "webpack --mode production",
-        "build:deno": "deno run --unstable --allow-read --allow-write ./scripts/build.js",
-        "build:watch": "webpack --mode development --watch",
+        "build": "yarn build:ts && yarn build:deno",
+        "build:ts": "echo 'Not ready for this'",
+        "build:deno": "echo 'Not ready for this'",
         "clean": "rm -rf ./dist && rm -rf ./deno",
         "test": "rm -rf ./coverage && jest --coverage --verbose",
         "test:silent": "rm -rf ./coverage && jest --silent",
@@ -30,45 +29,9 @@
         "ramda": "0.27.0"
     },
     "devDependencies": {
-        "@babel/cli": "^7.5.5",
-        "@babel/core": "^7.5.5",
-        "@babel/preset-env": "^7.5.5",
-        "babel-jest": "^24.9.0",
-        "babel-loader": "^8.0.6",
-        "babel-polyfill": "^6.26.0",
-        "jest": "^24.9.0",
-        "sinon": "^7.4.1",
-        "webpack": "^5.24.3",
-        "webpack-cli": "^4.5.0",
-        "webpack-dev-server": "^3.8.0"
-    },
-    "jest": {
-        "verbose": true,
-        "collectCoverageFrom": [
-            "src/*.{js,jsx}",
-            "src/*/*.{js,jsx}"
-        ],
-        "testMatch": [
-            "**/__tests__/(*.)test.js"
-        ],
-        "testEnvironment": "node",
-        "transform": {
-            ".js$": "babel-jest"
-        },
-        "transformIgnorePatterns": [
-            "<rootDir>/node_modules/"
-        ],
-        "moduleDirectories": [
-            "node_modules",
-            "modules"
-        ],
-        "moduleFileExtensions": [
-            "js",
-            "json",
-            "jsx"
-        ],
-        "setupFilesAfterEnv": [
-            "./setupTests.js"
-        ]
+        "@types/jest": "^27.0.1",
+        "jest": "^27.1.1",
+        "ts-jest": "^27.0.5",
+        "typescript": "^4.4.2"
     }
 }

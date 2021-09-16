@@ -1,4 +1,3 @@
-import "babel-polyfill";
 expect.extend({
     toTypeMatch(value,name) {
         if(!value?.match){
