@@ -1,5 +1,7 @@
+import type { Key } from "./types"
+
 export const InnerValue = Symbol("@@value");
-export const Type = Symbol("@@type");
+export const TypeRep = Symbol("@@type");
 export const TypeName = Symbol("@@typename");
 export const Variant = Symbol("@@variant");
 export const Typeclass = Symbol("@@typeclass");
@@ -7,16 +9,17 @@ export const Typeclasses = Symbol("@@typeclasses");
 
 type WithSymbol<T extends symbol,U> = { [P in T]: U }
 
-export type WithInnerValue = WithSymbol<typeof InnerValue, any>
-export type WithType = WithSymbol<typeof Type, () => any>
-export type WithTypeName = WithSymbol<typeof TypeName, string>
-export type WithVariant = WithSymbol<typeof Variant, string>
-export type WithTypeclasses = WithSymbol<typeof Typeclasses, () => string[]>
+export type WithInnerValue<T> = WithSymbol<typeof InnerValue, T>
+export type WithTypeRep<Rep> = WithSymbol<typeof TypeRep, () => Rep>
+export type WithTypeName<TName extends Key> = WithSymbol<typeof TypeName, TName>
+export type WithVariant<VName extends Key> = WithSymbol<typeof Variant, VName>
+export type WithTypeclasses<TCS extends readonly string[]> = WithSymbol<typeof Typeclasses, () => TCS>
+export type WithTypeclass<TCName extends Key> = WithSymbol<typeof Typeclass, TCName>
 
 const getSymbol = <Sym extends symbol>(sym: Sym) => <T>(withSym: Partial<WithSymbol<Sym,T>>): T => withSym[sym]!
 
 export const getInnerValue = getSymbol(InnerValue)
-export const getType = getSymbol(Type)
+export const getTypeRep = getSymbol(TypeRep)
 export const getTypeName = getSymbol(TypeName)
 export const getVariant = getSymbol(Variant)
 export const getTypeclass = getSymbol(Typeclass)
@@ -28,7 +31,7 @@ const setSymbol = <Sym extends symbol>(sym: Sym) => <T>(value: T, withSym: Parti
 } 
 
 export const setInnerValue = setSymbol(InnerValue)
-export const setType = setSymbol(Type)
+export const setTypeRep = setSymbol(TypeRep)
 export const setTypeName = setSymbol(TypeName)
 export const setVariant = setSymbol(Variant)
 export const setTypeclass = setSymbol(Typeclass)
