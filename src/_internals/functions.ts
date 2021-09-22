@@ -1,4 +1,4 @@
-export type Key = string | number | symbol
+import type { Extractable } from "./types"
 
 export const equals = (a: any, b: any): boolean => {
     const typeA = typeof a
@@ -56,3 +56,7 @@ export const prop = <K extends string | number | symbol>(key: K) => <T>(obj: T):
 export const propOr = <T, K extends keyof T>(or: T[K], key: K, obj: T): T[K] => obj[key] ?? or
 
 export const assoc = <T, K extends keyof T>(key: K, value: T[K], obj: T): T => ({ ...obj, [key]: value })
+
+export const extractWith = <Args extends any[]>(args: Args) => <T>(ext: Extractable<T,Args>): T => ext instanceof Function ? ext(...args) : ext;
+
+export const extract = extractWith([])
