@@ -4,6 +4,8 @@ export type Extractable<A,Args extends any[] = []> = A | ((...args: Args) => A)
 
 export type AnyFn = (...args: any[]) => any
 
+export type AnyConst = new (...args: any[]) => any
+
 export type Key = string | number | symbol
 
 export type Nil = null | undefined

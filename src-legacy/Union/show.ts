@@ -1,0 +1,30 @@
+import { propOr } from "../_internals";
+import { getVariant, getInnerValue, setTypeclass, getTypeName } from "../_internals/symbols"
+import { AnyBoxed, AnyConstRec, AnyFn } from "../_internals/types";
+
+type ShowDefs = {
+    overrides?: {
+        show?: {
+            [P: string]: AnyFn
+        }
+    }
+} 
+
+/**
+ * Adds show and toString method to proto
+ */
+const Show = (defs: ShowDefs) => setTypeclass("Show")((cases: AnyConstRec) => {
+    const overrides = propOr({},"overrides",defs);
+    Object.keys(cases).forEach(trivial => {
+        function trivialShow(this: AnyBoxed){
+            return `[${getTypeName(this)} => ${getVariant(this)} ${getInnerValue(this)}]`;
+        }
+        const show = overrides?.show?.[trivial] || trivialShow
+        cases[trivial].prototype.show = show
+        cases[trivial].prototype.toString = show
+    })
+})
+
+setTypeclass("Show")(Show)
+
+export default Show
