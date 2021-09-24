@@ -1,4 +1,4 @@
-import type { Extractable } from "./types"
+import type { Extractable, Nil } from "./types"
 
 export const equals = (a: any, b: any): boolean => {
     const typeA = typeof a
@@ -60,3 +60,9 @@ export const assoc = <T, K extends keyof T>(key: K, value: T[K], obj: T): T => (
 export const extractWith = <Args extends any[]>(args: Args) => <T>(ext: Extractable<T,Args>): T => ext instanceof Function ? ext(...args) : ext;
 
 export const extract = extractWith([])
+
+export const isNil = <A>(a: A | Nil): a is Nil => a === null || a === undefined 
+
+export const isNotNil = <A>(a: A | Nil): a is A => !isNil(a)
+
+export const coerce = <T,U>(a: T): U => a as unknown as U
