@@ -6,7 +6,9 @@ export type AnyFn = (...args: any[]) => any
 
 export type Key = string | number | symbol
 
-type Unwrap<A> = A extends Boxed<infer B, any, any> ? Unwrap<B> : A
+export type Nil = null | undefined
+
+type Unwrap<A> = A extends Box<any, any, infer B> ? Unwrap<B> : A
 
 export type Pattern<Cases extends string> = {
     [P in Cases]?: AnyFn
@@ -21,20 +23,32 @@ export type ExpandablePattern = {
     [P: string]: AnyFn
 }
 
-export type Boxed<
-    A,
+export type Box<
     TName extends string,
-    Cases extends string
-> = WithTypeName<TName>
-& WithInnerValue<A>
+    Cases extends string,
+    A
+> = 
+& WithTypeName<TName>
 & WithVariant<Cases>
+& WithInnerValue<A>
 & {
     get: () => A,
     unwrap: () => Unwrap<A>,
     simpleMatch: (pattern: Pattern<Cases>) => any,
     match: (pattern: ExpandablePattern) => any
 } & {
-    [P in Cases as `on${Capitalize<P>}`]: <B>(b: Extractable<B>) => A | B
+    [P in Cases as `on${Capitalize<string & P>}`]: <B>(b: Extractable<B>) => A | B
 } & {
-    [P in Cases as `is${Capitalize<P>}`]: () => boolean
+    [P in Cases as `is${Capitalize<string & P>}`]: () => boolean
 }
+
+export type AnyBox = Box<any,any,any>
+export type Boxed<A> = Box<any,any,A>
+export type Union<Cases extends string> = Box<any, Cases, any>
+export type Family<TName extends string> = Box<TName,any,any>
+
+export type InnerValueOf<T> = T extends Boxed<infer A> ? A : never
+export type FamilyOf<T> = T extends Family<infer A> ? A : never
+export type CasesOf<T> = T extends Union<infer A> ? A : never
+
+export type Relative<Fam extends Family<any>, Inner> = Box<FamilyOf<Fam>, CasesOf<Fam>, Inner>

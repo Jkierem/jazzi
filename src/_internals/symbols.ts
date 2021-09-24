@@ -25,7 +25,7 @@ export const getVariant = getSymbol(Variant)
 export const getTypeclass = getSymbol(Typeclass)
 export const getTypeclasses = getSymbol(Typeclasses)
 
-const setSymbol = <Sym extends symbol>(sym: Sym) => <T,U>(value: T, withSym: U): U & WithSymbol<Sym,T> => {
+const setSymbol = <Sym extends symbol>(sym: Sym) => <T>(value: T) => <U>( withSym: U): U & WithSymbol<Sym,T> => {
     (withSym as any)[sym] = value
     return withSym as U & WithSymbol<Sym,T>
 } 
