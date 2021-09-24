@@ -1,7 +1,4 @@
-import { default as rEquals } from 'ramda/src/equals';
-import isEmpty from 'ramda/src/isEmpty';
-import empty from 'ramda/src/empty';
-import { isNil } from '../_internals';
+import { equals as rEquals, isNil, isEmpty, empty } from "../_internals/functions";
 import { match as globalMatch } from "../_tools";
 import {
   Functor,

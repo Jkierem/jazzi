@@ -1,4 +1,4 @@
-import { isNil } from "../_internals";
+import { isNil } from "../_internals/functions";
 import {
   Eq,
   Functor,
