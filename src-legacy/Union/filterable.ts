@@ -1,7 +1,6 @@
-import { Boxed } from "../../src/_internals/types";
 import { defineOverrides, propOr } from "../_internals";
 import { setTypeclass } from "../_internals/symbols";
-import { AnyConstRec, AnyFnRec } from "../_internals/types";
+import { AnyConstRec, AnyFnRec, Boxed } from "../_internals/types";
 
 const mark = setTypeclass("Filterable")
 

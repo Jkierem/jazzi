@@ -38,9 +38,6 @@ extends WithTypeName<string>
 , WithInnerValue<A>
 {
     get: () => A,
-}
-
-export interface Wrapped<A> extends Boxed<A> {
     match: (pattern: any) => any,
     unwrap: () => Unwrap<A>
 }
