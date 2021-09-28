@@ -1,5 +1,5 @@
 import { equals, isNil, isEmpty, empty } from "../_internals/functions";
-import { match as globalMatch } from "../_tools";
+import { match } from "../_tools";
 import {
   Functor,
   Monad,
@@ -14,8 +14,7 @@ import {
   Thenable,
 } from "../Union";
 import Union from '../Union/union'
-import { AnyConstRec } from "../_internals/types";
-import { AnyFn } from "../../src/_internals/types";
+import { AnyConstRec, AnyFn } from "../_internals/types";
 import { Maybe, MaybeRep } from "./types";
 
 const MaybeType = () => (cases: AnyConstRec) => {
@@ -107,7 +106,7 @@ const Maybe: MaybeRep = Union(
   isEmpty(x: any) {
     return x?.isNone?.() || isEmpty(x?.get?.()) || false;
   },
-  match: globalMatch,
+  match,
   equals,
 }) as unknown as MaybeRep;
 
