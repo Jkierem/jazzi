@@ -3,11 +3,14 @@ import type { Filterable } from "../Union/filterable";
 import type { Foldable } from "../Union/foldable";
 import type { Monad } from "../Union/monad";
 import type { Monoid } from "../Union/monoid";
+import type { Natural, NaturalRep } from "../Union/natural";
 import type { Show } from "../Union/show";
+import type { Tap } from "../Union/tap";
 import type { Thenable } from "../Union/thenable";
 
 export interface Maybe<A> extends 
-Monad<A>, Filterable<A>, Monoid<A>, Thenable<A,undefined>,
+Monad<A>, Filterable<A>, Monoid<A>, Thenable<A,undefined>, Tap<A>,
+Natural<A>,
 Show, Foldable, Eq 
 {
     /**
@@ -41,7 +44,6 @@ Show, Foldable, Eq
      */
     isNone: () => boolean;
 
-    effect(fn: <B>(x: A) => Maybe<B>): Maybe<A>;
     peak(fn: (x: A) => void): Maybe<A>;
     tap(fn: (x: A) => void): Maybe<A>;
     matchEffect(patterns: any): Maybe<A>;
@@ -93,7 +95,9 @@ Show, Foldable, Eq
     catch(onReject: (err: undefined) => void): void
 }
 
-export interface MaybeRep {
+export interface MaybeRep 
+    extends NaturalRep
+{
     /**
      * Just constructor
      * @param a inner value
