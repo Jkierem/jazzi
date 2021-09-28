@@ -20,15 +20,17 @@ const Tap = (defs) => mark((cases) => {
     const identities = propOr([],"identities",defs);
     const overrides = propOr({},"overrides",defs);
     trivials.forEach(trivial => {
-        function trivialEffect(fn){
+        function trivialTap(fn){
             return this.map(x => {
                 fn(x)
                 return x
             })
         }
-        cases[trivial].prototype.effect = trivialEffect
-        cases[trivial].prototype.peak = trivialEffect
-        cases[trivial].prototype.tap = trivialEffect
+        cases[trivial].prototype.effect = function trivialEffect(fn) {
+            return this.chain(fn).map(x)
+        }
+        cases[trivial].prototype.peak = trivialTap
+        cases[trivial].prototype.tap = trivialTap
     })
 
     identities.forEach(empt => {
