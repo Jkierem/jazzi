@@ -10,7 +10,7 @@ export const Typeclasses = Symbol("@@typeclasses");
 type WithSymbol<T extends symbol,U> = { [P in T]: U }
 
 export type WithInnerValue<T> = WithSymbol<typeof InnerValue, T>
-export type WithTypeRep<Rep> = WithSymbol<typeof TypeRep, () => Rep>
+export type WithTypeRep<Rep> = WithSymbol<typeof TypeRep, Rep>
 export type WithTypeName<TName extends Key> = WithSymbol<typeof TypeName, TName>
 export type WithVariant<VName extends Key> = WithSymbol<typeof Variant, VName>
 export type WithTypeclasses<TCS extends () => readonly string[]> = WithSymbol<typeof Typeclasses, () => TCS>
