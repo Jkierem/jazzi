@@ -1,6 +1,6 @@
 import { defineOverrides, prop, propOr } from "../_internals";
 import { setTypeclass } from "../_internals/symbols"
-import { AnyConstRec, AnyFnRec } from "../_internals/types";
+import type { AnyConstRec, AnyFnRec, Boxed } from "../_internals/types";
 import type { Applicative } from "./applicative";
 
 type MonadDefs = {
