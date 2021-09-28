@@ -5,7 +5,7 @@ import { AnyBoxed, AnyConstRec } from "../_internals/types"
 const mark = setTypeclass("Eq")
 
 type EqDefs = { 
-    trivials?: string[], 
+    trivials?: string[],
     empties?: string[],
     overrides?: {
         equals?: any

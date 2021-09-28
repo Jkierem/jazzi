@@ -1,5 +1,4 @@
 export { default as Applicative } from "./applicative";
-export { default as Bifunctor } from "./bifunctor";
 export { default as BoxedEnum } from "./boxedEnum";
 export { default as BoxedEnumType } from "./boxedEnumType";
 export { default as EnumType } from "./enumType";

@@ -1,10 +1,13 @@
 import type { Eq } from "../Union/eq";
+import type { Filterable } from "../Union/filterable";
 import type { Foldable } from "../Union/foldable";
 import type { Monad } from "../Union/monad";
+import type { Monoid } from "../Union/monoid";
 import type { Show } from "../Union/show";
 
-export interface Maybe<A> extends
-Monad<A>, Show, Foldable, Eq<A> {
+export interface Maybe<A> extends 
+Monad<A>, Filterable<A>, Monoid<A>, Show, Foldable, Eq 
+{
     /**
      * If Just, returns application of argument or argument. 
      * If None, returns inner value. 
@@ -54,6 +57,7 @@ Monad<A>, Show, Foldable, Eq<A> {
     flatMap <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
 
     concat(s: Maybe<A>): Maybe<A>;
+    sconcat(s: Maybe<A>): Maybe<A>;
 
     empty(): Maybe<A>;
 
@@ -144,7 +148,7 @@ export interface MaybeRep {
     foldMap<A>(values: A[]): Maybe<A>;
   
     equals<A>(ma: Maybe<A>, mb: Maybe<A>): boolean;
-    do<A>(fn: any): Maybe<A>;
+    do<A>(fn: (pure: <T>(a: T) => Maybe<T>) => Generator<any,Maybe<A>,any>): Maybe<A>;
     
     natural<A>(data: A): Maybe<A>;
 }
