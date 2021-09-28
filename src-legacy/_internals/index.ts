@@ -1,6 +1,6 @@
 import { AnyFn } from '../../src/_internals/types';
 import { isEmpty, identity, isNil } from './functions';
-import { AnyFnRec } from './types';
+import { AnyConstRec, AnyFnRec } from './types';
 
 export * from "./functions"
 
@@ -66,7 +66,7 @@ export const forEachValue = <T>(fn: (a: T, key: string, index:number, container:
  * @param {any} overrides 
  * @param {any} cases 
  */
-export const defineOverrides = (method: string, aliases: string[], overrides: { [P in typeof method]?: AnyFnRec } , cases: AnyFnRec) => {
+export const defineOverrides = (method: string, aliases: string[], overrides: { [P in typeof method]?: AnyFnRec } , cases: AnyConstRec) => {
     forEachValue((override,key) => {
         cases[key].prototype[method] = override
         aliases.forEach(alias => {

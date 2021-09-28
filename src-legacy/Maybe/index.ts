@@ -1,4 +1,4 @@
-import { equals as rEquals, isNil, isEmpty, empty } from "../_internals/functions";
+import { equals, isNil, isEmpty, empty } from "../_internals/functions";
 import { match as globalMatch } from "../_tools";
 import {
   Functor,
@@ -14,15 +14,18 @@ import {
   Thenable,
 } from "../Union";
 import Union from '../Union/union'
+import { AnyConstRec } from "../_internals/types";
+import { AnyFn } from "../../src/_internals/types";
+import { Maybe, MaybeRep } from "./types";
 
-const MaybeType = () => (cases) => {
+const MaybeType = () => (cases: AnyConstRec) => {
   cases.Just.prototype.ifNone = function () {
     return this;
   };
-  cases.Just.prototype.ifJust = function (fn) {
+  cases.Just.prototype.ifJust = function (fn: AnyFn) {
     return fn(this.get());
   };
-  cases.None.prototype.ifNone = function (fn) {
+  cases.None.prototype.ifNone = function (fn: AnyFn) {
     return fn();
   };
   cases.None.prototype.ifJust = function () {
@@ -45,27 +48,27 @@ const MaybeDefs = {
       },
     },
     empty: {
-      Just() {
-        return Maybe.fromNullish(empty(this.get()));
+      Just<A>(this: Maybe<A>): Maybe<A> {
+        return Maybe.fromNullish(empty(this.get())) as Maybe<A>;
       },
     },
     filter: {
-      Just(fn) {
+      Just<A>(this: Maybe<A>, fn: (a: A) => boolean) {
         return Maybe.fromPredicate(fn, this.get());
       },
     },
     fold: {
-      Just(onNone,onJust){ return onJust(this.get()) },
-      None(onNone,onJust){ return onNone() }
+      Just<A,B,C>(this: Maybe<A>, onNone: () => B, onJust: (a: A) => C){ return onJust(this.get()) },
+      None<A,B,C>(this: Maybe<A>, onNone: () => B, onJust: (a: A) => C){ return onNone() }
     }
   },
 };
 
-function defaultConstructor(x) {
-  return x ? this.Just(x) : this.None();
+function defaultConstructor<T>(this: MaybeRep, x: T): Maybe<T> {
+  return x ? this.Just(x) : this.None<T>();
 }
 
-const Maybe = Union(
+const Maybe: MaybeRep = Union(
   "Maybe",
   {
     Just: (x) => x,
@@ -89,23 +92,23 @@ const Maybe = Union(
   of: defaultConstructor,
   from: defaultConstructor,
   fromFalsy: defaultConstructor,
-  fromArray(arr) {
-    return arr.length === 0 ? this.None() : this.Just(arr);
+  fromArray<A extends any[]>(this: MaybeRep, arr: A): Maybe<A> {
+    return arr.length === 0 ? this.None<A>() : this.Just<A>(arr);
   },
-  fromNullish(x) {
+  fromNullish<A>(this: MaybeRep, x: A): Maybe<A> {
     return isNil(x) ? this.None() : this.Just(x);
   },
-  fromEmpty(x) {
+  fromEmpty<A>(this: MaybeRep, x: A): Maybe<A> {
     return isEmpty(x) ? this.None() : this.Just(x);
   },
-  fromPredicate(pred, val) {
+  fromPredicate<A>(this: MaybeRep, pred: (a: A) => boolean, val: A) {
     return pred(val) ? this.Just(val) : this.None();
   },
-  isEmpty(x) {
-    return x?.isNone() || isEmpty(x?.get?.()) || false;
+  isEmpty(x: any) {
+    return x?.isNone?.() || isEmpty(x?.get?.()) || false;
   },
   match: globalMatch,
-  equals: rEquals,
-});
+  equals,
+}) as unknown as MaybeRep;
 
 export default Maybe;

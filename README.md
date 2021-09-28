@@ -6,6 +6,8 @@
 
 *Now available for deno too*
 
+*Now in typescript*
+
 Implementations of common structures using ramda for utilities. Available Structures and features: 
 
 - Either
@@ -33,7 +35,7 @@ yarn add jazzi
 From denoland
 
 ```javascript
-import * as jazzi from 'https://deno.land/x/jazzi/index.js'
+import * as jazzi from 'https://deno.land/x/jazzi/mod.ts'
 ```
 
 # Usage
@@ -335,23 +337,20 @@ These are usefull when you need types that don't represent a value other than th
 ```javascript
 const ValidationError = EnumType("ValidationError",["TooLong","TooShort","Taken"])
 
-// This will return Left of ValidationError or Right of name
-const validateName = (name) => {
-    return Either.do(function*(pure){
-        yield Either.of(ValidationError.TooLong , name.length > 20)
-        yield Either.of(ValidationError.TooShort, name.length < 7 )
-        return pure(name)
-    })
-}
-
-const verifyAvailable = async (/*....*/) => {
+const verifyAvailable = async (name) => {
     // Assume this does async stuff
 }
 
+// This will return Left of ValidationError or Right of name
 const doSomethingAsync = async (name) => {
     try {
-        await validateName(name)
-        await Either.of(ValidationError.Taken   , await verifyAvailable(name) )
+        const isAvailable = await verifyAvailable(name)
+        return Either.do(function*(pure){
+            yield Either.of(ValidationError.Taken   , isAvailable)
+            yield Either.of(ValidationError.TooLong , name.length > 20)
+            yield Either.of(ValidationError.TooShort, name.length < 7 )
+            return pure(name)
+        })
     } catch(e) {
         e.match({
             TooShort: () => console.log("Must be longer"),

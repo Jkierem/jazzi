@@ -14,6 +14,10 @@ export type Key = string | number | symbol
 
 export type Nil = null | undefined
 
+export type MapFn<A,B> = (a: A) => B
+
+export type NonEmptyArray<T> = [T, ...T[]];
+
 export type Pattern<Cases extends string> = {
     [P in Cases]?: AnyFn
 } & {
@@ -27,12 +31,15 @@ export type ExpandablePattern = {
     [P: string]: AnyFn
 }
 
-export type Boxed<A> = 
-& WithTypeName<string>
-& WithVariant<string>
-& WithInnerValue<A>
-& {
-    get: () => A
+type Unwrap<A> = A extends Boxed<infer B> ? Unwrap<B> : A 
+export interface Boxed<A> 
+extends WithTypeName<string>
+, WithVariant<string>
+, WithInnerValue<A>
+{
+    get: () => A,
+    match: (pattern: any) => any,
+    unwrap: () => Unwrap<A>
 }
 
 export type AnyBoxed = Boxed<any>

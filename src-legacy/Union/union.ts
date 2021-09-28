@@ -71,7 +71,7 @@ const Union = <K extends AnyFnRec>(name: string, cases: K, exts: TypeClassInstan
     const globals = {}
     extensions.forEach(fn => fn(mappedCases,globals))
     return {
-        constructors<T>(cons: T){
+        constructors<T extends any>(cons: T){
             const trueCases = mapObj(([key,value]: [any,any]) => [key, (...args: any[]) => new value(...args)])(mappedCases)
             typeRep = {
                 ...trueCases,

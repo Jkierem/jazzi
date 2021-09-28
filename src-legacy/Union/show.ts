@@ -10,6 +10,17 @@ type ShowDefs = {
     }
 } 
 
+export interface Show {
+    /**
+     * Returns the string representation
+     */
+    show(): string;
+    /**
+     * Returns the string representation
+     */
+    toString(): string;
+}
+
 /**
  * Adds show and toString method to proto
  */
