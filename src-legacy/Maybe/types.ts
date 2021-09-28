@@ -4,9 +4,11 @@ import type { Foldable } from "../Union/foldable";
 import type { Monad } from "../Union/monad";
 import type { Monoid } from "../Union/monoid";
 import type { Show } from "../Union/show";
+import type { Thenable } from "../Union/thenable";
 
 export interface Maybe<A> extends 
-Monad<A>, Filterable<A>, Monoid<A>, Show, Foldable, Eq 
+Monad<A>, Filterable<A>, Monoid<A>, Thenable<A,undefined>,
+Show, Foldable, Eq 
 {
     /**
      * If Just, returns application of argument or argument. 
@@ -53,6 +55,7 @@ Monad<A>, Filterable<A>, Monoid<A>, Show, Foldable, Eq
     applyRight<B>(a: Maybe<(a: A) => B>): Maybe<B>;
     applyLeft<B,C>(this: Maybe<(b: B) => C>, ap: Maybe<B>): Maybe<C>;
 
+    bind    <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
     chain   <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
     flatMap <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
 
@@ -126,7 +129,8 @@ export interface MaybeRep {
      */
     fromNullish<T>(x: T): Maybe<T>;
     /**
-     * If `ramda.empty` returns true, None. Just otherwise
+     * If given a value considered empty, returns None. Just otherwise.
+     * Empty values are {}, [], "", or the result of calling empty on either the value or its' constructor.
      * @param x inner value
      */
     fromEmpty<T>(x: T): Maybe<T>;
@@ -136,7 +140,8 @@ export interface MaybeRep {
      */
     fromPredicate<A>(pred: (a: A) => boolean, val?: A ): Maybe<A>;
     /**
-     * Returns true if inner value is considered an empty value.
+     * Returns true if the inner value of the given maybe is considered an empty value. 
+     * None is also itself considered as empty
      * @param x inner value
      */
     isEmpty<T>(x: Maybe<T>): boolean;
