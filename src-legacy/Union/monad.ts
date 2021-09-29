@@ -31,11 +31,6 @@ export interface Monad<A> extends Applicative<A> {
      * Performs monad composition using `fn`
      * @param fn 
      */
-    bind    <B>(fn: (a: A) => Monad<B>): Monad<B>;
-    /**
-     * Performs monad composition using `fn`
-     * @param fn 
-     */
     flatMap <B>(fn: (a: A) => Monad<B>): Monad<B>;
     /**
      * For lazy monads, runs the wrapper computation. 
@@ -51,17 +46,21 @@ export interface Monad<A> extends Applicative<A> {
     run(...args: any[]): any;
 }
 
+export interface MonadRep { 
+    /**
+     * Wraps a value of type `a` into a monadic value `M a`
+     * @param x value to be wrapped
+     */       
+    pure<A>(x: A): Monad<A>;
+    /**
+     * Do notation using generator functions
+     */
+    do<A>(fn: any): Monad<A>;
+}
+
 /**
- * Adds run, unsafeRun, pure, chain, bind and flatMap method to proto. Adds pure to global.
- * @param {{ 
- *  pure: string,
- *  trivials: string[], 
- *  identities: string[],
- *  overrides?: {
- *      chain?: any
- *  }
- * }} defs 
- * @returns {(cases: any, globals: any) => void}
+ * Adds run, unsafeRun, pure, chain, bind and flatMap method to proto. Adds pure and do to global.
+ * The lazy flag enables lazy do implementation
  */
 const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, globals: any) => {
     const trivials = propOr([],"trivials",defs);
@@ -74,7 +73,6 @@ const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, gl
             return fn(this.get())
         }
         cases[trivial].prototype.chain   = chain
-        cases[trivial].prototype.bind    = chain
         cases[trivial].prototype.flatMap = chain
 
         function join<A>(this: Monad<Monad<A>>){
@@ -88,7 +86,6 @@ const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, gl
             return this as unknown as Monad<B>
         }
         cases[empt].prototype.chain   = chain
-        cases[empt].prototype.bind    = chain
         cases[empt].prototype.flatMap = chain
         cases[empt].prototype.flat = chain
         cases[empt].prototype.join = chain

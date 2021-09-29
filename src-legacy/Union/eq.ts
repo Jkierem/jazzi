@@ -20,6 +20,15 @@ export interface Eq {
     equals(e: Eq): boolean;
 }
 
+export interface EqRep { 
+    /**
+     * Performs an equality check
+     * @param ea 
+     * @param eb 
+     */
+    equals(ea: Eq, eb: Eq): boolean; 
+}
+
 /**
  * Adds equals method to proto
 */

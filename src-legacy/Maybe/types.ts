@@ -1,8 +1,8 @@
-import type { Eq } from "../Union/eq";
+import type { Eq, EqRep } from "../Union/eq";
 import type { Filterable } from "../Union/filterable";
 import type { Foldable } from "../Union/foldable";
-import type { Monad } from "../Union/monad";
-import type { Monoid } from "../Union/monoid";
+import type { Monad, MonadRep } from "../Union/monad";
+import type { Monoid, MonoidRep } from "../Union/monoid";
 import type { Natural, NaturalRep } from "../Union/natural";
 import type { Show } from "../Union/show";
 import type { Tap } from "../Union/tap";
@@ -10,8 +10,7 @@ import type { Thenable } from "../Union/thenable";
 
 export interface Maybe<A> extends 
 Monad<A>, Filterable<A>, Monoid<A>, Thenable<A,undefined>, Tap<A>,
-Natural<A>,
-Show, Foldable, Eq 
+Natural<A>, Show, Foldable, Eq 
 {
     /**
      * If Just, returns application of argument or argument. 
@@ -57,7 +56,6 @@ Show, Foldable, Eq
     applyRight<B>(a: Maybe<(a: A) => B>): Maybe<B>;
     applyLeft<B,C>(this: Maybe<(b: B) => C>, ap: Maybe<B>): Maybe<C>;
 
-    bind    <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
     chain   <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
     flatMap <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
 
@@ -96,7 +94,7 @@ Show, Foldable, Eq
 }
 
 export interface MaybeRep 
-    extends NaturalRep
+    extends NaturalRep, EqRep, MonadRep, MonoidRep
 {
     /**
      * Just constructor
@@ -151,13 +149,13 @@ export interface MaybeRep
     isEmpty<T>(x: Maybe<T>): boolean;
   
     pure<A>(x: A): Maybe<A>;
+    do<A>(fn: (pure: <T>(a: T) => Maybe<T>) => Generator<any,Maybe<A>,any>): Maybe<A>;
   
     empty<A>(): Maybe<A>;
     accumulate(monoids: Maybe<any>[]): Maybe<any[]>;
     foldMap<A>(values: A[]): Maybe<A>;
   
     equals<A>(ma: Maybe<A>, mb: Maybe<A>): boolean;
-    do<A>(fn: (pure: <T>(a: T) => Maybe<T>) => Generator<any,Maybe<A>,any>): Maybe<A>;
     
     natural<A>(data: A): Maybe<A>;
 }
