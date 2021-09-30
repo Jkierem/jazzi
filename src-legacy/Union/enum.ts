@@ -15,11 +15,11 @@ type EnumDefs = {
 
 export interface Enum extends Eq {
     /**
-     * Returns succesor. Undefined if not defined.
+     * Returns succesor, if it exists.
      */
     succ(): Enum | undefined;
     /**
-     * Returns predecessor. Undefined if not defined.
+     * Returns predecessor, if it exists.
      */
     pred(): Enum | undefined; 
 }
