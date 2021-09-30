@@ -6,8 +6,8 @@ import { Functor } from "./functor"
 const mark = setTypeclass("Tap")
 
 type TapDefs = {
-    trivials: string[], 
-    identities: string[],
+    trivials?: string[], 
+    identities?: string[],
     overrides?: {
         tap?: any;
     }

@@ -13,12 +13,12 @@ interface Ordering extends TEq, TEnum, Ord, TShow {
     equals(e: Ordering): boolean;
     succ(): Ordering | undefined;
     pred(): Ordering | undefined;
-    compare: (o: Ord) => Ordering;
-    lessThanOrEqual: (o: Ord) => boolean;
-    greaterThan: (o: Ord) => boolean;
-    greaterThanOrEqual: (o: Ord) => boolean;
-    show: () => string;
-    toString: () => string;
+    compare(o: Ord): Ordering;
+    lessThanOrEqual(o: Ord): boolean;
+    greaterThan(o: Ord): boolean;
+    greaterThanOrEqual(o: Ord): boolean;
+    show(): string;
+    toString(): string;
 }
 
 interface OrderingRep 
@@ -68,22 +68,22 @@ export interface Ord {
      * @param {Ord} o ord to compare to
      * @returns {Ordering}
      */
-    compare: (o: Ord) => Ordering;
+    compare(o: Ord): Ordering;
     /**
      * Returns whether caller is less than or equal to the argument
      * @param {Ord} o ord to compare to
      */
-    lessThanOrEqual: (o: Ord) => boolean;
+    lessThanOrEqual(o: Ord): boolean;
     /**
      * Returns whether caller is greater than the argument
      * @param {Ord} o ord to compare to
      */
-    greaterThan: (o: Ord) => boolean;
+    greaterThan(o: Ord): boolean;
     /**
      * Returns whether caller is greater than or equal to the argument
      * @param {Ord} o ord to compare to
      */
-    greaterThanOrEqual: (o: Ord) => boolean;
+    greaterThanOrEqual(o: Ord): boolean;
 }
 
 /**

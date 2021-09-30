@@ -41,6 +41,13 @@ const MaybeDefs = {
   resolve: ["Just"],
   reject: ["None"],
   overrides: {
+    fmap: undefined,
+    tap: undefined,
+    equals: undefined,
+    chain: undefined,
+    apply: undefined,
+    concat: undefined,
+    toPromise: undefined,
     show: {
       None() {
         return `[Maybe => None]`;

@@ -16,29 +16,28 @@ export { default as Show } from "./show";
 export { default as Swap } from "./swap";
 export { default as Tap } from "./tap";
 export { default as Thenable } from "./thenable";
-
 import { default as _RawUnion } from './union'
 
+type UnionDefinition = {
+  name: string
+  cases: {
+    [x: string]: (innerValue: any) => any
+  }
+  extensions: any[]
+  config: {
+    noHelpers: boolean
+  }
+  constructors: {
+    [x: string]: (x: any) => any
+  }
+}
 /**
- * 
- * @param {{
- *  name: string
- *  cases: {
- *    [x: string]: (innerValue: any) => any
- *  }
- *  extensions: any[]
- *  config: {
- *    noHelpers: boolean
- *  }
- *  constructors: {
- *    [x: string]: (x: any) => any
- *  }
- * }} data union definition data
+ * Creates an union type
  */
-export const Union = (data) => {
+export const Union = (data: UnionDefinition) => {
   const { name, cases, extensions=[], config={}, constructors={} } = data;
   return _RawUnion(name, cases, extensions, config).constructors(constructors);
 }
 export * from "./functor";
-export * from "./union";
-export * from "./ord";
+export { AutoType, NewType, createAutoDefinition } from "./union";
+export { Ordering } from "./ord";
