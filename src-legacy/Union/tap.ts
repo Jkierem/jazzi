@@ -1,6 +1,6 @@
 import { defineOverrides, forEachValue, propOr } from "../_internals"
 import { setTypeclass } from "../_internals/symbols"
-import { AnyConstRec } from "../_internals/types"
+import { AnyConstRec, Matcher } from "../_internals/types"
 import { Functor } from "./functor"
 
 const mark = setTypeclass("Tap")
@@ -64,7 +64,7 @@ const Tap = (defs: TapDefs) => mark((cases: AnyConstRec) => {
         cases[empt].prototype.tap = idEffect
     })
     forEachValue((variant) => {
-        function baseImpl(this: Tap<any>, pat: any){
+        function baseImpl(this: Matcher<any>, pat: any){
             this.match(pat)
             return this
         }
