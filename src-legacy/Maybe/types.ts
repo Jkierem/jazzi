@@ -7,10 +7,13 @@ import type { Natural, NaturalRep } from "../Union/natural";
 import type { Show } from "../Union/show";
 import type { Tap } from "../Union/tap";
 import type { Thenable } from "../Union/thenable";
+import type { Matcher } from "../_internals/types";
+
+type MaybeCases = "Just" | "None";
 
 export interface Maybe<A> extends 
 Monad<A>, Filterable<A>, Monoid<A>, Thenable<A,undefined>, Tap<A>,
-Natural<A>, Show, Foldable, Eq 
+Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>
 {
     /**
      * If Just, returns application of argument or argument. 

@@ -9,7 +9,7 @@ import {
     getTypeclass, 
     getVariant
 } from "../_internals/symbols"
-import { AnyFn, AnyFnRec, Boxed } from "../_internals/types";
+import type { AnyFn, AnyFnRec, Boxed } from "../_internals/types";
 import Show from './show'
 
 type ConstCases<K extends AnyFnRec> = {
@@ -35,7 +35,7 @@ const Box = (config?: { noHelpers?: boolean }) => <K extends AnyFnRec>(cases: Co
         cases[trivial].prototype.match = function(this: Boxed<any>, patterns: AnyFnRec){
             return extractWith([this.get()])(getCase(getVariant(this),expandCases(patterns)));
         }
-        cases[trivial].prototype.simpleMatch = function(this: Boxed<any>, patterns: AnyFnRec){
+        cases[trivial].prototype.variantMatch = function(this: Boxed<any>, patterns: AnyFnRec){
             return extractWith([this.get()])(getCase(getVariant(this),patterns));
         }
 

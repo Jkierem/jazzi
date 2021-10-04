@@ -32,14 +32,19 @@ export type ExpandablePattern = {
 }
 
 type Unwrap<A> = A extends Boxed<infer B> ? Unwrap<B> : A 
+
 export interface Boxed<A> 
 extends WithTypeName<string>
 , WithVariant<string>
 , WithInnerValue<A>
 {
     get: () => A,
-    match: (pattern: any) => any,
     unwrap: () => Unwrap<A>
+}
+
+export interface Matcher<Cases extends string> {
+    match(pattern: ExpandablePattern): unknown
+    variantMatch(pattern: Pattern<Cases>): unknown
 }
 
 export type AnyBoxed = Boxed<any>
