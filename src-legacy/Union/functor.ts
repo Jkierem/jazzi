@@ -30,10 +30,30 @@ export interface Functor<A> extends Boxed<A> {
     mapTo<B>(b: B): Functor<B>
 }
 
+export interface EndoFunctor<A> extends Boxed<A> {
+    /**
+     * Map a functor over a given function (`fn`)
+     * @param fn function used to map inner value
+     * @returns mapped functor
+     */
+     map(fn: (a: A) => A ): EndoFunctor<A>;
+     /**
+      * Map a functor over a given function (`fn`)
+      * @param fn function used to map inner value
+      * @returns mapped functor
+      */
+     fmap(fn: (a: A) => A ): EndoFunctor<A>;
+     /**
+      * Maps a functor to a constant value
+      * @param b 
+      */
+     mapTo(b: A): EndoFunctor<A>
+}
+
 /**
  * Adds map and fmap method to proto
  */
-const Functor = (defs: FunctorDefs) => setTypeclass("Functor")((cases: AnyConstRec) => {
+const Functor = (defs: FunctorDefs = {}) => setTypeclass("Functor")((cases: AnyConstRec) => {
     const trivials = propOr([],"trivials",defs);
     const identities = propOr([],"identities",defs);
     const overrides = propOr({},"overrides",defs);
