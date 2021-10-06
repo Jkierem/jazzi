@@ -37,12 +37,29 @@ export interface MonoidRep {
      * Combines a list of monoids
      * @param monoids list of monoids
      */
-    accumulate<A>(monoids: Monoid<A>[]): Monoid<A[]>;
+    accumulate<A>(monoids: Monoid<A>[]): Monoid<A>;
     /**
      * Maps a list of values into a list of monoids and combines them
      * @param values 
      */
     foldMap<A>(values: A[]): Monoid<A>;
+}
+
+export interface FixedMonoidRep<A> {
+    /**
+     * Returns the empty value of a Monoid
+     */
+     empty(): Monoid<A>; 
+     /**
+      * Combines a list of monoids
+      * @param monoids list of monoids
+      */
+     accumulate(monoids: Monoid<A>[]): Monoid<A>;
+     /**
+      * Maps a list of values into a list of monoids and combines them
+      * @param values 
+      */
+     foldMap(values: A[]): Monoid<A>;
 }
 
 /**

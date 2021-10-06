@@ -8,6 +8,7 @@ import {
 } from "../Union";
 import Union from '../Union/union'
 import { monoidToPromise } from "../_internals";
+import { Sum, SumRep } from "./types";
 
 const Defs = {
   trivials: ["Sum"],
@@ -16,8 +17,10 @@ const Defs = {
   resolve: ["Sum"],
   reject: ["Zero"],
   overrides: {
+    fmap: undefined,
+    empty: undefined,
     concat: {
-      Sum(o) {
+      Sum(this: Sum, o: Sum) {
         return Sum.from(this.get() + o.get());
       },
     },
@@ -28,14 +31,14 @@ const Defs = {
   },
 };
 
-function defaultConstructor(x) {
+function defaultConstructor(this: SumRep, x: number): Sum {
   return x === 0 ? this.Zero() : this.Sum(x);
 }
 
 const Sum = Union(
   "Sum",
   {
-    Sum: (x) => x,
+    Sum: (x: number) => x,
     Zero: () => 0,
   },
   [
@@ -52,6 +55,6 @@ const Sum = Union(
 ).constructors({
   of: defaultConstructor,
   from: defaultConstructor,
-});
+}) as unknown as SumRep;
 
 export default Sum;

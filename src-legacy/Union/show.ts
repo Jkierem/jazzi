@@ -24,8 +24,8 @@ export interface Show {
 /**
  * Adds show and toString method to proto
  */
-const Show = (defs: ShowDefs) => setTypeclass("Show")((cases: AnyConstRec) => {
-    const overrides = propOr({},"overrides",defs);
+const Show = (defs?: ShowDefs) => setTypeclass("Show")((cases: AnyConstRec) => {
+    const overrides = propOr({},"overrides",defs ?? {});
     Object.keys(cases).forEach(trivial => {
         function trivialShow(this: AnyBoxed){
             return `[${getTypeName(this)} => ${getVariant(this)} ${getInnerValue(this)}]`;
