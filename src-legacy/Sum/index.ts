@@ -7,7 +7,7 @@ import {
   Thenable
 } from "../Union";
 import Union from '../Union/union'
-import { monoidToPromise } from "../_internals";
+import { equals, monoidToPromise } from "../_internals";
 import { Sum, SumRep } from "./types";
 
 const Defs = {
@@ -21,7 +21,18 @@ const Defs = {
     empty: undefined,
     concat: {
       Sum(this: Sum, o: Sum) {
+        if( o.isZero() ){
+          return this
+        }
         return Sum.from(this.get() + o.get());
+      }
+    },
+    equals: {
+      Sum(this: Sum, o: Sum) {
+        return equals(this.get(),o.get())
+      },
+      Zero(this: Sum, o: Sum) {
+        return equals(this.get(),o.get())
       },
     },
     toPromise: {
@@ -42,10 +53,7 @@ const Sum = Union(
     Zero: () => 0,
   },
   [
-    Eq({
-      trivials: ["Sum", "Zero"],
-      empties: [],
-    }),
+    Eq(Defs),
     Functor(Defs),
     Semigroup(Defs),
     Monoid(Defs),

@@ -1,6 +1,5 @@
-import { getVariant } from "../../src/_internals/symbols";
 import { forEachValue, propOr } from "../_internals";
-import { setTypeclass } from "../_internals/symbols"
+import { setTypeclass, getVariant } from "../_internals/symbols"
 import type { AnyConstRec, AnyFnRec, Boxed } from "../_internals/types";
 
 type SemigroupDefs = {
@@ -51,6 +50,7 @@ const Semigroup = (defs: SemigroupDefs) => setTypeclass("Semigroup")((cases: Any
     })
     forEachValue((override,key) => {
         cases[key].prototype.concat = override
+        cases[key].prototype.sconcat = override
     },overrides?.concat || {})
 })
 

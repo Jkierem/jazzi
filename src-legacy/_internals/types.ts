@@ -47,4 +47,13 @@ export interface Matcher<Cases extends string> {
     variantMatch(pattern: Pattern<Cases>): unknown
 }
 
+export interface MatcherRep<Cases extends string> { 
+    /**
+     * Type matches using the variant name.
+     * Receives an object where the types are the keys and computations are values
+     * @param {Match} patterns
+     */
+    match<A>(fa: A, patterns: Pattern<Cases>): any; 
+}
+
 export type AnyBoxed = Boxed<any>
