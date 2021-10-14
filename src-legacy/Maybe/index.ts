@@ -16,6 +16,7 @@ import {
 import Union from '../Union/union'
 import { AnyConstRec, AnyFn } from "../_internals/types";
 import { Maybe, MaybeRep } from "./types";
+import { getTypeName } from "../_internals/symbols";
 
 const MaybeType = () => (cases: AnyConstRec) => {
   cases.Just.prototype.ifNone = function () {
@@ -111,7 +112,11 @@ const Maybe: MaybeRep = Union(
     return pred(val) ? this.Just(val) : this.None();
   },
   isEmpty(x: any) {
-    return x?.isNone?.() || isEmpty(x?.get?.()) || false;
+    const t = getTypeName(x);
+    if( t !== "Maybe" ){
+      return false;
+    }
+    return x.isNone() || isEmpty(x.get());
   },
   match,
   equals,

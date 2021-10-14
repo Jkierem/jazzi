@@ -51,7 +51,7 @@ export interface EndoFunctor<A> extends Boxed<A> {
 }
 
 /**
- * Adds map and fmap method to proto
+ * Adds map, mapTo and fmap methods to proto
  */
 const Functor = (defs: FunctorDefs = {}) => setTypeclass("Functor")((cases: AnyConstRec) => {
     const trivials = propOr([],"trivials",defs);

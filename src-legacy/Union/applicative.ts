@@ -43,7 +43,10 @@ const Applicative = (defs: ApplicativeDefs) => mark((cases: AnyConstRec) => {
     const overrides = propOr({},"overrides",defs);
     trivials.forEach((trivial: string) => {
         function ap<A,B>(this: Applicative<A>, other: Applicative<(a: A) => B>){
-            return this.map(other.get()) as Applicative<B>
+            return (other as any)?.match?.({
+                [trivial]: (fn: (a: A) => B) => this.map(fn),
+                _: () => other
+            }) as unknown as Applicative<B>
         }
         cases[trivial].prototype.apply = ap
         cases[trivial].prototype.applyRight = ap

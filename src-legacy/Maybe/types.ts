@@ -7,7 +7,7 @@ import type { Natural, NaturalRep } from "../Union/natural";
 import type { Show } from "../Union/show";
 import type { Tap } from "../Union/tap";
 import type { Thenable } from "../Union/thenable";
-import type { Matcher } from "../_internals/types";
+import type { Matcher, MatcherRep } from "../_internals/types";
 
 type MaybeCases = "Just" | "None";
 
@@ -17,14 +17,14 @@ Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>
 {
     /**
      * If Just, returns application of argument or argument. 
-     * If None, returns inner value. 
+     * If None, returns undefined. 
      */
     onJust<B>(fn: B | ((x: A) => B)): B;
     /**
      * If None, returns application of argument or argument. 
      * If Just, returns inner value. 
      */
-    onNone<B>(fn: B | (() => B)): B;
+    onNone<B>(fn: B | (() => B)): A | B;
     /**
      * If Just, maps over argument
      * If None, returns structure unchanged. 
@@ -75,7 +75,7 @@ Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>
      */
     filter(fn: (a: A) => boolean): Maybe<A>;
 
-    equals<B>(e: Maybe<B>): boolean;
+    equals<B>(e: Maybe<B> | B): boolean;
 
     fold<B,C>(onNone: () => B, onJust: (a: A) => C): B | C;
 
@@ -97,7 +97,7 @@ Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>
 }
 
 export interface MaybeRep 
-    extends NaturalRep, EqRep, MonadRep, MonoidRep
+    extends NaturalRep, EqRep, MonadRep, MonoidRep, MatcherRep<MaybeCases>
 {
     /**
      * Just constructor
@@ -149,13 +149,13 @@ export interface MaybeRep
      * None is also itself considered as empty
      * @param x inner value
      */
-    isEmpty<T>(x: Maybe<T>): boolean;
+    isEmpty<T>(x: any): boolean;
   
     pure<A>(x: A): Maybe<A>;
     do<A>(fn: (pure: <T>(a: T) => Maybe<T>) => Generator<any,Maybe<A>,any>): Maybe<A>;
   
     empty<A>(): Maybe<A>;
-    accumulate(monoids: Maybe<any>[]): Maybe<any[]>;
+    accumulate(monoids: Maybe<any>[]): Maybe<any>;
     foldMap<A>(values: A[]): Maybe<A>;
   
     equals<A>(ma: Maybe<A>, mb: Maybe<A>): boolean;
