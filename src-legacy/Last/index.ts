@@ -8,14 +8,15 @@ import {
 } from "../Union";
 import Union from '../Union/union'
 import { monoidThen, monoidToPromise } from "../_internals";
+import type { Last, LastRep } from "./types";
 
-const Defs = {
+const Defs: any = {
   trivials: ["Last"],
   zero: "Last",
   resolve: ["Last"],
   overrides: {
     concat: {
-      Last(o) {
+      Last<T>(o: Last<T>) {
         return o;
       },
     },
@@ -28,7 +29,7 @@ const Defs = {
   },
 };
 
-function defaultConstructor(x) {
+function defaultConstructor<A>(this: LastRep, x: A) {
   return this.Last(x);
 }
 

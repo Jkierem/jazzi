@@ -22,6 +22,14 @@ Show, Eq, Thenable<number, 0>, Monoid<number>
      * @param x 
      */
     concat(x: Sum): Sum;
+    /**
+     * Semigroup combine method. Takes two semigroups and combines them.
+     * The combination of a Sum type is addition
+     * @param x 
+     */
+    sconcat(x: Sum): Sum;
+    append(x: Sum): Sum;
+    mappend(x: Sum): Sum;
 
     empty(): Sum;
 

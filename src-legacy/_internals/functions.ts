@@ -3,7 +3,7 @@ import type { Extractable, Nil } from "./types"
 export const equals = (a: any, b: any): boolean => {
     const typeA = typeof a
     const typeB = typeof b
-    if( typeA !== typeB || typeA === "function" ){
+    if( typeA !== typeB || typeA === "function" || typeB === "function" ){
         return false
     }
     if( typeA === "object" ){
@@ -34,14 +34,14 @@ export const equals = (a: any, b: any): boolean => {
 export const empty = <T>(what: T): T | undefined => {
     const anyWho = what as any
     const typ = typeof anyWho
-    if( Array.isArray(what) ){
-        return [] as unknown as T
-    } else if( typ === "string" ) {
-        return "" as unknown as T
-    } else if( typeof anyWho?.empty === "function" ){
+    if( typeof anyWho?.empty === "function" ){
         return anyWho.empty() as T
     } else if( typeof anyWho?.constructor?.empty === "function" ){
         return anyWho.constructor.empty() as T
+    } else if( Array.isArray(what) ){
+        return [] as unknown as T
+    } else if( typ === "string" ) {
+        return "" as unknown as T
     } else if( typ === "object" ) {
         return {} as T
     }
