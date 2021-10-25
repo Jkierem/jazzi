@@ -100,7 +100,7 @@ export type AnyFunctorError = FunctorError<any>
 /**
  * Adds mapError method to proto of error cases
  */
-const FunctorError = (defs: FunctorErrorDefs) => setTypeclass("FunctorError")((cases: AnyConstRec) => {
+export const FunctorError = (defs: FunctorErrorDefs) => setTypeclass("FunctorError")((cases: AnyConstRec) => {
     const errors = propOr([],"errors",defs);
     const overrides = propOr({},"overrides",defs);
     const [ lefts, rights ] = splitBy( c => !includes(c,errors), Object.keys(cases))
@@ -124,5 +124,4 @@ const FunctorError = (defs: FunctorErrorDefs) => setTypeclass("FunctorError")((c
 
 setTypeclass("FunctorError")(FunctorError)
 
-export { FunctorError }
 export default Functor;

@@ -12,19 +12,19 @@ type SwapDefs = {
   }
 }
 
-export interface Swap<R> extends Boxed<R>{
+export interface Swap<L,R> {
   /**
    * Swap the context without altering the inner value.
    */
-  swap(): Swap<R>
+  swap(): Swap<R,L>
   /**
    * Swap if predicate returns true
    */
-  swapIf(fn: (a: R) => boolean): Swap<R>;
+  swapIf(fn: (a: R) => boolean): Swap<R | L,L | R>;
   /**
    * Swap if predicate returns true
    */
-  swapOn(fn: (a: R) => boolean): Swap<R>;
+  swapOn(fn: (a: R) => boolean): Swap<R | L,L | R>;
 }
 
 /**
@@ -40,7 +40,7 @@ const Swap = (defs: SwapDefs) => mark((cases: AnyConstRec) => {
     function trivialrswap(this: Boxed<any>) {
       return new cases[left](this.get());
     }
-    function swapOn(this: Swap<any>, fn: (data: any) => boolean) {
+    function swapIf(this: Boxed<any> & Swap<any,any>, fn: (data: any) => boolean) {
       const variant = getVariant(this);
       return fn(this.get()) ? this.swap() : new cases[variant](this.get());
     }
@@ -48,10 +48,10 @@ const Swap = (defs: SwapDefs) => mark((cases: AnyConstRec) => {
     const rswap = overrides?.swap?.[right] || trivialrswap;
     cases[left].prototype.swap = lswap;
     cases[right].prototype.swap = rswap;
-    cases[left].prototype.swapIf = swapOn;
-    cases[right].prototype.swapIf = swapOn;
-    cases[left].prototype.swapOn = swapOn;
-    cases[right].prototype.swapOn = swapOn;
+    cases[left].prototype.swapIf = swapIf;
+    cases[right].prototype.swapIf = swapIf;
+    cases[left].prototype.swapOn = swapIf;
+    cases[right].prototype.swapOn = swapIf;
   });
 
 mark(Swap);
