@@ -8,14 +8,15 @@ import {
 } from "../Union";
 import Union from '../Union/union'
 import { monoidThen, monoidToPromise } from "../_internals";
+import type { First, FirstRep } from "./types";
 
-const Defs = {
+const Defs: any = {
   trivials: ["First"],
   zero: "First",
   resolve: ["First"],
   overrides: {
     concat: {
-      First(o) {
+      First<A>(this: First<A>, o: First<A>) {
         return this.get() === undefined ? o : this;
       },
     },
@@ -28,7 +29,7 @@ const Defs = {
   },
 };
 
-function defaultConstructor(x) {
+function defaultConstructor<A>(this: FirstRep, x: A) {
   return this.First(x);
 }
 
@@ -48,6 +49,6 @@ const First = Union(
 ).constructors({
   of: defaultConstructor,
   from: defaultConstructor,
-});
+}) as unknown as FirstRep;
 
 export default First;

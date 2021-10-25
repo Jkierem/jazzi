@@ -30,7 +30,7 @@ export interface EqRep {
 }
 
 /**
- * Adds equals method to proto
+ * Adds equals method to proto and global
 */
 const Eq = (defs: EqDefs) => mark((cases: AnyConstRec, globals: any) => {
     const trivials = propOr([],"trivials",defs)

@@ -1,11 +1,11 @@
 import type { Maybe } from "../Maybe/types";
 import type { Foldable } from "../Union/foldable";
 import type { FunctorError } from "../Union/functor";
-import type { Monad } from "../Union/monad";
+import type { Monad, MonadRep } from "../Union/monad";
 import type { Show } from "../Union/show";
 import type { Swap } from "../Union/swap";
 import type { Thenable } from "../Union/thenable";
-import type { Extractable, Matcher, Nil, Tuple } from "../_internals/types";
+import type { Extractable, Matcher, MatcherRep, Nil, Tuple } from "../_internals/types";
 
 type EitherCases = "Left" | "Right";
 
@@ -54,7 +54,9 @@ extends Monad<R>, Matcher<EitherCases>,
     applyLeft<B,C>(this: Either<L,(b: B) => C>,ap: Either<L,B>): Either<L,C>;
 }
 
-export interface EitherRep {
+export interface EitherRep 
+extends MonadRep, MatcherRep<EitherCases>
+{
     Left<L>(l: L): Either<L, never>;
     Right<R>(r: R): Either<never, R>;
 
@@ -98,5 +100,5 @@ export interface EitherRep {
      * Merges all rights by means of calling concat on the inner value of rights
      * @param xs 
      */
-    collectRights<L,R>(xs: Either<L,R>[]): Either<never, R[]>
+    collectRights<L,R>(xs: Either<L,R>[]): Either<never, R[]>;
 }

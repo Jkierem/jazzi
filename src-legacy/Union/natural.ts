@@ -29,7 +29,7 @@ export interface NaturalRep {
 }
 
 /**
- * Adds a natural tranformation 
+ * Adds a natural tranformation. Adds to method to proto and natural method to global
  */
 const Natural = (defs: NaturalDefs) => mark((cases: AnyConstRec, globals: any) => {
     const natKey = propOr("of","natural",defs)
