@@ -18,6 +18,12 @@ export type MapFn<A,B> = (a: A) => B
 
 export type NonEmptyArray<T> = [T, ...T[]];
 
+export type Tuple<T0,T1> = [T0, T1]
+
+export type Tuple2<T0,T1> = [T0, T1]
+
+export type Tuple3<T0,T1,T2> = [T0, T1, T2]
+
 export type Pattern<Cases extends string> = {
     [P in Cases]?: AnyFn
 } & {

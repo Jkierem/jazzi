@@ -57,7 +57,6 @@ export const applyLeft = (left: Ap, right: Ap) => right.apply(left)
 
 export const join = <T>(monad: { join: () => T }) => monad.join();
 export const flat = <T>(monad: { flat: () => T }) => monad.flat();
-export const bind = <A,B,M>(fn: (a: A) => B, monad: { bind: (fn: (a: A) => B) => M}) => monad.bind(fn)
 export const chain = <A,B,M>(fn: (a: A) => B, monad: { chain: (fn: (a: A) => B) => M}) => monad.chain(fn)
 export const flatMap = <A,B,M>(fn: (a: A) => B, monad: { flatMap: (fn: (a: A) => B) => M}) => monad.flatMap(fn)
 export const to = <A,T>(other: { natural: (a: A) => T } , nat: { to: (other: { natural: (a: A) => T }) => T}) => nat.to(other)

@@ -61,6 +61,8 @@ Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>
 
     chain   <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
     flatMap <B>(fn: (a: A) => Maybe<B>): Maybe<B>;
+    join(): A extends Monad<infer B> ? Maybe<B> : A;
+    flat(): A extends Monad<infer B> ? Maybe<B> : A;
 
     concat(s: Maybe<A>): Maybe<A>;
     sconcat(s: Maybe<A>): Maybe<A>;
