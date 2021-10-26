@@ -1,19 +1,13 @@
-import type { EndoFunctor } from "../Union";
-import type { FixedEqRep } from "../Union/eq";
-import type { FixedMonoidRep, Monoid } from "../Union/monoid";
+import type { FixedEndoFunctor } from "../Union";
+import type { Eq, FixedEqRep } from "../Union/eq";
+import type { FixedMonoidRep, FixedMonoid } from "../Union/monoid";
+import type { Show } from "../Union/show";
 import type { Thenable } from "../Union/thenable";
 
 export interface Max 
-extends EndoFunctor<number>, Monoid<number>, Thenable<number, number>
+extends FixedEndoFunctor<Max,number>, FixedMonoid<Max,number>, 
+        Thenable<number, number>, Eq, Show
 {
-    map(fn: (a: number) => number ): Max;
-    fmap(fn: (a: number) => number ): Max;
-    mapTo(b: number): Max;
-    concat(x: Max): Max;
-    sconcat(x: Max): Max;
-    append(x: Max): Max;
-    mappend(x: Max): Max;
-    empty(): Max;
     equals(m: Max): boolean;
 }
 

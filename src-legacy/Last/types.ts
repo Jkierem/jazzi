@@ -1,23 +1,18 @@
 import type { Eq, EqRep } from "../Union/eq";
 import type { Functor } from "../Union/functor";
-import type { Monoid, MonoidRep } from "../Union/monoid";
+import type { FixedMonoid, MonoidRep } from "../Union/monoid";
 import type { Show } from "../Union/show";
 import type { Thenable } from "../Union/thenable";
 
 export interface Last<A> 
-extends Monoid<A>, Functor<A>, 
+extends FixedMonoid<Last<A>, A>, Functor<A>, 
         Thenable<A, undefined>, Show, Eq
 {
-    equals(other: Last<A>): boolean;
     map <B>(fn: (a: A) => B): Last<B>;
     fmap<B>(fn: (a: A) => B): Last<B>;
-    concat(other: Last<A>): Last<A>;
-    sconcat(other: Last<A>): Last<A>;
-    append(other: Last<A>): Last<A>;
-    mappend(other: Last<A>): Last<A>;
-    empty(): Last<A>;
+    mapTo<B>(b: B): Last<B>;
+    equals(other: Last<any>): boolean;
 }
-
 export interface LastRep 
 extends MonoidRep, EqRep
 {

@@ -8,8 +8,9 @@ import {
 } from "../Union";
 import Union from '../Union/union'
 import { monoidToPromise } from "../_internals";
+import { Mult, MultRep } from "./types";
 
-const Defs = {
+const Defs: any = {
   trivials: ["Mult"],
   identities: ["One"],
   zero: "One",
@@ -17,7 +18,7 @@ const Defs = {
   reject: ["One"],
   overrides: {
     concat: {
-      Mult(o) {
+      Mult(this: Mult, o: Mult) {
         return Mult.from(this.get() * o.get());
       },
     },
@@ -28,7 +29,7 @@ const Defs = {
   },
 };
 
-function defaultConstructor(x) {
+function defaultConstructor(this: MultRep, x: any) {
   return x === 1 ? this.One() : this.Mult(x);
 }
 
@@ -52,6 +53,6 @@ const Mult = Union(
 ).constructors({
   of: defaultConstructor,
   from: defaultConstructor,
-});
+}) as unknown as MultRep;
 
 export default Mult;
