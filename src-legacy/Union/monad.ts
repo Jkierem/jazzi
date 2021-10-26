@@ -55,7 +55,7 @@ export interface MonadRep {
     /**
      * Do notation using generator functions
      */
-    do<A>(fn: any): Monad<A>;
+    do<A>(fn: (pure: <T>(a: T) => Monad<T>) => Generator<any, Monad<A>, any>): Monad<A>;
 }
 
 /**

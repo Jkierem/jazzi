@@ -62,7 +62,6 @@ extends MonadRep, MatcherRep<EitherCases>
 
     of<R>(x: R): Either<Nil, NonNullable<R>>;
     from<L,R>(l: L, r: R): Either<L, NonNullable<R>>;
-    of<L,R>(l: L, r: R): Either<L, NonNullable<R>>;
     fromFalsy<L,R>(l: L, r: R): Either<L,R>;
     fromPredicate<R>(pred: (r: R) => boolean, r: R): Either<R,R>;
     fromMaybe<R>(m: Maybe<R>): Either<undefined, R>;
@@ -101,4 +100,7 @@ extends MonadRep, MatcherRep<EitherCases>
      * @param xs 
      */
     collectRights<L,R>(xs: Either<L,R>[]): Either<never, R[]>;
+
+    pure<A>(x: A): Either<any,A>;
+    do<A>(fn: (pure: <T>(a: T) => Either<any,T>) => Generator<any, Either<any,A>, any>): Either<any,A>;
 }

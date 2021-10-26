@@ -21,6 +21,17 @@ export interface Show {
     toString(): string;
 }
 
+export type LazyShow<Type extends string, Var extends string> = {
+    /**
+     * Returns the string representation
+     */
+     show(): `[${Type} => ${Var} => _]`;
+     /**
+      * Returns the string representation
+      */
+     toString(): `[${Type} => ${Var} => _]`;
+}
+
 /**
  * Adds show and toString method to proto
  */
