@@ -3,7 +3,6 @@
     "version": "1.8.0",
     "main": "./dist/jazzi.cjs.js",
     "license": "MIT",
-    "types": "types/index.d.ts",
     "publishConfig": {
         "access": "public"
     },
@@ -11,10 +10,7 @@
         "type": "git",
         "url": "https://github.com/Jkierem/jazzi"
     },
-    "files": [
-        "dist",
-        "types"
-    ],
+    "files": [ "dist" ],
     "scripts": {
         "build": "yarn build:ts && yarn build:deno",
         "build:ts": "echo 'Not ready for this'",
@@ -24,9 +20,6 @@
         "test:silent": "rm -rf ./coverage && jest --silent",
         "test:watch": "jest --verbose --watch",
         "prepublish": "yarn clean && yarn build"
-    },
-    "dependencies": {
-        "ramda": "0.27.0"
     },
     "devDependencies": {
         "@types/jest": "^27.0.1",
