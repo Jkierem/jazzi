@@ -3,12 +3,18 @@ import type { Extractable, Nil } from "./types"
 export const equals = (a: any, b: any): boolean => {
     const typeA = typeof a
     const typeB = typeof b
-    if( typeA !== typeB || typeA === "function" ){
+    if( typeA !== typeB || typeA === "function" || typeB === "function" ){
         return false
     }
     if( typeA === "object" ){
         if( a === b ){
             return true
+        }
+        if( typeof a?.equals === "function" ){
+            return a.equals(b)
+        }
+        if( typeof b?.equals === "function" ){
+            return b.equals(a)
         }
         if( Array.isArray(a) && Array.isArray(b) ){
             return a.every((_a, idx) => equals(_a, b[idx]))
@@ -28,16 +34,16 @@ export const equals = (a: any, b: any): boolean => {
 export const empty = <T>(what: T): T | undefined => {
     const anyWho = what as any
     const typ = typeof anyWho
-    if( Array.isArray(what) ){
+    if( typeof anyWho?.empty === "function" ){
+        return anyWho.empty() as T
+    } else if( typeof anyWho?.constructor?.empty === "function" ){
+        return anyWho.constructor.empty() as T
+    } else if( Array.isArray(what) ){
         return [] as unknown as T
     } else if( typ === "string" ) {
         return "" as unknown as T
     } else if( typ === "object" ) {
         return {} as T
-    } else if( typeof anyWho?.empty === "function" ){
-        return anyWho.empty() as T
-    } else if( typeof anyWho?.constructor?.empty === "function" ){
-        return anyWho.constructor.empty() as T
     }
 }
 
@@ -53,7 +59,7 @@ export const merge = <A,B>(a: A, b: B): A & B => ({ ...a, ...b })
 
 export const prop = <K extends string | number | symbol>(key: K) => <T>(obj: T): K extends keyof T ? T[K] : undefined => (obj as any)?.[key]
 
-export const propOr = <T, K extends keyof T>(or: T[K], key: K, obj: T): T[K] => obj[key] ?? or
+export const propOr = <T, K extends keyof T>(or: NonNullable<T[K]>, key: K, obj: T) => obj[key] ?? or
 
 export const assoc = <T, K extends keyof T>(key: K, value: T[K], obj: T): T => ({ ...obj, [key]: value })
 

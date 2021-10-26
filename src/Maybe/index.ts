@@ -1,101 +1,125 @@
-import type { Box, Nil } from "../_internals/types";
-import { Show } from "../union/show"
-import { isEmpty, isNil } from "../_internals/functions";
-import { Eq } from "../union/eq";
-import { getVariant } from "../_internals/symbols";
-import { alias, Builder } from "../_internals/builder";
-import { Foldable } from "../union/foldable";
-import { Thenable } from "../union/thenable";
+import { equals, isNil, isEmpty, empty } from "../_internals/functions";
+import { match } from "../_tools";
+import {
+  Functor,
+  Monad,
+  Applicative,
+  Eq,
+  Semigroup,
+  Show,
+  Monoid,
+  Tap,
+  Foldable,
+  Filterable,
+  Thenable,
+} from "../Union";
+import Union from '../Union/union'
+import { AnyConstRec, AnyFn } from "../_internals/types";
+import { Maybe, MaybeRep } from "./types";
+import { getTypeName } from "../_internals/symbols";
 
-const maybeCases = ["Just" , "None"] as const
+const MaybeType = () => (cases: AnyConstRec) => {
+  cases.Just.prototype.ifNone = function () {
+    return this;
+  };
+  cases.Just.prototype.ifJust = function (fn: AnyFn) {
+    return fn(this.get());
+  };
+  cases.None.prototype.ifNone = function (fn: AnyFn) {
+    return fn();
+  };
+  cases.None.prototype.ifJust = function () {
+    return this;
+  };
+};
 
-type MaybeCases = typeof maybeCases[number]
-
-type BoxedMaybe<A> = Box<"Maybe",MaybeCases,A>
-
-export type Maybe<A> = BoxedMaybe<A> 
-    & Show 
-    & Eq<"Maybe">
-    & Foldable<undefined, A>
-    & Thenable<A>
-    & { 
-        fmap: <B>(fn: (a: A) => B) => Maybe<B>,
-        map: <B>(fn: (a: A) => B) => Maybe<B>,
-        
-        join: () => A,
-        flat: () => A,
-        chain: <B>(fn: (a: A) => Maybe<B>) => Maybe<B>,
-        bind: <B>(fn: (a: A) => Maybe<B>) => Maybe<B>,
-        flatMap: <B>(fn: (a: A) => Maybe<B>) => Maybe<B>,
-
-        tap: (fn: (a: A) => void) => Maybe<A>,
-        peak: (fn: (a: A) => void) => Maybe<A>,
-        effect: <B>(fn: (a: A) => Maybe<B>) => Maybe<A>,
+const MaybeDefs = {
+  trivials: ["Just"],
+  identities: ["None"],
+  empties: ["None"],
+  pure: "Just",
+  zero: "None",
+  resolve: ["Just"],
+  reject: ["None"],
+  overrides: {
+    fmap: undefined,
+    tap: undefined,
+    equals: undefined,
+    chain: undefined,
+    apply: undefined,
+    concat: undefined,
+    toPromise: undefined,
+    show: {
+      None() {
+        return `[Maybe => None]`;
+      },
+    },
+    empty: {
+      Just<A>(this: Maybe<A>): Maybe<A> {
+        return Maybe.fromNullish(empty(this.get())) as Maybe<A>;
+      },
+    },
+    filter: {
+      Just<A>(this: Maybe<A>, fn: (a: A) => boolean) {
+        return Maybe.fromPredicate(fn, this.get());
+      },
+    },
+    fold: {
+      Just<A,B,C>(this: Maybe<A>, onNone: () => B, onJust: (a: A) => C){ return onJust(this.get()) },
+      None<A,B,C>(this: Maybe<A>, onNone: () => B, onJust: (a: A) => C){ return onNone() }
     }
+  },
+};
 
-const maybeBuilder = Builder("Maybe", maybeCases)
-
-export const Just = <A>(a: A): Maybe<A> => {
-    return maybeBuilder
-        .forVariant("Just",a)
-        .mixWith({
-            fmap: <B>(fn: (a: A) => B) => {
-                return Just(fn(a))
-            },
-            chain<B>(fn: (a: A) => Maybe<B>){
-                return fn(a)
-            },
-            tap: (fn: (a: A) => void) => {
-                fn(a);
-                return Just(a) 
-            },
-            effect: <B>(fn: (a: A) => Maybe<B>) => {
-                return fn(a).map(() => a)
-            },
-            peak: alias("tap"),
-            map: alias("fmap"),
-            bind: alias("chain"),
-            flatMap: alias("chain"),
-            join: alias("get"),
-            flat: alias("get")
-        })
-        .mix(Thenable())
-        .mix(Foldable())
-        .mix(Eq())
-        .mix(Show())
-        .finish()
+function defaultConstructor<T>(this: MaybeRep, x: T): Maybe<T> {
+  return x ? this.Just(x) : this.None<T>();
 }
 
-export const None = <A>(): Maybe<A> => {
-    return maybeBuilder
-        .forVariant("None", undefined as unknown as A)
-        .mixWith({
-            fmap<B>(_fn: (a: A) => B){ return this as unknown as Maybe<B> },
-            chain<B>(_fn: (a: A) => Maybe<B>){ return this as unknown as Maybe<B> },
-            tap: alias("fmap"),
-            peak: alias("tap"),
-            effect: alias("chain"),
-            map: alias("fmap"),
-            bind: alias("chain"),
-            flatMap: alias("chain"),
-            join: alias("get"),
-            flat: alias("get")
-        })
-        .mix(Thenable("Reject"))
-        .mix(Foldable("Left"))
-        .mix(Eq((other) => getVariant(other) === "None"))
-        .mix(Show(() => `[Maybe => None]`))
-        .finish()
-}
+const Maybe: MaybeRep = Union(
+  "Maybe",
+  {
+    Just: (x) => x,
+    None: () => {},
+  },
+  [
+    Functor(MaybeDefs),
+    Tap(MaybeDefs),
+    Eq(MaybeDefs),
+    Monad(MaybeDefs),
+    Monoid(MaybeDefs),
+    Applicative(MaybeDefs),
+    Semigroup(MaybeDefs),
+    Filterable(MaybeDefs),
+    Thenable(MaybeDefs),
+    Show(MaybeDefs),
+    Foldable(MaybeDefs),
+    MaybeType(),
+  ]
+).constructors({
+  of: defaultConstructor,
+  from: defaultConstructor,
+  fromFalsy: defaultConstructor,
+  fromArray<A extends any[]>(this: MaybeRep, arr: A): Maybe<A> {
+    return arr.length === 0 ? this.None<A>() : this.Just<A>(arr);
+  },
+  fromNullish<A>(this: MaybeRep, x: A): Maybe<A> {
+    return isNil(x) ? this.None() : this.Just(x);
+  },
+  fromEmpty<A>(this: MaybeRep, x: A): Maybe<A> {
+    return isEmpty(x) ? this.None() : this.Just(x);
+  },
+  fromPredicate<A>(this: MaybeRep, pred: (a: A) => boolean, val: A) {
+    return pred(val) ? this.Just(val) : this.None();
+  },
+  isEmpty(x: any) {
+    const t = getTypeName(x);
+    if( t !== "Maybe" ){
+      return false;
+    }
+    return x.isNone() || isEmpty(x.get());
+  },
+  match,
+  equals,
+}) as unknown as MaybeRep;
 
-export const fromFalsy = <A>(a: A): Maybe<A> => a ? Just(a) : None<A>()
-export const fromNullish = <A>(a: A | Nil): Maybe<A> => isNil(a) ? None<A>() : Just(a)
-export const fromEmpty = <A>(a: A): Maybe<A> => isEmpty(a) ? Just(a) : None<A>()
-export const fromPredicate = <A>(pred: (a: A) => boolean, a: A): Maybe<A> => pred(a) ? Just(a) : None<A>()
-export const of = <A>(a: A): Maybe<A> => Just(a)
-
-export const Maybe = {
-    Just, None, 
-    of, fromNullish, fromEmpty,
-    fromFalsy, fromPredicate
-}
+export default Maybe;
