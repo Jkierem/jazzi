@@ -1,4 +1,4 @@
-import { WithInnerValue, WithTypeName, WithVariant } from "./symbols"
+import { WithInnerValue, WithTypeName, WithTypeRep, WithVariant } from "./symbols"
 
 export type Extractable<A,Args extends any[] = []> = A | ((...args: Args) => A)
 
@@ -41,10 +41,11 @@ export type ExpandablePattern = {
 
 type Unwrap<A> = A extends Boxed<infer B> ? Unwrap<B> : A 
 
-export interface Boxed<A> 
+export interface Boxed<A, TRep=any> 
 extends WithTypeName<string>
 , WithVariant<string>
 , WithInnerValue<A>
+, WithTypeRep<TRep>
 {
     get: () => A,
     unwrap: () => Unwrap<A>

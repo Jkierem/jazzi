@@ -151,7 +151,7 @@ export interface MaybeRep
      * None is also itself considered as empty
      * @param x inner value
      */
-    isEmpty<T>(x: any): boolean;
+    isEmpty(x: any): boolean;
   
     pure<A>(x: A): Maybe<A>;
     do<A>(fn: (pure: <T>(a: T) => Maybe<T>) => Generator<any,Maybe<A>,any>): Maybe<A>;
