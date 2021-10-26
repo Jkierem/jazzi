@@ -7,7 +7,9 @@ import {
     setTypeName,  
     getInnerValue, 
     getTypeclass, 
-    getVariant
+    getVariant,
+    setRepHasInstance,
+    setCaseHasInstance
 } from "../_internals/symbols"
 import type { AnyFn, AnyFnRec, Boxed } from "../_internals/types";
 import Show from './show'
@@ -60,25 +62,33 @@ const Union = <K extends AnyFnRec>(name: string, cases: K, exts: TypeClassInstan
     const tcs =  extensions.map(tc => getTypeclass(tc)).filter(Boolean)
     let typeRep = {}
     const mappedCases = mapObj(([key,val]: [string, AnyFn]) => {
-        return [key , function(this:any, ...args: Parameters<typeof val>){
+        const Case = function(this:any, ...args: Parameters<typeof val>){
             setTypeName(name)(this)
             setVariant(key)(this)
             setInnerValue(val(...args))(this)
             setTypeclasses(() => tcs)(this)
             setTypeRep(() => typeRep)(this);
-        }]
+        }
+        return [key, Case]
     })(cases) as ConstCases<K>
     const globals = {}
     extensions.forEach(fn => fn(mappedCases,globals))
     return {
         constructors<T extends any>(cons: T){
-            const trueCases = mapObj(([key,value]: [any,any]) => [key, (...args: any[]) => new value(...args)])(mappedCases)
+            const trueCases = mapObj(([key,value]: [any,any]) => {
+                const Case = (...args: any[]) => new value(...args)
+                setVariant(key)(Case);
+                setTypeRep(() => typeRep)(Case);
+                setCaseHasInstance(Case);
+                return [key, Case]
+            })(mappedCases)
             typeRep = {
                 ...trueCases,
                 ...globals,
                 ...mapObj(([key,fn]: [string, AnyFn]) => [key,fn.bind(trueCases)])(cons),
             }
             setTypeclasses(() => tcs)(typeRep)
+            setRepHasInstance(typeRep)
             return typeRep as { [P in keyof K]: K[P] } & { [Q in keyof T]: T[Q] }
         }
     }

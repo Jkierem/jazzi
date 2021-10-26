@@ -29,6 +29,15 @@ export interface EqRep {
     equals(ea: Eq, eb: Eq): boolean; 
 }
 
+export interface FixedEqRep<A>{
+    /**
+     * Performs an equality check
+     * @param ea 
+     * @param eb 
+     */
+     equals(ea: A, eb: A): boolean; 
+}
+
 /**
  * Adds equals method to proto and global
 */
