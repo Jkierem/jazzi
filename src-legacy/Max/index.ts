@@ -9,14 +9,15 @@ import {
 } from "../Union";
 import Union from '../Union/union'
 import { monoidThen, monoidToPromise } from "../_internals";
+import { Max, MaxRep } from "./types";
 
-const Defs = {
+const Defs: any = {
   trivials: ["Max"],
   zero: "Max",
   resolve: ["Max"],
   overrides: {
     concat: {
-      Max(o) {
+      Max(this: Max, o: Max) {
         return this.get() < o.get() ? o : this;
       },
     },
@@ -34,7 +35,7 @@ const Defs = {
   },
 };
 
-function defaultConstructor(x) {
+function defaultConstructor(this: MaxRep, x: any) {
   return this.Max(x);
 }
 
@@ -54,6 +55,6 @@ const Max = Union(
 ).constructors({
   of: defaultConstructor,
   from: defaultConstructor,
-});
+}) as unknown as MaxRep;
 
 export default Max;

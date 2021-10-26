@@ -1,4 +1,4 @@
-import { Eq, EqRep } from "../Union/eq";
+import { Eq, FixedEqRep } from "../Union/eq";
 import { EndoFunctor } from "../Union/functor";
 import { FixedMonoidRep, Monoid } from "../Union/monoid";
 import { Show } from "../Union/show";
@@ -30,18 +30,15 @@ Show, Eq, Thenable<number, 0>, Monoid<number>
     sconcat(x: Sum): Sum;
     append(x: Sum): Sum;
     mappend(x: Sum): Sum;
-
     empty(): Sum;
-
     equals(m: Sum): boolean;
-
     map (fn: (a: number) => number): Sum;
     fmap(fn: (a: number) => number): Sum;
     mapTo(n: number): Sum;
 }
 
 export interface SumRep 
-extends FixedMonoidRep<number>, EqRep {
+extends FixedMonoidRep<Sum>, FixedEqRep<Sum> {
     Sum(x: number): Sum;
     Zero(): Sum;
     /**
@@ -56,8 +53,4 @@ extends FixedMonoidRep<number>, EqRep {
      * @param {number} x inner value
      */
     from(x: number): Sum;
-    empty(): Sum;
-    accumulate(monoids: Sum[]): Sum;
-    foldMap(values: number[]): Sum;
-    equals(ma: Sum, mb: Sum): boolean;
 }

@@ -8,14 +8,15 @@ import {
 } from "../Union";
 import Union from '../Union/union'
 import { isNil, monoidThen, monoidToPromise } from "../_internals";
+import { Min, MinRep } from "./types";
 
-const Defs = {
+const Defs: any = {
   trivials: ["Min"],
   zero: "Min",
   resolve: ["Min"],
   overrides: {
     concat: {
-      Min(o) {
+      Min(this: Min, o: Min) {
         return this.get() > o.get() ? o : this;
       },
     },
@@ -33,7 +34,7 @@ const Defs = {
   },
 };
 
-function defaultConstructor(x) {
+function defaultConstructor(this: MinRep, x: any) {
   return this.Min(x);
 }
 
@@ -53,6 +54,6 @@ const Min = Union(
 ).constructors({
   of: defaultConstructor,
   from: defaultConstructor,
-});
+}) as unknown as MinRep;
 
 export default Min;

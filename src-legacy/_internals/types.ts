@@ -6,6 +6,8 @@ export type AnyFn = (...args: any[]) => any
 
 export type AnyFnRec = Record<string, AnyFn>
 
+export type AnyRec = Record<string | symbol | number, any>
+
 export type AnyConst = new (...args: any[]) => any
 
 export type AnyConstRec = Record<string, new (...args: any[]) => any>
