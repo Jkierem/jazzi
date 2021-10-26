@@ -1,6 +1,6 @@
 import { Eq, FixedEqRep } from "../Union/eq";
-import { EndoFunctor } from "../Union/functor";
-import { FixedMonoidRep, Monoid } from "../Union/monoid";
+import { FixedEndoFunctor } from "../Union/functor";
+import { FixedMonoid, FixedMonoidRep } from "../Union/monoid";
 import { Show } from "../Union/show";
 import { Thenable } from "../Union/thenable";
 import { Extractable, Matcher } from "../_internals/types";
@@ -8,33 +8,14 @@ import { Extractable, Matcher } from "../_internals/types";
 type SumCases = "Sum" | "Zero"
 
 export interface Sum
-extends Matcher<SumCases>, EndoFunctor<number>,
-Show, Eq, Thenable<number, 0>, Monoid<number>
+extends Matcher<SumCases>, FixedEndoFunctor<Sum,number>,
+Show, Eq, Thenable<number, 0>, FixedMonoid<Sum,number>
 {
     onSum <B>(fn: Extractable<B,[number]>): B ;
     onZero<B>(fn: Extractable<B,[number]>): B ;
     isSum (): boolean;
     isZero(): boolean;
-
-    /**
-     * Semigroup combine method. Takes two semigroups and combines them.
-     * The combination of a Sum type is addition
-     * @param x 
-     */
-    concat(x: Sum): Sum;
-    /**
-     * Semigroup combine method. Takes two semigroups and combines them.
-     * The combination of a Sum type is addition
-     * @param x 
-     */
-    sconcat(x: Sum): Sum;
-    append(x: Sum): Sum;
-    mappend(x: Sum): Sum;
-    empty(): Sum;
     equals(m: Sum): boolean;
-    map (fn: (a: number) => number): Sum;
-    fmap(fn: (a: number) => number): Sum;
-    mapTo(n: number): Sum;
 }
 
 export interface SumRep 

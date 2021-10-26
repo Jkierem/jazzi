@@ -1,7 +1,7 @@
 import { defineOverrides, prop, propOr } from "../_internals";
 import { setTypeclass } from "../_internals/symbols"
 import type { AnyConstRec, AnyFnRec } from "../_internals/types";
-import type { Semigroup } from "./semigroup";
+import type { FixedSemigroup, Semigroup } from "./semigroup";
 
 type MonoidDefs = {
     trivials: string[], 
@@ -21,11 +21,28 @@ export interface Monoid<A> extends Semigroup<A>{
     /**
      * Monoid combine operation
      */
-    append(m: Monoid<A>): Monoid<A> 
+    append(m: Monoid<A>): Monoid<A>
     /**
      * Monoid combine operation
      */
-    mappend(m: Monoid<A>): Monoid<A> 
+    mappend(m: Monoid<A>): Monoid<A>
+}
+
+export interface FixedMonoid<Outer extends Monoid<Inner>, Inner> 
+        extends FixedSemigroup<Outer,Inner>
+{
+    /**
+     * Returns the empty value of a Monoid
+     */
+    empty(): Outer
+    /**
+     * Monoid combine operation
+     */
+    append(m: Outer): Outer
+    /**
+     * Monoid combine operation
+     */
+    mappend(m: Outer): Outer
 }
 
 export interface MonoidRep { 

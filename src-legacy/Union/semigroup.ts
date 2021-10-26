@@ -23,6 +23,13 @@ export interface Semigroup<A> extends Boxed<A> {
     sconcat(s: Semigroup<A>): Semigroup<A>
 }
 
+export interface FixedSemigroup<Outer extends Semigroup<Inner>, Inner> 
+        extends Semigroup<Inner> 
+{
+    concat(s: Outer): Outer
+    sconcat(s: Outer): Outer
+}
+
 /**
  * Adds concat method to proto
  */

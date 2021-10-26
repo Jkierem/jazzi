@@ -50,6 +50,14 @@ export interface EndoFunctor<A> extends Boxed<A> {
      mapTo(b: A): EndoFunctor<A>
 }
 
+export interface FixedEndoFunctor<Outer extends EndoFunctor<Inner>, Inner> 
+        extends EndoFunctor<Inner> 
+{
+    map(fn: (a: Inner) => Inner ): Outer;
+    fmap(fn: (a: Inner) => Inner ): Outer;
+    mapTo(b: Inner): Outer;
+}
+
 /**
  * Adds map, mapTo and fmap methods to proto
  */
