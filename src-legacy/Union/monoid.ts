@@ -45,21 +45,23 @@ export interface MonoidRep {
     foldMap<A>(values: A[]): Monoid<A>;
 }
 
-export interface FixedMonoidRep<A> {
+type InnerType<A> = A extends Monoid<infer B> ? B : never
+
+export interface FixedMonoidRep<A extends Monoid<any>> {
     /**
      * Returns the empty value of a Monoid
      */
-     empty(): Monoid<A>; 
+     empty(): A; 
      /**
       * Combines a list of monoids
       * @param monoids list of monoids
       */
-     accumulate(monoids: Monoid<A>[]): Monoid<A>;
+     accumulate(monoids: A[]): A;
      /**
       * Maps a list of values into a list of monoids and combines them
       * @param values 
       */
-     foldMap(values: A[]): Monoid<A>;
+     foldMap(values: InnerType<A>[]): A;
 }
 
 /**

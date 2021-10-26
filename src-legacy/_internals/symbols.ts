@@ -40,3 +40,20 @@ export const setTypeName = setSymbol(TypeName)
 export const setVariant = setSymbol(Variant)
 export const setTypeclass = setSymbol(Typeclass)
 export const setTypeclasses = setSymbol(Typeclasses)
+
+export const setRepHasInstance = (rep: any) => {
+    Object.defineProperty(rep, Symbol.hasInstance, {
+        value: (instance: WithTypeRep<any>) => {
+            return getTypeRep(instance) === rep
+        }
+    })
+}
+
+export const setCaseHasInstance = (Case: any) => {
+    Object.defineProperty(Case, Symbol.hasInstance, {
+        value: (instance: WithVariant<string>) => {
+            return getVariant(instance) === getVariant(Case) 
+                && getTypeRep(instance) === getTypeRep(Case)
+        }
+    })
+}

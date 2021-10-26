@@ -23,11 +23,11 @@ type UnionDefinition = {
   cases: {
     [x: string]: (innerValue: any) => any
   }
-  extensions: any[]
-  config: {
-    noHelpers: boolean
+  extensions?: any[]
+  config?: {
+    noHelpers?: boolean
   }
-  constructors: {
+  constructors?: {
     [x: string]: (x: any) => any
   }
 }
