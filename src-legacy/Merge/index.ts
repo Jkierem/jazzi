@@ -1,5 +1,3 @@
-import equals from "ramda/src/equals";
-import mergeAll from "ramda/src/mergeAll";
 import {
   Eq,
   Functor,
@@ -9,9 +7,10 @@ import {
   Thenable,
 } from "../Union";
 import Union from '../Union/union'
-import { monoidToPromise } from "../_internals";
+import { equals, monoidToPromise, merge } from "../_internals";
+import { Merge, MergeRep } from "./types";
 
-const Defs = {
+const Defs: any = {
   trivials: ["Merge"],
   identities: ["Empty"],
   zero: "Empty",
@@ -19,8 +18,8 @@ const Defs = {
   reject: ["Empty"],
   overrides: {
     concat: {
-      Merge(m) {
-        return Merge.from(mergeAll([this.get(), m.get()]));
+      Merge(this: Merge<any>, m: Merge<any>) {
+        return Merge.from(merge(this.get(), m.get()));
       },
     },
     toPromise: {
@@ -30,7 +29,7 @@ const Defs = {
   },
 };
 
-function defaultConstructor(x) {
+function defaultConstructor(this: MergeRep, x: any) {
   return equals({}, x) ? this.Empty() : this.Merge(x);
 }
 
@@ -54,6 +53,6 @@ const Merge = Union(
 ).constructors({
   of: defaultConstructor,
   from: defaultConstructor,
-});
+}) as unknown as MergeRep;
 
 export default Merge;
