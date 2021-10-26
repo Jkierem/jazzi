@@ -1,26 +1,52 @@
-import { getInnerValue, getTypeName, getVariant } from "../_internals/symbols"
-import { Boxed } from "../_internals/types"
+import { propOr } from "../_internals";
+import { getVariant, getInnerValue, setTypeclass, getTypeName } from "../_internals/symbols"
+import { AnyBoxed, AnyConstRec, AnyFn } from "../_internals/types";
 
-export interface Show { 
-    show: () => string,
-    toString: () => string
-}
-
-export const Show = <A,V extends Boxed<A>>(impl?: (a: A) => string) => (v: V): V & Show => {
-    if( impl ){
-        return {
-            ...v,
-            show(){
-                return impl(getInnerValue(this))
-            },
-            toString(){ return this.show() }
+type ShowDefs = {
+    overrides?: {
+        show?: {
+            [P: string]: AnyFn
         }
     }
-    return {
-        ...v,
-        show(){
-            return `[${getTypeName(this)} => ${getVariant(this)} ${getInnerValue(this)}]`
-        },
-        toString(){ return this.show() }
-    }
+} 
+
+export interface Show {
+    /**
+     * Returns the string representation
+     */
+    show(): string;
+    /**
+     * Returns the string representation
+     */
+    toString(): string;
 }
+
+export type LazyShow<Type extends string, Var extends string> = {
+    /**
+     * Returns the string representation
+     */
+     show(): `[${Type} => ${Var} => _]`;
+     /**
+      * Returns the string representation
+      */
+     toString(): `[${Type} => ${Var} => _]`;
+}
+
+/**
+ * Adds show and toString method to proto
+ */
+const Show = (defs?: ShowDefs) => setTypeclass("Show")((cases: AnyConstRec) => {
+    const overrides = propOr({},"overrides",defs ?? {});
+    Object.keys(cases).forEach(trivial => {
+        function trivialShow(this: AnyBoxed){
+            return `[${getTypeName(this)} => ${getVariant(this)} ${getInnerValue(this)}]`;
+        }
+        const show = overrides?.show?.[trivial] || trivialShow
+        cases[trivial].prototype.show = show
+        cases[trivial].prototype.toString = show
+    })
+})
+
+setTypeclass("Show")(Show)
+
+export default Show

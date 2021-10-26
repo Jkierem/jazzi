@@ -1,5 +1,4 @@
-import { Boxed } from "./src-legacy/_internals/types"
-import { Spy } from "./src-legacy/__test-utils"
+import { Spy } from "./src/__test-utils"
 
 expect.extend({
     toTypeMatch(value,name) {

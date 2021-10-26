@@ -10,7 +10,7 @@ export const Typeclasses = Symbol("@@typeclasses");
 type WithSymbol<T extends symbol,U> = { [P in T]: U }
 
 export type WithInnerValue<T> = WithSymbol<typeof InnerValue, T>
-export type WithTypeRep<Rep> = WithSymbol<typeof TypeRep, () => Rep>
+export type WithTypeRep<Rep> = WithSymbol<typeof TypeRep, Rep>
 export type WithTypeName<TName extends Key> = WithSymbol<typeof TypeName, TName>
 export type WithVariant<VName extends Key> = WithSymbol<typeof Variant, VName>
 export type WithTypeclasses<TCS extends () => readonly string[]> = WithSymbol<typeof Typeclasses, () => TCS>
@@ -31,8 +31,29 @@ const setSymbol = <Sym extends symbol>(sym: Sym) => <T>(value: T) => <U>( withSy
 } 
 
 export const setInnerValue = setSymbol(InnerValue)
-export const setTypeRep = setSymbol(TypeRep)
+export const setTypeRep = (t: any) => (val: any) => {
+    Object.defineProperty(val,TypeRep,{
+        get: () => t()
+    })
+};
 export const setTypeName = setSymbol(TypeName)
 export const setVariant = setSymbol(Variant)
 export const setTypeclass = setSymbol(Typeclass)
 export const setTypeclasses = setSymbol(Typeclasses)
+
+export const setRepHasInstance = (rep: any) => {
+    Object.defineProperty(rep, Symbol.hasInstance, {
+        value: (instance: WithTypeRep<any>) => {
+            return getTypeRep(instance) === rep
+        }
+    })
+}
+
+export const setCaseHasInstance = (Case: any) => {
+    Object.defineProperty(Case, Symbol.hasInstance, {
+        value: (instance: WithVariant<string>) => {
+            return getVariant(instance) === getVariant(Case) 
+                && getTypeRep(instance) === getTypeRep(Case)
+        }
+    })
+}
