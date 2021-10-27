@@ -72,3 +72,5 @@ export const isNil = <A>(a: A | Nil): a is Nil => a === null || a === undefined
 export const isNotNil = <A>(a: A | Nil): a is A => !isNil(a)
 
 export const coerce = <T,U>(a: T): U => a as unknown as U
+
+export const isFunction = <T>(x: T) => typeof x === "function"
