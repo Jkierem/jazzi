@@ -1,21 +1,12 @@
 # Jazzi: Juan's Algebraic Data Structures
 
-*Now with Do notation*
-
-*Now with thenables*
-
-*Now available for deno too*
-
-*Now in typescript*
-
-Implementations of common structures using ramda for utilities. Available Structures and features: 
+Implementations of common functional structures. Available structures and features: 
 
 - Either
 - IO
 - Maybe
 - Reader
-- Useful Monoids: Sum, Mult, Merge
-- Moar Monoids: Max, Min, First, Last
+- Monoids: Sum, Mult, Merge, Max, Min, First, Last
 - A function to create Tagged Unions/Sum types: Union
 - A way to implement typeclasses and use prototype inheritance. More on this on API.md
 - Pre built typeclasses available to use. More on this on API.md 
@@ -47,7 +38,7 @@ All functionalities are exported as named exports from the jazzi module
 ```javascript
 import { Maybe, Either, IO, Reader, foldMap, match } from 'jazzi';
 // or if you use deno
-import { Maybe, Either, IO, Reader, foldMap, match } from 'https://deno.land/x/jazzi/index.js'; 
+import { Maybe, Either, IO, Reader, foldMap, match } from 'https://deno.land/x/jazzi/mod.ts'; 
 ```
 
 # Summary
@@ -66,6 +57,20 @@ match(Maybe.of(42), {
     Just: x  => console.log(`The answer is ${x}`),
     None: () => console.log("Nothing")
 })
+```
+
+If you want to validate that a value is an instance of a type you can use the `instanceof` operator and you can use the `hasInstance` function to check if it implements a typeclass
+
+```javascript
+const a = Maybe.Just(42)
+
+a instanceof Maybe // true
+a instanceof Maybe.Just // true
+a instanceof Maybe.None // false
+
+hasInstance(Functor, a) // true
+hasInstance("Functor", a) // true
+hasInstance(Ord, a) // false
 ```
 
 All structures have utility functions to extract the inner value. The base two which are `get` and `unwrap`.
@@ -109,6 +114,8 @@ Maybe.do(function*(){
 **Keep in mind**: Do expects that the return value of the generator to be of the same type as the caller of do, so it is advised to use the provided `pure` on return.
 
 **This is sugar for chain**: It will call chain on the `yield`'ed values. Although, due to the nature of JS you *can* chain different monads, I would advise against it.
+
+**The types are not the best**: Honestly, the way generators are handled in TS are not ideal. The solution was using `yield*` expressions and an adapter but I don't like that approach so I left it as is.
 
 Also all Monads have a `run` and an `unsafeRun` method. This methods make sense for the lazy monads that store computations (`IO`,`Reader`). For the other Monads, it will do nothing.
 
@@ -264,7 +271,7 @@ foldMap(Last ,values)   // Last 5
 
 ## Creating Tagged Unions/Sum types and Typeclasses
 
-Jazzi provides a way to do this through the `Union` function. Typeclasses are used mostly as a means to recycle code. Types created with Union cannot be extended (working on it). Some typeclasses are avaialable out of the box but they are simply higher order functions that receive definitions to alter the prototypes of the case constructors. This is the definition of the Maybe Functor:
+Jazzi provides a way to do this through the `Union` function. Typeclasses are used mostly as a means to recycle code. Types created with Union cannot be extended. Some typeclasses are avaialable out of the box but they are simply higher order functions that receive definitions to alter the prototypes of the case constructors. This is the definition of the Maybe Functor:
 
 ```javascript
 const Maybe = Union({
@@ -338,25 +345,28 @@ These are usefull when you need types that don't represent a value other than th
 const ValidationError = EnumType("ValidationError",["TooLong","TooShort","Taken"])
 
 const verifyAvailable = async (name) => {
-    // Assume this does async stuff
+    return name !== "jazzi"
 }
 
-// This will return Left of ValidationError or Right of name
 const doSomethingAsync = async (name) => {
     try {
         const isAvailable = await verifyAvailable(name)
-        return Either.do(function*(pure){
-            yield Either.of(ValidationError.Taken   , isAvailable)
-            yield Either.of(ValidationError.TooLong , name.length > 20)
-            yield Either.of(ValidationError.TooShort, name.length < 7 )
+        return await Either.do(function*(pure){
+            yield Either.fromFalsy(ValidationError.Taken   , isAvailable)
+            yield Either.fromFalsy(ValidationError.TooLong , name.length < 21)
+            yield Either.fromFalsy(ValidationError.TooShort, name.length > 4 )
             return pure(name)
         })
     } catch(e) {
-        e.match({
-            TooShort: () => console.log("Must be longer"),
-            TooLong : () => console.log("Must be shorter"),
-            Taken   : () => console.log("Must be unique")
-        })
+        if( e instanceof ValidationError ){
+            const errorMessage = e.match({
+                TooShort: () => "Must be longer",
+                TooLong : () => "Must be shorter",
+                Taken   : () => "Must be unique"
+            })
+            throw new Error(errorMessage)
+        }
+        throw e
     }
 }
 ```

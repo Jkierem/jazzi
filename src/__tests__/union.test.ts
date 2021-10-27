@@ -1,4 +1,4 @@
-import { Union } from "../Union";
+import { EnumType, Union } from "../Union";
 
 const Maybe = Union({
     name: "Maybe",
@@ -8,6 +8,8 @@ const Maybe = Union({
     }
 })
 
+const Nats = EnumType("Nats",["One","Two"])
+
 describe("union", () => {
     describe("instanceOf", () => {
         it("should be true", () => {
@@ -15,6 +17,7 @@ describe("union", () => {
             expect(j42 instanceof (Maybe as any)).toBeTruthy()
             expect(j42 instanceof (Maybe.Just as any)).toBeTruthy()
             expect(j42 instanceof (Maybe.None as any)).toBeFalsy()
+            expect(Nats.One instanceof (Nats as any)).toBeTruthy()
         })
     })
 })
