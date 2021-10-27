@@ -17,6 +17,7 @@ const loadSymbols = (symbolPath) => {
     return text
       .split("\n")
       .filter(isNotLineComment)
+      .filter(Boolean)
       .map(x => x.split(":=").map(x => x.trim() ))
       .reduce((acc,[key,value]) => ({ ...acc , [key] : value }),{})
 }
@@ -28,13 +29,13 @@ const fixImports = (data) => {
     const isFolder = Boolean(path.match(/(\/[A-Z_][^\/]*)$/))
     const isUrl = Boolean(path.startsWith("https"))
     if( isUrl ){
-      return path.match(/.[jt]s;$/gm) ? `from "${path}";\n` : `from "${path}.js";\n`
+      return path.match(/.[t]s;$/gm) ? `from "${path}";\n` : `from "${path}.ts";\n`
     } else {
       if( isFolder ){
-        return `from "${path}/mod.js";\n`
+        return `from "${path}/mod.ts";\n`
       }
       if( isFile ){
-        return `from "${path}.js";\n`
+        return `from "${path}.ts";\n`
       }
     }
   })

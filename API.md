@@ -76,8 +76,6 @@ const constructors = {
 }
 
 // This is the partial definition of Maybe
-// < 1.2.x
-const Maybe = Union("Maybe",cases,extensions,config).constructors(constructors)
 // Since 1.3.x
 const Maybe = Union({
     name: "Maybe",
@@ -104,7 +102,7 @@ const Boxed = NewType("Boxed",[
 
 Boxed.of(42)
 .fmap(x => x + 1)          // returns Box 43
-.effect(console.log)       // logs 43 and returns Box 43
+.tap(console.log)       // logs 43 and returns Box 43
 .chain(x => Box.of(x + 4)) // returns Box 47
 ```
 
@@ -116,7 +114,7 @@ const Boxed = AutoType("Boxed",[Functor, Tap, Monad])
 
 Boxed.of(42)
 .fmap(x => x + 1)          // returns Box 43
-.effect(console.log)       // logs 43 and returns Box 43
+.tap(console.log)       // logs 43 and returns Box 43
 .chain(x => Box.of(x + 4)) // returns Box 47
 ```
 
@@ -137,6 +135,8 @@ const autoDef = (name) => ({
     }
 })
 ```
+
+In typescript, you will have to provide typing for the generated type. Types for the type classes are exported.
 
 The following typeclasses are available:
 
@@ -182,19 +182,6 @@ Defines a mapError operation that behaves like map but maps over the error cases
 | ------ | ----------- |
 | mapError :: FunctorError f => f a ~> (a -> b) -> f b | if error case, maps the functor over the given function. Otherwise does nothing |
 
-## Bifunctor
-
-Defines a bimap method for a structure that has a defined first and second cases.
-
-- Definitions: 
-    - first: string
-    - second: string
-- Overrides: N/A
-
-| method | description |
-|--------|-------------|
-| bimap :: Bifunctor f => f a c ~> (a -> b) -> (c -> d) -> f b d | maps using the first function if first, second function if second. |
-
 ## Tap
 
 This typeclass defines a way to look into a structure without altering it. Usually runs tasks considered as side effects hence the name. It requires the definition of trivial cases and identity cases if the default implementation wants to be used.
@@ -209,7 +196,6 @@ This typeclass defines a way to look into a structure without altering it. Usual
 | ------ | ----------- |
 | tap :: Tap f => f a ~> (a -> ()) -> f a | runs the given function without altering the structure if trivial. Does nothing if identity |
 | peak   :: Tap f => f a ~> (a -> ()) -> f a | alias of tap |
-| effect   :: Tap f => f a ~> (a -> ()) -> f a | alias of tap |
 | matchEffect :: Cases c, Tap f => f a ~> c f a -> f a | matches against patterns and runs effect function |
 | when        :: Cases c, Tap f => f a ~> c f a -> f a | alias of matchEffec |
 
