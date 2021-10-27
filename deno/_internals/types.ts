@@ -1,4 +1,4 @@
-import { WithInnerValue, WithTypeName, WithTypeRep, WithVariant } from "./symbols"
+import { WithInnerValue, WithTypeName, WithTypeRep, WithVariant } from "./symbols.ts";
 
 export type Extractable<A,Args extends any[] = []> = A | ((...args: Args) => A)
 

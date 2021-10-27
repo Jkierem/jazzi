@@ -2,11 +2,15 @@
     "compilerOptions": {
       "target": "ES2015",
       "module": "commonjs",
+      "declaration": true,
       "strict": true,
       "esModuleInterop": true,
       "skipLibCheck": true,
-      "forceConsistentCasingInFileNames": true
+      "forceConsistentCasingInFileNames": true,
+      "outDir": "./dist"
     },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "src/__**/*"],
     "$schema": "https://json.schemastore.org/tsconfig",
     "display": "Recommended"
 }
