@@ -169,6 +169,23 @@ Defines a structure that can be mapped over a given function without leaving the
 | map :: Functor f => f a ~> (a -> b) -> f b | if trivial case, maps the functor over the given function. If it is an identity case does nothing |
 | fmap :: Functor f => f a ~> (a -> b) -> f b | alias of map
 
+## Natural
+
+Defines a natural transformation on a type. Defines an alias on the type `natural` to a function than can create a value of the type. That function defaults to `of`. Also, values of a natural type have a `to` function that receives a different natural type and tries to perform a natural transformation. If the value implements Functor or Monad, it will attempt to do the natural transformation by means of `map` or `flatMap`, otherwise it uses the `get` function. 
+
+- Definitions: 
+    - natural: string
+- Overrides:
+    - to: object
+
+| method | description |
+| ------ | ----------- |
+| to :: Natural f, Natural g => f a ~> g -> g a | Performs a natural transformation from a natural type f to a natural type g |
+
+Defines the following methods on the type:
+
+| natural :: Natural f => a -> f a | creates a value of type f with a |
+
 ## FunctorError
 
 Defines a mapError operation that behaves like map but maps over the error cases and all other cases behave like an identity. It is a way to handle error cases and map them. Although it does not need to be a functor, it is implied and suggested. The overrides are taken from `mapError` key of overrides
