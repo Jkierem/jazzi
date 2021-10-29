@@ -149,6 +149,13 @@ const Either = Union(
       return this.Left(e)
     }
   },
+  async asyncAttempt(this: EitherRep, fn: any,...args: any[]){
+    try {
+      return this.Right(await fn(...args))
+    } catch(e) {
+      return this.Left(e)
+    }
+  }
 }) as unknown as EitherRep;
 
 export default Either;

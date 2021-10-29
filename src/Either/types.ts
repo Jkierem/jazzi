@@ -74,6 +74,8 @@ extends MonadRep, MatcherRep<EitherCases>
      */
     attempt<E=never,R=unknown>(fn: () => R): Either<E, R>;
     attempt<Args,E=never,R=unknown>(fn: (...args: Args[]) => R, ...args: Args[]): Either<E, R>;
+    asyncAttempt<E=never,R=unknown>(fn: () => R): Promise<Either<E, R>>;
+    asyncAttempt<Args,E=never,R=unknown>(fn: (...args: Args[]) => R, ...args: Args[]): Promise<Either<E, R>>;
 
     /**
      * returns a new array with all the Lefts

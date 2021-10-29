@@ -1,10 +1,12 @@
+import { Functor, Monad, Runnable, Show } from "../Union";
 import Union from "../Union/union";
-import { isFunction } from "../_internals";
+import { identity, isFunction } from "../_internals";
 import { AnyFn } from "../_internals/types";
-import { Async, AsyncPartialRep, AsyncRep } from "./types";
+import { Async, AsyncPartialRep, AsyncRep, getFailure, getHandler, getSuccess, makeWrapper } from "./types";
 
 type AnyAsync = Async<any,any,any>
-type EmptyAsync = Async<unknown,never,any>
+
+type Bottom<A> =  A extends never ? [] : [A]
 
 const AsyncDefs: any = {
     trivials: ["Succeed"],
@@ -13,76 +15,68 @@ const AsyncDefs: any = {
     lazy: true,
     overrides: {
       fmap: {
-        Succeed(this: AnyAsync, fn: AnyFn) {
-            return Async.Succeed((r: unknown) => this.run(r).then(fn));
+        Succeed<R,E,A,B>(this: Async<R,E,A>, fn: (a: A) => B) {
+          const rep = this.get()
+          const suc = getSuccess(rep);
+          return Async.Succeed((env: R) => suc(env).then(fn))
         },
       },
-      mapError: {
-        Fail(this: AnyAsync, fn: AnyFn){
-            return Async
-        }
-      },
       chain: {
-        Succeed(this: AnyAsync, fn: AnyFn) {
-            return Async.Succeed((env: unknown) => this.run(env).then(x => fn(x).run(env)))
+        Succeed<R,E,A,R0,E0,B>(this: Async<R,E,A>, fn: (a: A) => Async<R0,E0,B>) {
+          return Async.Succeed((...env: [R & R0]) => this.run(...env as unknown as Bottom<R>).then(a => fn(a).run(...env as unknown as Bottom<R0>)))
         },
       },
       join: {
-        Succeed(this: AnyAsync){
-            return Async.Succeed((r: unknown) => this.unsafeRun(r).then(x => x.unsafeRun(r)))
-        }
-      },
-      apply: {
-        Succeed(this: AnyAsync, asyncWithFn: AnyAsync) {
-            return this.chain(args => asyncWithFn.map(fn => fn(args)))
-        },
+        Succeed<R,E,A,R0,E0>(this: Async<R,E, Async<R0,E0, A>>){}
       },
       show: {
         Succeed() {
-            return `[Async => R => _]`;
+            return `[Async => Succeed => (R -> _)]`;
+        },
+        Fail() {
+            return `[Async => Fail => (R -> _)]`;
         },
       },
       run: {
-        Succeed(this: AnyAsync) {
-            return this.get()();
+        Succeed(this: AnyAsync, env: any) {
+            const inner = this.get()
+            return getSuccess(inner)(env).catch(getHandler(inner))
         },
-      },
-      then: {
-        Succeed(this: EmptyAsync, res: AnyFn){
-            this.run(undefined).then(res)
-        }
-      },
-      toPromise: {
-        Succeed(this: EmptyAsync) {
-            return this.run(undefined)
+        Fail(this: AnyAsync){
+            const inner = this.get()
+            const handler = getHandler(inner)
+            if( handler ){
+                return Promise.resolve(handler(getFailure(inner)))
+            }
+            return Promise.reject(getFailure(inner))
         }
       }
     },
-  };
+};
+
+const wrapSuccess = <R,A>(x: A | ((r: R) => A)) => (env: R) => Promise.resolve(env).then(isFunction(x) ? x : () => x);
+
 const Async = Union(
     "Async",
     {
-        Succeed: x => (env: any) => ({
-            s: () => Promise.resolve(env).then(isFunction(x) ? x : () => x),
-            e: (x: any) => x,
-        }),
-        Fail: x => (env: any) => ({
-            s: x => x,
-            e: Promise.reject(env).then(isFunction(x) ? x : () => x)
-        }),
+        Succeed: x => makeWrapper(wrapSuccess(x), undefined),
+        Fail: x => makeWrapper(identity, x),
     },
     [
-
+        Functor(AsyncDefs),
+        Monad(AsyncDefs),
+        Runnable(AsyncDefs),
+        Show(AsyncDefs)
     ]
 ).constructors({
     of<R=unknown,E=never,A=any>(this: AsyncPartialRep, fn: (env: R) => A): Async<R,E,A> {
-        return this.Succeed((r: R) => Promise.resolve().then(() => fn(r)))
+        return this.Succeed((r: R) => Promise.resolve().then(() => fn(r))) as unknown as Async<R,E,A>
     },
-    from<R=unknown,E=never,A=any>(this: AsyncPartialRep, fn: (env: R) => Promise<A>): Async<R,E,A> {
-        return this.Succeed(fn)
+    from<R=never,E=never,A=any>(this: AsyncPartialRep, fn: (env: R) => Promise<A>): Async<R,E,A> {
+        return this.Succeed(fn) as unknown as Async<R,E,A>
     },
     fromPromise<E=never,A=any>(this: AsyncPartialRep, p: Promise<A>): Async<unknown,E,A> {
-        return this.Succeed(() => p)
+        return this.Succeed(() => p) as unknown as Async<unknown,E,A>
     },
     unary<A,B>(this: AsyncPartialRep ,fn: (a: A) => B): (a: A) => Async<unknown,never,B> {
         return (a: A) => this.Succeed(() => Promise.resolve(fn(a)))
