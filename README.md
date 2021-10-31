@@ -6,6 +6,7 @@ Implementations of common functional structures. Available structures and featur
 - IO
 - Maybe
 - Reader
+- Async
 - Monoids: Sum, Mult, Merge, Max, Min, First, Last
 - A function to create Tagged Unions/Sum types: Union
 - A way to implement typeclasses and use prototype inheritance. More on this on API.md
@@ -223,6 +224,41 @@ Reader.do(function*(){
 ```
 
 This is simple example but there are tons of uses for the Reader monad.
+
+## Async
+
+The Async structure represents an async computation that may need some input. It can be seen as a mix between IO, Reader and a Promise. Unlike IO, run returns a promise with the result of the computation and it does not implement applicative. Like IO, it is a lazy monad. Like Reader, the run method must receive the environment.  
+
+```javascript
+const s42 = Async.Success(42)
+const f42 = Async.Fail(42)
+
+await s42.run() // resolves with 42
+await f42.run() // rejects with 42
+
+const withEnv = Async.from(async (x) => x + 2)
+await withEnv.run(40) // resolves with 42
+
+// Environment can be provided using the provide family of functions
+const withEnvProvided = Async.from(async (x) => x + 2).provide(40)
+await withEnvProvided.run() // resolves with 42
+
+// Zip sequences two Asyncs and collects the result in a tuple. Left and Right variants discard one result.
+await zip(s42,s42).run() // resolves to [42,42]
+await zipRight(s42, Async.Success("right")).run() // resolves to "right"
+await zipLeft(Async.Success("left"), s42).run() // resolves to "left"
+
+// Similar to Promise.all
+await Async.all([s42,s42,s42]).run() // resolves to [42,42,42]
+
+// The only way to recover from a Fail
+await f42.recover((e) => Async.Success(e)).run() // resolves to 42
+
+// Constructors to deal with different async styles
+await Async.from(() => Promise.resolve(42)).run() // resolves to 42
+await Async.fromPromise(Promise.resolve(42)).run() // resolves to 42
+await Async.fromCallback((res) => setTimeout(() => res(42),0)).run() // resolves to 42
+```
 
 ## Sum, Mult and Merge Monoids
 
