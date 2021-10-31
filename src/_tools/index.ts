@@ -1,6 +1,7 @@
 import { extractWith, getCaseSensitive, safeMatch, includes } from "../_internals";
-import { AnyFnRec, Boxed, Unwrap } from "../_internals/types";
+import { AnyFn, AnyFnRec, Boxed, Unwrap } from "../_internals/types";
 import * as S from "../_internals/symbols"
+import type { Async } from "../Async/types";
 
 /**
  * Type match a value
@@ -60,6 +61,13 @@ export const flat = <T>(monad: { flat: () => T }) => monad.flat();
 export const chain = <A,B,M>(fn: (a: A) => B, monad: { chain: (fn: (a: A) => B) => M}) => monad.chain(fn)
 export const flatMap = <A,B,M>(fn: (a: A) => B, monad: { flatMap: (fn: (a: A) => B) => M}) => monad.flatMap(fn)
 export const to = <A,T>(other: { natural: (a: A) => T } , nat: { to: (other: { natural: (a: A) => T }) => T}) => nat.to(other)
+
+export const zip = <R0,R1,A0,A1>(left: Async<R0,A0>, right: Async<R1,A1>) => left.zip(right)
+export const zipLeft = <R0,R1,A0,A1>(left: Async<R0,A0>, right: Async<R1,A1>) => left.zipLeft(right)
+export const zipRight = <R0,R1,A0,A1>(left: Async<R0,A0>, right: Async<R1,A1>) => left.zipRight(right)
+type ProvideArg<T> = T extends { provide: (r: infer R) => any } ? R : never
+type ProvideReturn<T> = T extends { provide: (r: any) => infer R } ? R : never
+export const provide = <T extends { provide: AnyFn }>(a: T, r: ProvideArg<T>): ProvideReturn<T> => a.provide(r)
 
 export const stringSwitch = (str: string, _patt: AnyFnRec) => {
     return extractWith([])(getCaseSensitive(str,_patt))

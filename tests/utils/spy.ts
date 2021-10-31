@@ -1,25 +1,37 @@
-type Call<Args extends any[], Ret> = {
+export interface Call<Args extends any[], Ret> {
+    readonly isJazziSpyCall: true;
     args: Args,
     result: Ret,
     callTime: number,
-    calledBefore(other: Call<any,any>): boolean,
-    calledAfter(other: Call<any,any>): boolean,
+    calledBefore<T extends Call<any,any>>(other: T): boolean,
+    calledAfter<T extends Call<any,any>>(other: T): boolean,
 }
+
+const clock = (() => {
+    let order = 0
+    return {
+        getTime(){
+            order++
+            return order
+        }
+    }
+})()
 
 const mkCall = <Args extends any[],Ret>(data: { args: Args, result: Ret }): Call<Args,Ret> => {
     return {
         ...data,
-        callTime: Date.now(),
+        callTime: clock.getTime(),
         calledBefore(otherCall){
             return this.callTime - otherCall.callTime < 0
         },
         calledAfter(otherCall){
-            return this.callTime - otherCall.callTime >= 0
-        }
+            return this.callTime - otherCall.callTime > 0
+        },
+        isJazziSpyCall: true
     }
 }
 
-export type Spy<Args extends any[], Ret> = {
+export interface Spy<Args extends any[], Ret> {
     (...args: Args): Ret, 
     readonly calls: Call<Args,Ret>[],
     readonly callCount: number,
@@ -27,7 +39,7 @@ export type Spy<Args extends any[], Ret> = {
     readonly calledOnce: boolean,
     readonly calledTwice: boolean,
     readonly calledThrice: boolean,
-    readonly isJazziSpy: boolean,
+    readonly isJazziSpy: true,
     calledWith(...args: Args): boolean,
     getNthCall(n: number): Call<Args,Ret>,
     findCall(fn: (call: Call<Args,Ret>) => boolean): Call<Args,Ret> | undefined,
@@ -95,6 +107,7 @@ export const Spy = <Args extends any[],Ret>(fn: (...args: Args) => Ret = identit
 
     sp.calledWith = (...args: Args) => calls.some(call => call.args.every((a,idx) => equals(a,args[idx])))
     sp.getNthCall = (n: number) => calls[n]
+    sp.findCall = (fn: (call: Call<Args,Ret>) => boolean): Call<Args,Ret> | undefined => calls.find(fn)
     sp.setImplementation = (fn: (...args: Args) => Ret) => {
         impl = fn
         return sp

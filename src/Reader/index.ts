@@ -9,8 +9,8 @@ const ReaderMonad = () => (cases: AnyConstRec, global: any) => {
   cases.Reader.prototype.local = function (this: Reader<any,any>, fn: AnyFn) {
     return getTypeRep(this).pure((...env: any[]) => this.run(fn(...env)));
   };
-  global.runReader = function (reader: Reader<any,any>, ...env: any[]) {
-    return reader.run(...env);
+  global.runReader = function (reader: Reader<any,any>,env: any) {
+    return reader.run(env);
   };
   global.ask = function () {
     return new cases.Reader((x: any) => x);
@@ -31,17 +31,17 @@ const Defs: any = {
     },
     chain: {
       Reader(this: Reader<any,any>, fn: AnyFn) {
-        return Reader.Reader((...env: any[]) => fn(this.run(...env)).run(...env));
+        return Reader.Reader((env: any) => fn(this.run(env)).run(env));
       },
     },
     join: {
       Reader(this: Reader<any,any>){
-        return Reader.Reader((...env: any[]) => this.run(...env).run(...env));
+        return Reader.Reader((env: any) => this.run(env).run(env));
       }
     },
     apply: {
       Reader(this: Reader<any,any>, readerFn: Reader<any, AnyFn>) {
-        return Reader.Reader((...env: any[]) => readerFn.get()(this.run(...env)));
+        return Reader.Reader((env: any) => readerFn.get()(this.run(env)));
       },
     },
     show: {
@@ -55,13 +55,13 @@ const Defs: any = {
       },
     },
     then: {
-      Reader(this: Reader<any,any>, res: AnyFn){
-        res(this.run())
+      Reader(this: Reader<unknown,any>, res: AnyFn){
+        res(this.run(undefined))
       }
     },
     toPromise: {
-      Reader(this: Reader<any,any>,...args: any[]) {
-        return Promise.resolve(this.run(...args))
+      Reader(this: Reader<any,any>,args: any) {
+        return Promise.resolve(this.run(args))
       }
     }
   },
@@ -70,7 +70,7 @@ const Defs: any = {
 const Reader = Union(
   "Reader",
   {
-    Reader: (fn) => (...env: any[]) => extractWith(env)(fn),
+    Reader: (fn) => (env: any) => extractWith([env])(fn),
   },
   [
     Functor(Defs), 

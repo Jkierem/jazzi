@@ -25,7 +25,6 @@ const AutoExtendable = [
 describe("AutoType", () => {
     it("should be able to auto implement these type classes", () => {
         const Auto = AutoType("Auto",AutoExtendable);
-        console.log(Auto)
         const auto = Auto.of(42)
         expect(hasInstance(U.Applicative, auto)).toBeTruthy()
         expect(hasInstance(U.Bifunctor, auto)).toBeTruthy()

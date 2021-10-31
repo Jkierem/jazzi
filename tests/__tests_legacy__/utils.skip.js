@@ -1,4 +1,4 @@
-import Sum from "../Sum";
+import Sum from "../../src/Sum";
 import {
   Union,
   NewType,
@@ -6,7 +6,7 @@ import {
   Functor,
   EnumType,
   Show,
-} from "../Union";
+} from "../../src/Union";
 import {
   foldMap,
   fromEnum,
@@ -17,7 +17,7 @@ import {
   succ,
   toEnum,
   unwrap,
-} from "../_tools";
+} from "../../src/_tools";
 
 describe("Union tools", () => {
   // Box is the simplest definition of an union

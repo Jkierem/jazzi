@@ -1,9 +1,10 @@
 import type { Monad, MonadRep } from "../Union/monad";
+import type { Runnable } from "../Union/runnable";
 import type { LazyShow } from "../Union/show";
 import type { Thenable } from "../Union/thenable";
 
 export interface Reader<R,A> 
-extends Monad<A>, Thenable<A, any>, LazyShow<"Reader", "R">
+extends Monad<A>, Thenable<A, any>, LazyShow<"Reader", "R">, Runnable<[R],A>
 {
     map<B>(fn: (a: A) => B ): Reader<R,B>;
     fmap<B>(fn: (a: A) => B ): Reader<R,B>;

@@ -32,18 +32,6 @@ export interface Monad<A> extends Applicative<A> {
      * @param fn 
      */
     flatMap <B>(fn: (a: A) => Monad<B>): Monad<B>;
-    /**
-     * For lazy monads, runs the wrapper computation. 
-     * For Monads that are eager, returns the monad unchanged
-     */
-    unsafeRun(): any;
-    unsafeRun(...args: any[]): any;
-    /**
-     * For lazy monads, runs the wrapper computation. 
-     * For Monads that are eager, returns the monad unchanged
-     */
-    run(): any;
-    run(...args: any[]): any;
 }
 
 export interface MonadRep { 
@@ -59,8 +47,7 @@ export interface MonadRep {
 }
 
 /**
- * Adds run, unsafeRun, pure, chain, bind and flatMap method to proto. Adds pure and do to global.
- * The lazy flag enables lazy do implementation
+ * Adds pure, chain, bind and flatMap method to proto. Adds pure and do to global.
  */
 const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, globals: any) => {
     const trivials = propOr([],"trivials",defs);
@@ -90,13 +77,7 @@ const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, gl
         cases[empt].prototype.flat = chain
         cases[empt].prototype.join = chain
     })
-    Object.keys(cases).forEach(key => {
-        function run<A>(this: Monad<A>){ return this.get() }
-        cases[key].prototype.run       = run;
-        cases[key].prototype.unsafeRun = run;
-    })
     defineOverrides("chain",["bind","flatMap"],overrides,cases)
-    defineOverrides("run",["unsafeRun"],overrides,cases)
     defineOverrides("join",["flat"],overrides,cases)
     globals.pure = (...args: any[]) => new cases[pure](...args)
     globals.do = function<A>(fn: (pure: <Any>(a: Any) => Monad<Any>) => Generator<Monad<any>, Monad<any>, any>){
@@ -112,12 +93,11 @@ const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, gl
         if( lazy ){
             return new cases[pure]((...args: any[]) => {
                 gen = fn(this.pure)
-                return runDo(undefined as any).unsafeRun(...args)
+                return (runDo(undefined as any) as any).unsafeRun(...args)
             })
-        } else {
-            gen = fn(this.pure);
-            return runDo(undefined as any)
         }
+        gen = fn(this.pure);
+        return runDo(undefined as any)
     }
 })
 

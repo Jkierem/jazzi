@@ -1,8 +1,8 @@
-import Maybe from '../Maybe'
-import type { Maybe as M } from "../Maybe/types"
-import Sum from '../Sum'
-import { isEmpty } from '../_internals';
-import { Spy } from "../__test-utils";
+import Maybe from '../../src/Maybe'
+import type { Maybe as M } from "../../src/Maybe/types"
+import Sum from '../../src/Sum'
+import { isEmpty } from '../../src/_internals';
+import { Spy } from "../utils/spy";
 
 type AnyMaybe = M<any>
 type Maybe<A> = M<A>

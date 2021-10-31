@@ -1,4 +1,4 @@
-import { Spy } from "./src/__test-utils"
+import { Spy } from "./utils/spy"
 
 expect.extend({
     toTypeMatch(value,name) {
@@ -163,6 +163,46 @@ expect.extend({
         return {
             pass: this.isNot,
             message: () => `Expected a jazzi spy`
+        }
+    },
+    calledBefore(value: any, other: any){
+        if( value.isJazziSpyCall ){
+            const pass = value.calledBefore(other)
+            if( pass ){
+                return {
+                    pass,
+                    message: () => `Expected spy to not have been called before other`
+                }
+            } else {
+                return {
+                    pass,
+                    message: () => `Expected spy to have been called before other but wasn't`
+                }
+            }
+        }
+        return {
+            pass: this.isNot,
+            message: () => `Expected a jazzi spy call`
+        }
+    },
+    calledAfter(value: any, other: any){
+        if( value.isJazziSpyCall ){
+            const pass = value.calledAfter(other)
+            if( pass ){
+                return {
+                    pass,
+                    message: () => `Expected spy to not have been called before other`
+                }
+            } else {
+                return {
+                    pass,
+                    message: () => `Expected spy to have been called before other but wasn't`
+                }
+            }
+        }
+        return {
+            pass: this.isNot,
+            message: () => `Expected a jazzi spy call`
         }
     }
 })
