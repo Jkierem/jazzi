@@ -16,8 +16,9 @@ export { default as Show } from "./show";
 export { default as Swap } from "./swap";
 export { default as Tap } from "./tap";
 export { default as Thenable } from "./thenable";
+export { default as Traversable } from "./traversable";
 export { default as Runnable } from "./runnable";
-import { default as _RawUnion } from './union'
+import { default as _RawUnion } from './union';
 
 type UnionDefinition = {
   name: string

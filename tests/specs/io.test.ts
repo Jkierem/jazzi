@@ -1,5 +1,5 @@
-import IO from '../IO'
-import { Spy } from '../__test-utils/index'
+import IO from '../../src/IO'
+import { Spy } from '../utils/spy'
 
 describe("IO", () => {
     it("should work", () => {

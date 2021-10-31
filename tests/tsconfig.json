@@ -5,6 +5,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "typeRoots": ["../node_modules/@types","./typings"]
   },
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Recommended"

@@ -1,55 +1,155 @@
-import { Functor, Monad, Runnable, Show } from "../Union";
+import { Functor, Monad, Runnable, Show, Tap, Traversable } from "../Union";
 import Union from "../Union/union";
-import { identity, isFunction } from "../_internals";
-import { AnyFn } from "../_internals/types";
-import { Async, AsyncPartialRep, AsyncRep, getFailure, getHandler, getSuccess, makeWrapper } from "./types";
+import { identity, isFunction, isPrimitive, makeTuple, pass } from "../_internals";
+import { getInnerValue, setInnerValue } from "../_internals/symbols";
+import { AnyConstRec, AnyFn } from "../_internals/types";
+import { Async, AsyncIO, AsyncPartialRep, AsyncRep, getFailure, getHandler, getSuccess, makeWrapper, setHandler } from "./types";
 
-type AnyAsync = Async<any,any,any>
+const AsyncType = () => (cases: AnyConstRec, globals: any) => {
+    cases.Success.prototype.zipWith = function<R,R0,A,A0,C>(
+        this: Async<R,A>, 
+        right: Async<R0,A0>, 
+        fn: (a: A, a0: A0) => C
+    ){
+        return this.chain(a => right.map(b => fn(a,b)))
+    }
+    cases.Success.prototype.zip = function<R,R0,A,A0>(
+        this: Async<R,A>, 
+        right: Async<R0,A0>, 
+    ){
+        return this.zipWith(right, makeTuple)
+    }
+    cases.Success.prototype.zipLeft = function<R,R0,A,A0>(
+        this: Async<R,A>, 
+        right: Async<R0,A0>, 
+    ){
+        return this.zipWith(right, a => a)
+    }
+    cases.Success.prototype.zipRight = function<R,R0,A,A0>(
+        this: Async<R,A>, 
+        right: Async<R0,A0>, 
+    ){
+        return this.zipWith(right, (_,b) => b)
+    }
+    cases.Success.prototype.provide = function<R,A>(
+        this: Async<R,A>,
+        p: R
+    ){
+        return new cases.Success(() => this.run(p as any))
+    }
+    cases.Success.prototype.providePartial = function<R,A>(
+        this: Async<R,A>,
+        p: Partial<R>
+    ){
+        if( isPrimitive(p) ){
+            return this.provide(p as any)
+        }
+        return new cases.Success((env: any) => this.run({...p,...env} as any))
+    }
+    cases.Success.prototype.provideSlice = function<R,A>(
+        this: Async<R,A>,
+        p: Partial<R>
+    ){
+        if( isPrimitive(p) ){
+            return this.provide(p as any)
+        }
+        return new cases.Success((env: any) => this.run({...p,...env} as any))
+    }
+    cases.Success.prototype.recover = function<R,A,A0>(
+        this: Async<R,A>,
+        fn: (e: any) => Async<unknown, A0>
+    ) {
+        const cpy = this.map(x => x)
+        setInnerValue(setHandler(fn)(getInnerValue(cpy)))(cpy)
+        return cpy;
+    }
+    cases.Fail.prototype.recover = function<R,A,A0>(
+        this: Async<R,A>,
+        fn: (e: any) => Async<unknown, A0>
+    ) {
+        const cpy = new cases.Fail(getFailure(getInnerValue(this)))
+        return setInnerValue(setHandler(fn)(getInnerValue(cpy)))(cpy)
+    }
 
-type Bottom<A> =  A extends never ? [] : [A]
+    cases.Fail.prototype.zipWith = pass
+    cases.Fail.prototype.zip = pass
+    cases.Fail.prototype.zipLeft = pass
+    cases.Fail.prototype.zipRight = pass
+    cases.Fail.prototype.provide = pass
+    cases.Fail.prototype.providePartial = pass
+    cases.Fail.prototype.provideSlice = pass
+
+    globals.all = function(actions: AsyncIO<any>[]){
+        const res: any[] = []
+        return actions
+            .map(x => x.tap(x => res.push(x)))
+            .reduce((acc,next) => acc.chain(() => next))
+            .map(() => res)
+    }
+}
 
 const AsyncDefs: any = {
-    trivials: ["Succeed"],
+    trivials: ["Success"],
     identities: ["Fail"],
-    pure: "Succeed",
+    pure: "Success",
     lazy: true,
     overrides: {
       fmap: {
-        Succeed<R,E,A,B>(this: Async<R,E,A>, fn: (a: A) => B) {
+        Success<R,A,B>(this: Async<R,A>, fn: (a: A) => B) {
           const rep = this.get()
           const suc = getSuccess(rep);
-          return Async.Succeed((env: R) => suc(env).then(fn))
+          return Async.Success((env: R) => suc(env).then(fn))
         },
       },
       chain: {
-        Succeed<R,E,A,R0,E0,B>(this: Async<R,E,A>, fn: (a: A) => Async<R0,E0,B>) {
-          return Async.Succeed((...env: [R & R0]) => this.run(...env as unknown as Bottom<R>).then(a => fn(a).run(...env as unknown as Bottom<R0>)))
+        Success<R,A,R0,B>(this: Async<R,A>, fn: (a: A) => Async<R0,B>) {
+          return Async.Success((env: any) => this.run(env).then(a => fn(a).run(env)))
         },
       },
       join: {
-        Succeed<R,E,A,R0,E0>(this: Async<R,E, Async<R0,E0, A>>){}
+        Success<R,A,R0>(this: Async<R,Async<R0,A>>){}
       },
       show: {
-        Succeed() {
-            return `[Async => Succeed => (R -> _)]`;
+        Success() {
+            return `[Async => Success => (R -> _)]`;
         },
         Fail() {
             return `[Async => Fail => (R -> _)]`;
         },
       },
       run: {
-        Succeed(this: AnyAsync, env: any) {
+        async Success<R,A>(this: Async<R,A>, env: R = {} as R) {
             const inner = this.get()
-            return getSuccess(inner)(env).catch(getHandler(inner))
+            const handler = getHandler(inner)
+            try {
+                return await getSuccess(inner)(env)
+            } catch (e) {
+                return handler ? handler(e).run() : Promise.reject(e)
+            }
         },
-        Fail(this: AnyAsync){
+        Fail<R,A>(this: Async<R,A>){
             const inner = this.get()
             const handler = getHandler(inner)
             if( handler ){
-                return Promise.resolve(handler(getFailure(inner)))
+                return handler(getFailure(inner)).run()
             }
             return Promise.reject(getFailure(inner))
         }
+      },
+      sequence: {
+        Success<A,B>(this: AsyncIO<A>, other: AsyncIO<B>){
+            return this.zip(other)
+        },
+        Fail<A,B>(this: AsyncIO<A>, other: AsyncIO<B>){
+            return this.zip(other)
+        }
+      },
+      traverse(data: any[], fn: (a: any) => AsyncIO<any>){
+        const res: any[] = []
+        return data
+            .map(x => fn(x).tap(x => res.push(x)))
+            .reduce((acc,next) => acc.chain(() => next))
+            .map(() => res)
       }
     },
 };
@@ -59,36 +159,54 @@ const wrapSuccess = <R,A>(x: A | ((r: R) => A)) => (env: R) => Promise.resolve(e
 const Async = Union(
     "Async",
     {
-        Succeed: x => makeWrapper(wrapSuccess(x), undefined),
+        Success: x => makeWrapper(wrapSuccess(x), undefined),
         Fail: x => makeWrapper(identity, x),
     },
     [
         Functor(AsyncDefs),
         Monad(AsyncDefs),
+        Tap(AsyncDefs),
         Runnable(AsyncDefs),
-        Show(AsyncDefs)
+        Show(AsyncDefs),
+        Traversable(AsyncDefs),
+        AsyncType()
     ]
 ).constructors({
-    of<R=unknown,E=never,A=any>(this: AsyncPartialRep, fn: (env: R) => A): Async<R,E,A> {
-        return this.Succeed((r: R) => Promise.resolve().then(() => fn(r))) as unknown as Async<R,E,A>
+    of<R=unknown,A=any>(this: AsyncPartialRep, fn: (env: R) => A): Async<R,A> {
+        return this.Success((r: R) => Promise.resolve().then(() => fn(r))) as unknown as Async<R,A>
     },
-    from<R=never,E=never,A=any>(this: AsyncPartialRep, fn: (env: R) => Promise<A>): Async<R,E,A> {
-        return this.Succeed(fn) as unknown as Async<R,E,A>
+    from<R=never,A=any>(this: AsyncPartialRep, fn: (env: R) => Promise<A>): Async<R,A> {
+        return this.Success(fn) as unknown as Async<R,A>
     },
-    fromPromise<E=never,A=any>(this: AsyncPartialRep, p: Promise<A>): Async<unknown,E,A> {
-        return this.Succeed(() => p) as unknown as Async<unknown,E,A>
+    fromPromise<A>(this: AsyncPartialRep, p: Promise<A>): Async<unknown,A> {
+        return this.Success(() => p) as unknown as Async<unknown,A>
     },
-    unary<A,B>(this: AsyncPartialRep ,fn: (a: A) => B): (a: A) => Async<unknown,never,B> {
-        return (a: A) => this.Succeed(() => Promise.resolve(fn(a)))
+    unary<A,B>(this: AsyncPartialRep ,fn: (a: A) => B): (a: A) => Async<unknown,B> {
+        return (a: A) => this.Success(() => Promise.resolve(fn(a)))
     },
-    through<A,B>(this: AsyncPartialRep, fn: (...a: A[]) => B): (...a: A[]) => Async<unknown,never,B> {
-        return (...a: A[]) => this.Succeed(() => Promise.resolve(fn(...a)))
+    through<A,B>(this: AsyncPartialRep, fn: (...a: A[]) => B): (...a: A[]) => Async<unknown,B> {
+        return (...a: A[]) => this.Success(() => Promise.resolve(fn(...a)))
     },
-    require<Env>(this: AsyncPartialRep): Async<Env,never,Env> {
-        return this.Succeed((env: Env) => Promise.resolve(env))
+    require<Env>(this: AsyncPartialRep): Async<Env,Env> {
+        return this.Success((env: Env) => Promise.resolve(env))
     },
-    unit(this: AsyncPartialRep): Async<unknown,never,undefined> {
-        return this.Succeed(() => Promise.resolve(undefined))
+    unit(this: AsyncPartialRep): Async<unknown,undefined> {
+        return this.Success(() => Promise.resolve(undefined))
+    },
+    fromMaybe(this: AsyncPartialRep, m: any): Async<any,any> {
+        return m.match({
+            Just: this.Success,
+            None: this.Fail
+        })
+    },
+    fromEither(this: AsyncPartialRep, e: any): Async<any,any> {
+        return e.match({
+            Right: this.Success,
+            Left: this.Fail
+        })
+    },
+    fromCallback(this: AsyncRep, fn: (res: <T>(t: T) => void, rej: (t: any) => void) => void){
+        return this.Success(() => new Promise(fn))
     }
 }) as unknown as AsyncRep
 

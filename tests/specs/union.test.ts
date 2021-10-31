@@ -1,4 +1,4 @@
-import { EnumType, Union } from "../Union";
+import { EnumType, Union } from "../../src/Union";
 
 const Maybe = Union({
     name: "Maybe",

@@ -1,6 +1,6 @@
-import Sum from "../Sum"
-import { isEmpty } from "../_internals"
-import { Spy } from "../__test-utils"
+import Sum from "../../src/Sum"
+import { isEmpty } from "../../src/_internals"
+import { Spy } from "../utils/spy"
 
 describe("Sum", () => {
     describe("Constructors", () => {

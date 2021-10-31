@@ -1,4 +1,4 @@
-import type { Extractable, Nil } from "./types"
+import type { Extractable, Nil, Primitive } from "./types"
 
 export const equals = (a: any, b: any): boolean => {
     const typeA = typeof a
@@ -74,3 +74,7 @@ export const isNotNil = <A>(a: A | Nil): a is A => !isNil(a)
 export const coerce = <T,U>(a: T): U => a as unknown as U
 
 export const isFunction = (x: any): x is Function => typeof x === "function"
+
+export const makeTuple = <A,B>(a: A, b: B): [A,B] => [a,b];
+
+export const isPrimitive = (a: any): a is Primitive => typeof a !== "object" && typeof a !== "function"

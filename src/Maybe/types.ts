@@ -8,6 +8,7 @@ import type { Show } from "../Union/show";
 import type { Tap } from "../Union/tap";
 import type { Thenable } from "../Union/thenable";
 import type { Matcher, MatcherRep } from "../_internals/types";
+import type { Async } from "../Async/types"
 
 type MaybeCases = "Just" | "None";
 
@@ -95,7 +96,12 @@ Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>
      * Calls onReject if None
      * @param onReject 
      */
-    catch(onReject: (err: undefined) => void): void
+    catch(onReject: (err: undefined) => void): void;
+    /**
+     * Success if Just
+     * Fail if None
+     */
+    toAsync(): Async<unknown, A>
 }
 
 export interface MaybeRep 

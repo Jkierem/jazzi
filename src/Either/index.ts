@@ -13,30 +13,31 @@ import Union from '../Union/union'
 import { AnyConstRec, AnyFn, Extractable } from "../_internals/types";
 import { Either, EitherRep } from "./types";
 import { getInnerValue } from "../_internals/symbols";
+import Async from "../Async";
 
 type AnyEither = Either<any,any>
 
 const EitherType = () => (cases: AnyConstRec, globals: any) => {
   function getImpl(this: AnyEither) {
-    return this.isRight() ? this.get() : undefined
+    return this.isRight() ? getInnerValue(this) : undefined
   };
   cases.Right.prototype.get = getImpl;
   cases.Left.prototype.get = getImpl;
 
   function getOrImpl(this: AnyEither, fn: Extractable<any>) {
-    return this.isRight() ? this.get() : fn()
+    return this.isRight() ? getInnerValue(this) : fn()
   };
   cases.Right.prototype.getOr = getOrImpl;
   cases.Left.prototype.getOr = getOrImpl;
 
   function getLeftImpl(this: AnyEither) {
-    return this.isLeft() ? this.get() : undefined
+    return this.isLeft() ? getInnerValue(this) : undefined
   };
   cases.Right.prototype.getLeft = getLeftImpl;
   cases.Left.prototype.getLeft = getLeftImpl;
 
   function getLeftOrImpl(this: AnyEither, fn: Extractable<any>) {
-    return this.isLeft() ? this.get() : fn()
+    return this.isLeft() ? getInnerValue(this) : fn()
   };
   cases.Right.prototype.getLeftOr = getLeftOrImpl;
   cases.Left.prototype.getLeftOr = getLeftOrImpl;
@@ -63,6 +64,13 @@ const EitherType = () => (cases: AnyConstRec, globals: any) => {
   cases.Left.prototype.mapRight = mapImpl
   cases.Left.prototype.ifLeft = mapErrorImpl
   cases.Left.prototype.mapLeft = mapErrorImpl
+
+  cases.Right.prototype.toAsync = function(){
+    return Async.Success(this.get())
+  };
+  cases.Left.prototype.toAsync = function(){
+    return Async.Fail(this.getEither())
+  };
 
   globals.lefts = (ls: AnyEither[]) => ls.filter((l) => l.isLeft());
   globals.rights = (rs: AnyEither[]) => rs.filter((r) => r.isRight());
