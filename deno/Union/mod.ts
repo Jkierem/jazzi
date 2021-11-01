@@ -16,6 +16,8 @@ export { default as Show } from "./show.ts";
 export { default as Swap } from "./swap.ts";
 export { default as Tap } from "./tap.ts";
 export { default as Thenable } from "./thenable.ts";
+export { default as Traversable } from "./traversable.ts";
+export { default as Runnable } from "./runnable.ts";
 import { default as _RawUnion } from "./union.ts";
 
 type UnionDefinition = {

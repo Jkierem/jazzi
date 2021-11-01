@@ -1,9 +1,9 @@
-import { Functor, Monad, Runnable, Show, Tap, Traversable } from "../Union";
-import Union from "../Union/union";
-import { identity, isFunction, isPrimitive, makeTuple, pass } from "../_internals";
-import { getInnerValue, setInnerValue } from "../_internals/symbols";
-import { AnyConstRec } from "../_internals/types";
-import { Async, AsyncIO, AsyncPartialRep, AsyncRep, getFailure, getHandler, getSuccess, makeWrapper, setHandler } from "./types";
+import { Functor, Monad, Runnable, Show, Tap, Traversable } from "../Union/mod.ts";
+import Union from "../Union/union.ts";
+import { identity, isFunction, isPrimitive, makeTuple, pass } from "../_internals/mod.ts";
+import { getInnerValue, setInnerValue } from "../_internals/symbols.ts";
+import { AnyConstRec } from "../_internals/types.ts";
+import { Async, AsyncIO, AsyncPartialRep, AsyncRep, getFailure, getHandler, getSuccess, makeWrapper, setHandler } from "./types.ts";
 
 const AsyncType = () => (cases: AnyConstRec, globals: any) => {
     cases.Success.prototype.zipWith = function<R,R0,A,A0,C>(

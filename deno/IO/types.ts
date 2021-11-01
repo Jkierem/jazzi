@@ -1,10 +1,11 @@
+import type { Runnable } from "../Union/runnable.ts";
 import type { Monad, MonadRep } from "../Union/monad.ts";
 import type { LazyShow } from "../Union/show.ts";
 import type { Tap } from "../Union/tap.ts";
 import type { Thenable } from "../Union/thenable.ts";
 
 export interface IO<A> 
-extends Monad<A>, Thenable<A, any>, Tap<A>, LazyShow<"IO", "()">
+extends Monad<A>, Thenable<A, any>, Tap<A>, LazyShow<"IO", "()">, Runnable<[],A>
 {
     map<B>(fn: (a: A) => B ): IO<B>;
     fmap<B>(fn: (a: A) => B ): IO<B>;
@@ -34,6 +35,3 @@ extends MonadRep
     pure<A>(x: A): IO<A>;
     do<A>(fn: (pure: <T>(a: T) => IO<T>) => Generator<any, IO<A>, any>): IO<A>;
 }
-
-const a = null as unknown as IORep
-a.pure

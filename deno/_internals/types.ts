@@ -12,6 +12,8 @@ export type AnyConst = new (...args: any[]) => any
 
 export type AnyConstRec = Record<string, new (...args: any[]) => any>
 
+export type ConstRecOf<T extends string> = Record<T, new (...args: any[]) => any>
+
 export type Key = string | number | symbol
 
 export type Nil = null | undefined
@@ -66,3 +68,21 @@ export interface MatcherRep<Cases extends string> {
 }
 
 export type AnyBoxed = Boxed<any>
+
+export type isNever<T> = [T] extends [never] ? true : false
+
+export type isUnknown<T> = isNever<T> extends false 
+    ? unknown extends T
+        ? true
+        : false
+    : false
+
+export type Primitive = 
+    | number 
+    | bigint
+    | string 
+    | boolean 
+    | symbol 
+    | null 
+    | undefined
+export type IsPrimitive<T> = T extends Primitive ? true : false

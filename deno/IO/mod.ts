@@ -8,6 +8,7 @@ import {
   Show,
   Tap,
   Thenable,
+  Runnable
 } from "../Union/mod.ts";
 import Union from "../Union/union.ts";
 import { IO, IORep } from "./types.ts";
@@ -25,12 +26,12 @@ const IODefs: any = {
     },
     chain: {
       IO(this: IO<any>, fn: AnyFn) {
-        return IO.pure((...args: any[]) => fn(this.unsafeRun(...args)).unsafeRun());
+        return IO.pure(() => fn(this.unsafeRun()).unsafeRun());
       },
     },
     join: {
       IO(this: IO<any>){
-        return IO.pure((...args: any[]) => this.unsafeRun(...args).unsafeRun())
+        return IO.pure(() => this.unsafeRun().unsafeRun())
       }
     },
     apply: {
@@ -81,6 +82,7 @@ const IO = Union(
     Thenable(IODefs),
     Show(IODefs),
     Tap(IODefs),
+    Runnable(IODefs)
   ]
 ).constructors({
   of: defaultIO,

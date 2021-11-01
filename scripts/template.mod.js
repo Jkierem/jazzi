@@ -29,13 +29,13 @@ const fixImports = (data) => {
     const isFolder = Boolean(path.match(/(\/[A-Z_][^\/]*)$/))
     const isUrl = Boolean(path.startsWith("https"))
     if( isUrl ){
-      return path.match(/.[t]s;$/gm) ? `from "${path}";\n` : `from "${path}.ts";\n`
+      return path.match(/.[t]s;$/gm) ? `from "${path}";` : `from "${path}.ts";`
     } else {
       if( isFolder ){
-        return `from "${path}/mod.ts";\n`
+        return `from "${path}/mod.ts";`
       }
       if( isFile ){
-        return `from "${path}.ts";\n`
+        return `from "${path}.ts";`
       }
     }
   })
@@ -51,7 +51,6 @@ const template = ({
     const srcPath = resolve(input)
     const outPath = resolve(output)
     const symbs = loadSymbols(symbols)
-    const interpolate = replaceTemplate(symbs,debug)
     const replaceDestination = file => file.replace(srcPath,last(outPath.split("/")))
     if(debug){
       console.log({
@@ -69,12 +68,15 @@ const template = ({
                   console.log("Porcessing: ", file.path)
                 }
                 const rawData = await Deno.readTextFile(file.path)
-                const data = fixImports(interpolate(rawData))
+                const data = fixImports(rawData)
                 const target = replaceDestination(resolve(file.path)).replace("index","mod");
                 if(debug){
                   console.log("Writing: ", target)
                 }
-                if( !dry ){
+                if( dry ){
+                  console.log(target)
+                  console.log(data)
+                } else {
                   await ensureDir(dirname(target));
                   await Deno.writeTextFile(target,data);
                 }

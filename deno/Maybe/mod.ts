@@ -17,6 +17,7 @@ import Union from "../Union/union.ts";
 import { AnyConstRec, AnyFn } from "../_internals/types.ts";
 import { Maybe, MaybeRep } from "./types.ts";
 import { getTypeName } from "../_internals/symbols.ts";
+import Async from "../Async/mod.ts";
 
 const MaybeType = () => (cases: AnyConstRec) => {
   cases.Just.prototype.ifNone = function () {
@@ -31,6 +32,12 @@ const MaybeType = () => (cases: AnyConstRec) => {
   cases.None.prototype.ifJust = function () {
     return this;
   };
+  cases.Just.prototype.toAsync = function(){
+    return Async.Success(this.get())
+  }
+  cases.None.prototype.toAsync = function(){
+    return Async.Fail(undefined)
+  }
 };
 
 const MaybeDefs = {
