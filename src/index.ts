@@ -1,3 +1,4 @@
+export { default as Async } from './Async'
 export { default as Either } from './Either'
 export { default as First } from './First'
 export { default as IO } from './IO'

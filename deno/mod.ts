@@ -1,3 +1,4 @@
+export { default as Async } from "./Async/mod.ts";
 export { default as Either } from "./Either/mod.ts";
 export { default as First } from "./First/mod.ts";
 export { default as IO } from "./IO/mod.ts";

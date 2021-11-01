@@ -7,6 +7,6 @@ export default {
     files: [
         ["deno/mod.js","./mod.d.ts"]
     ],
-    debug: true,
+    debug: false,
     dry: false
 }
