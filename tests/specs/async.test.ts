@@ -51,9 +51,18 @@ describe("Async", () => {
         })
 
         describe("Traversable Rep", () => {
-            it("should traverse an array of values", async () => {
+            it("should traverse an array of values using fn", async () => {
                 const traversed = Async.traverse([1,[2,3],4], Async.Success)
+                expect(traversed).toTypeMatch("Success")
                 await expect(traversed.run()).resolves.toStrictEqual([1,[2,3],4])
+            })
+            it("should traverse an array of values defaulting to Fail", async () => {
+                const traversed = Async.traverse(
+                    [1,2,3,4], 
+                    Async.fromCondition((x: number) => x < 3)
+                )
+                expect(traversed).toTypeMatch("Fail")
+                await expect(traversed.run()).rejects.toBe(3)
             })
         })
     })
@@ -74,6 +83,15 @@ describe("Async", () => {
                 const f42 = Async.Fail(42).map(spy)
                 await expect(f42.run()).rejects.toBe(42)
                 expect(spy).not.toHaveBeenCalled()
+            })
+        })
+
+        describe("Applicative Async", () => {
+            it("should apply", async () => {
+                const fn = Async.Success(() => (x: number) => x + 1)
+                const arg = Async.Success(41);
+                const applied = fn.applyLeft(arg)
+                await expect(applied.run()).resolves.toBe(42)
             })
         })
 

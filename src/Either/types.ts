@@ -7,6 +7,7 @@ import type { Swap } from "../Union/swap";
 import type { Thenable } from "../Union/thenable";
 import type { Extractable, Matcher, MatcherRep, Nil, Tuple } from "../_internals/types";
 import type { Async } from "../Async/types"
+import { ApplicativeRep } from "../Union/applicative";
 
 type EitherCases = "Left" | "Right";
 
@@ -62,7 +63,7 @@ extends Monad<R>, Matcher<EitherCases>,
 }
 
 export interface EitherRep 
-extends MonadRep, MatcherRep<EitherCases>
+extends MonadRep, MatcherRep<EitherCases>, ApplicativeRep
 {
     Left<L>(l: L): Either<L, never>;
     Right<R>(r: R): Either<never, R>;
@@ -111,5 +112,6 @@ extends MonadRep, MatcherRep<EitherCases>
     collectRights<L,R>(xs: Either<L,R>[]): Either<never, R[]>;
 
     pure<A>(x: A): Either<any,A>;
+    return<A>(x: A): Either<any,A>;
     do<A>(fn: (pure: <T>(a: T) => Either<any,T>) => Generator<any, Either<any,A>, any>): Either<any,A>;
 }

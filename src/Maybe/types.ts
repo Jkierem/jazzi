@@ -9,6 +9,7 @@ import type { Tap } from "../Union/tap";
 import type { Thenable } from "../Union/thenable";
 import type { Matcher, MatcherRep } from "../_internals/types";
 import type { Async } from "../Async/types"
+import type { TraversableRep } from "../Union/traversable";
 
 type MaybeCases = "Just" | "None";
 
@@ -105,7 +106,7 @@ Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>
 }
 
 export interface MaybeRep 
-    extends NaturalRep, EqRep, MonadRep, MonoidRep, MatcherRep<MaybeCases>
+    extends NaturalRep, EqRep, MonadRep, MonoidRep, MatcherRep<MaybeCases>, TraversableRep
 {
     /**
      * Just constructor
@@ -160,6 +161,7 @@ export interface MaybeRep
     isEmpty(x: any): boolean;
   
     pure<A>(x: A): Maybe<A>;
+    pureM<A>(x: A): Maybe<A>;
     do<A>(fn: (pure: <T>(a: T) => Maybe<T>) => Generator<any,Maybe<A>,any>): Maybe<A>;
   
     empty<A>(): Maybe<A>;

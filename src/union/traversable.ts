@@ -1,41 +1,42 @@
-import { defineOverrides, prop } from "../_internals";
+import { prop } from "../_internals";
 import { setTypeclass } from "../_internals/symbols";
-import { AnyConstRec, AnyFn, AnyFnRec } from "../_internals/types";
+import { Applicative, ApplicativeRep } from "./applicative";
 
 const mark = setTypeclass("Traversable")
 
 type TraversableDefs = {
     overrides: {
-        sequence: AnyFnRec,
-        traverse?: <T,A>(fn: (a: A) => Traversable<T>, data: A[]) => Traversable<T[]>,
+        traverse?: <T,A>(fn: (a: A) => Applicative<T>, data: A[]) => Applicative<T[]>,
     }
 }
-
-export interface Traversable<T> {
-    /**
-     * Sequences two traversables collecting the results in an array
-     * @param other 
-     */
-    sequence<U>(other: Traversable<U>): Traversable<(T | U)[]>
-}
-
 export interface TraversableRep {
     /**
      * Use `fn` to map values to a traversable and then sequence them collecting the results in an array
      * @param fn 
      * @param data 
      */
-    traverse<A,T>(data: A[], fn: (a: A) => Traversable<T>): Traversable<T[]>;
+    traverse<A,T>(data: A[], fn: (a: A) => Applicative<T>): Applicative<T[]>;
 }
 
-const Traversable = (defs: TraversableDefs) => mark((cases: AnyConstRec, globals: any) => {
+const Traversable = (defs: TraversableDefs) => mark((_: any, globals: any) => {
     const overrides = prop("overrides")(defs)
-    defineOverrides("sequence",[],overrides as any,cases)
 
-    globals.traverse = function<T>(arr: T[], fn: (a: any) => any){
+    globals.traverse = function<T>(this: ApplicativeRep, arr: T[], fn: (a: any) => Applicative<any>){
+        const res: any[] = []
+        const mark = Symbol("@@stop")
+        const stop = this.pure({ [mark]: true })
+        const pushOrReturn = (x: any) => {
+            if( x[mark] ){
+                return res;
+            }
+            res.push(x)
+            return pushOrReturn
+        }
+        const init = this.pure(pushOrReturn)
         return arr
             .map(fn)
-            .reduce((acc,next) => acc.sequence(next))
+            .concat(stop)
+            .reduce((acc,next) => acc.applyLeft(next), init)
     }
     const traverseOverride = prop("traverse")(overrides)
     if( traverseOverride ){

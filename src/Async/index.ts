@@ -1,9 +1,20 @@
-import { Functor, Monad, Runnable, Show, Tap, Traversable } from "../Union";
+import { Applicative, Functor, Monad, Runnable, Show, Tap, Traversable } from "../Union";
 import Union from "../Union/union";
 import { identity, isFunction, isPrimitive, makeTuple, pass } from "../_internals";
 import { getInnerValue, setInnerValue } from "../_internals/symbols";
 import { AnyConstRec } from "../_internals/types";
-import { Async, AsyncIO, AsyncPartialRep, AsyncRep, getFailure, getHandler, getSuccess, makeWrapper, setHandler } from "./types";
+import { 
+    Async, 
+    AsyncIO, 
+    AsyncPartialRep, 
+    AsyncRep, 
+    AsyncWrapper, 
+    getFailure, 
+    getHandler, 
+    getSuccess, 
+    makeWrapper, 
+    setHandler 
+} from "./types";
 
 const AsyncType = () => (cases: AnyConstRec, globals: any) => {
     cases.Success.prototype.zipWith = function<R,R0,A,A0,C>(
@@ -96,10 +107,15 @@ const AsyncDefs: any = {
     overrides: {
       fmap: {
         Success<R,A,B>(this: Async<R,A>, fn: (a: A) => B) {
-          const rep = this.get()
+          const rep = this.get() as unknown as AsyncWrapper<R,A>;
           const suc = getSuccess(rep);
           return Async.Success((env: R) => suc(env).then(fn))
         },
+      },
+      apply: {
+          Success<A,B>(this: AsyncIO<A>, asyncFn: AsyncIO<(a:A) => B>){
+            return this.chain(a => asyncFn.map(fn => fn(a))) 
+          }
       },
       chain: {
         Success<R,A,R0,B>(this: Async<R,A>, fn: (a: A) => Async<R0,B>) {
@@ -119,7 +135,7 @@ const AsyncDefs: any = {
       },
       run: {
         async Success<R,A>(this: Async<R,A>, env: R = {} as R) {
-            const inner = this.get()
+            const inner = this.get() as unknown as AsyncWrapper<R,A>;
             const handler = getHandler(inner)
             try {
                 return await getSuccess(inner)(env)
@@ -128,7 +144,7 @@ const AsyncDefs: any = {
             }
         },
         Fail<R,A>(this: Async<R,A>){
-            const inner = this.get()
+            const inner = this.get() as unknown as AsyncWrapper<R,A>;
             const handler = getHandler(inner)
             if( handler ){
                 return handler(getFailure(inner)).run()
@@ -140,15 +156,23 @@ const AsyncDefs: any = {
         Success<A,B>(this: AsyncIO<A>, other: AsyncIO<B>){
             return this.zip(other)
         },
-        Fail<A,B>(this: AsyncIO<A>, other: AsyncIO<B>){
-            return this.zip(other)
+        Fail<A,B>(this: AsyncIO<A>, _other: AsyncIO<B>){
+            return this
         }
       },
       traverse(data: any[], fn: (a: any) => AsyncIO<any>){
         const res: any[] = []
         return data
             .map(x => fn(x).tap(x => res.push(x)))
-            .reduce((acc,next) => acc.chain(() => next))
+            .reduce((acc,next) => {
+                if( acc.isFail() ){
+                    return acc
+                }
+                if( next.isFail() ){
+                    return next
+                }
+                return acc.chain(() => next)
+            })
             .map(() => res)
       }
     },
@@ -164,6 +188,7 @@ const Async = Union(
     },
     [
         Functor(AsyncDefs),
+        Applicative(AsyncDefs),
         Monad(AsyncDefs),
         Tap(AsyncDefs),
         Runnable(AsyncDefs),
@@ -204,6 +229,12 @@ const Async = Union(
             Right: this.Success,
             Left: this.Fail
         })
+    },
+    fromPredicate<A>(this: AsyncPartialRep, fn: (a?: A) => boolean, a?: A){
+        return fn(a) ? this.Success(() => Promise.resolve(a)) : this.Fail(a)
+    },
+    fromCondition<A>(this: AsyncPartialRep, fn: (a?: A) => boolean){
+        return (a?: A) => fn(a) ? this.Success(() => Promise.resolve(a)) : this.Fail(a)
     },
     fromCallback(this: AsyncRep, fn: (res: <T>(t: T) => void, rej: (t: any) => void) => void){
         return this.Success(() => new Promise(fn))

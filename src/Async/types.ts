@@ -3,9 +3,10 @@ import type { Boxed, IsPrimitive, isUnknown } from "../_internals/types";
 import type { Maybe } from "../Maybe/types"
 import type { Either } from "../Either/types";
 import { getSymbol, setSymbol, WithSymbol } from "../_internals/symbols";
-import { Traversable, TraversableRep } from "../Union/traversable";
+import type { Monad, MonadRep } from "../Union/monad";
 
 export type RemoveUnknown<A> = isUnknown<A> extends true ? [env?: never] : [env: A];
+type Env<A> = A extends Async<infer R, any> ? R : never
 type Remove<A,B> = B extends A & infer C 
     ? C
     : B;
@@ -33,7 +34,7 @@ export const getFailure = getSymbol(F)
 export const getHandler = getSymbol(E)
 
 type SuccessChannel<R,A> = (r: R) => A
-interface AsyncWrapper<R,A> 
+export interface AsyncWrapper<R,A> 
 extends WithSymbol<typeof S, (r: R) => Promise<A>>, 
         WithSymbol<typeof F, any>,
         WithSymbol<typeof E, (<A0>(e: any) => AsyncIO<A0>) | undefined>
@@ -47,18 +48,25 @@ export const makeWrapper = <R,A>(success: SuccessChannel<R,A>, failure: any) => 
 }
 
 export type AsyncCases = "Success" | "Fail"
-
 export type AsyncIO<A> = Async<unknown,A>
+export type AsyncUnit = AsyncIO<undefined>
 
 export interface Async<R, A> 
-extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Boxed<AsyncWrapper<R,A>>, Traversable<A>
+extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>
 {
+    isFail(): boolean;
+    isSuccess(): boolean;
+
     map<B>(fn: (a: A) => B ): Async<R,B>;
     fmap<B>(fn: (a: A) => B ): Async<R,B>;
     mapTo<B>(b: B): Async<R,B>;
 
-    join(): A extends Async<infer R0, infer B> ? Async<R0 & R, B> : A;
-    flat(): A extends Async<infer R0, infer B> ? Async<R0 & R, B> : A;
+    apply<B>(ap: AsyncIO<(a: A) => B>): AsyncIO<B>;
+    applyRight<B>(ap: AsyncIO<(a: A) => B>): AsyncIO<B>;
+    applyLeft<B,C>(this: AsyncIO<(b: B) => C>,ap: AsyncIO<B>): AsyncIO<C>;
+
+    join(): A extends Monad<infer B> ? Async<Env<A> & R, B> : A;
+    flat(): A extends Monad<infer B> ? Async<Env<A> & R, B> : A;
 
     chain  <B,R0>(fn: (a: A) => Async<R0,B>): Async<R & R0, B>;
     flatMap<B,R0>(fn: (a: A) => Async<R0,B>): Async<R & R0, B>;
@@ -113,7 +121,6 @@ extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Boxed<AsyncWrapper<R,A
      * Recover from failures using the provided function
      */
     recover<A0>(fn: (e: any) => AsyncIO<A0>): Async<R, A | A0>
-    sequence<R0,A0>(other: Async<R0,A0>): Async<R & R0, (A0 | A)[]>;
 }
 
 export interface AsyncPartialRep {
@@ -122,13 +129,10 @@ export interface AsyncPartialRep {
 }
 
 export interface AsyncRep 
-extends TraversableRep
+extends MonadRep
 {
-    /**
-     * Create an Async that succeeds with the given value.
-     * @param a 
-     */
     pure<A>(a: A): AsyncIO<A>;
+    return<A>(a: A): AsyncIO<A>;
     /**
      * Create an Async that succeeds with the given value or return value of the function.
      * @param a 
@@ -178,13 +182,14 @@ extends TraversableRep
      * Create an Async that succeeds with undefined.
      * @param fn 
      */
-    unit(): AsyncIO<undefined>;
-    /**
-     * Do notation using generator functions
-     */
+    unit(): AsyncUnit;
     do<R,A>(fn: (pure: <T>(a: T) => AsyncIO<T>) => Generator<any, Async<R,A>, any>): Async<R,A>;
     fromMaybe<T>(m: Maybe<T>): AsyncIO<T>;
     fromEither<L,R>(m: Either<L,R>): AsyncIO<R>;
     traverse<A,T>(data: A[], fn: (a: A) => AsyncIO<T>): AsyncIO<T[]>;
-    all<A>(actions: AsyncIO<A>[]): AsyncIO<A[]>
+    all<A>(actions: AsyncIO<A>[]): AsyncIO<A[]>;
+    fromPredicate(fn: () => boolean): AsyncUnit;
+    fromPredicate<A>(fn: (a: A) => boolean, a: A): AsyncIO<A>;
+    fromCondition(fn: () => boolean):() => AsyncUnit;
+    fromCondition<A>(fn: (a: A) => boolean): (a: A) => AsyncIO<A>;
 }
