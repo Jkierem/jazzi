@@ -1,12 +1,14 @@
 import type { FixedEndoFunctor } from "../Union";
 import type { Eq, FixedEqRep } from "../Union/eq";
 import type { FixedMonoidRep, FixedMonoid } from "../Union/monoid";
+import type { FixedOrd } from "../Union/ord";
 import type { Show } from "../Union/show";
 import type { Thenable } from "../Union/thenable";
+import { Boxed } from "../_internals/types";
 
 export interface Min 
 extends FixedEndoFunctor<Min,number>, FixedMonoid<Min,number>, 
-        Thenable<number, number>, Eq, Show
+        Thenable<number, number>, Eq, Show, Boxed<number>, FixedOrd<Min>
 {
     equals(m: Min): boolean;
 }

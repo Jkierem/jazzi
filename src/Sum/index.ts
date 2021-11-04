@@ -2,12 +2,14 @@ import {
   Eq,
   Functor,
   Monoid,
+  Ord,
   Semigroup,
   Show,
   Thenable
 } from "../Union";
 import Union from '../Union/union'
 import { equals, monoidToPromise } from "../_internals";
+import { lessThanOrEqual } from "../_tools";
 import { Sum, SumRep } from "./types";
 
 const Defs = {
@@ -26,6 +28,9 @@ const Defs = {
         }
         return Sum.from(this.get() + o.get());
       }
+    },
+    lessThanOrEqual(this: Sum, o: Sum){
+      return lessThanOrEqual(this.get(), o.get())
     },
     equals: {
       Sum(this: Sum, o: Sum) {
@@ -54,6 +59,7 @@ const Sum = Union(
   },
   [
     Eq(Defs),
+    Ord(Defs),
     Functor(Defs),
     Semigroup(Defs),
     Monoid(Defs),

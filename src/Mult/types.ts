@@ -1,16 +1,17 @@
 import type { FixedEndoFunctor } from "../Union";
 import type { Eq, FixedEqRep } from "../Union/eq";
 import type { FixedMonoid, FixedMonoidRep } from "../Union/monoid";
+import type { FixedOrd } from "../Union/ord";
 import type { Show } from "../Union/show";
 import type { Thenable } from "../Union/thenable";
-import type { Extractable, Matcher } from "../_internals/types";
+import type { Boxed, Extractable, Matcher } from "../_internals/types";
 
 type MultCases = "Mult" | "One"
 
 export interface Mult 
 extends FixedMonoid<Mult,number>, 
         FixedEndoFunctor<Mult,number>,
-        Eq, Thenable<number,1>, Show, Matcher<MultCases>
+        Eq, Thenable<number,1>, Show, Matcher<MultCases>, Boxed<number>, FixedOrd<Mult>
 {
     onMult<B>(fn: Extractable<B,[number]>): B;
     onOne<B>(fn: Extractable<B,[number]>): B;

@@ -3,10 +3,10 @@ import type { Monad, MonadRep } from "../Union/monad";
 import type { LazyShow } from "../Union/show";
 import type { Tap } from "../Union/tap";
 import type { Thenable } from "../Union/thenable";
-import { ApplicativeRep } from "../Union/applicative";
+import type { Boxed } from "../_internals/types";
 
 export interface IO<A> 
-extends Monad<A>, Thenable<A, any>, Tap<A>, LazyShow<"IO", "()">, Runnable<[],A>
+extends Monad<A>, Thenable<A, any>, Tap<A>, LazyShow<"IO", "()">, Runnable<[],A>, Boxed<A>
 {
     map<B>(fn: (a: A) => B ): IO<B>;
     fmap<B>(fn: (a: A) => B ): IO<B>;
@@ -25,7 +25,7 @@ extends Monad<A>, Thenable<A, any>, Tap<A>, LazyShow<"IO", "()">, Runnable<[],A>
 }
 
 export interface IORep 
-extends MonadRep, ApplicativeRep 
+extends MonadRep 
 {
     IO<A>(fn: () => A): IO<A>;
     of<A>(fn: () => A): IO<A>;
@@ -34,6 +34,6 @@ extends MonadRep, ApplicativeRep
     through<Args extends any[], Return>(fn: (...args: Args) => Return): (...args: Args) => IO<Return>;
     unary<Arg, Return>(fn: (a: Arg) => Return): (args: Arg) => IO<Return>;
     pure<A>(x: A): IO<A>;
-    pureM<A>(x: A): IO<A>;
+    return<A>(x: A): IO<A>;
     do<A>(fn: (pure: <T>(a: T) => IO<T>) => Generator<any, IO<A>, any>): IO<A>;
 }

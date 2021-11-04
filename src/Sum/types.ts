@@ -1,15 +1,17 @@
-import { Eq, FixedEqRep } from "../Union/eq";
-import { FixedEndoFunctor } from "../Union/functor";
-import { FixedMonoid, FixedMonoidRep } from "../Union/monoid";
-import { Show } from "../Union/show";
-import { Thenable } from "../Union/thenable";
-import { Extractable, Matcher } from "../_internals/types";
+import type { Eq, FixedEqRep } from "../Union/eq";
+import type { FixedEndoFunctor } from "../Union/functor";
+import type { FixedMonoid, FixedMonoidRep } from "../Union/monoid";
+import type { FixedOrd } from "../Union/ord";
+import type { Show } from "../Union/show";
+import type { Thenable } from "../Union/thenable";
+import type { Boxed, Extractable, Matcher } from "../_internals/types";
 
 type SumCases = "Sum" | "Zero"
 
 export interface Sum
 extends Matcher<SumCases>, FixedEndoFunctor<Sum,number>,
-Show, Eq, Thenable<number, 0>, FixedMonoid<Sum,number>
+Show, Eq, Thenable<number, 0>, FixedMonoid<Sum,number>, Boxed<number>,
+FixedOrd<Sum>
 {
     onSum <B>(fn: Extractable<B,[number]>): B ;
     onZero<B>(fn: Extractable<B,[number]>): B ;

@@ -3,6 +3,7 @@ import {
   Eq,
   Functor,
   Monoid,
+  Ord,
   Semigroup,
   Show,
   Thenable,
@@ -10,6 +11,7 @@ import {
 import Union from '../Union/union'
 import { monoidThen, monoidToPromise } from "../_internals";
 import { Max, MaxRep } from "./types";
+import { lessThanOrEqual } from "../_tools";
 
 const Defs: any = {
   trivials: ["Max"],
@@ -18,8 +20,11 @@ const Defs: any = {
   overrides: {
     concat: {
       Max(this: Max, o: Max) {
-        return this.get() < o.get() ? o : this;
+        return this.lessThan(o) ? o : this;
       },
+    },
+    lessThanOrEqual(this: Max, o: Max) {
+      return lessThanOrEqual(this.get(), o.get())
     },
     empty: {
       Max() {
@@ -45,7 +50,8 @@ const Max = Union(
     Max: (x) => (isNil(x) ? -Infinity : x),
   },
   [
-    Eq(Defs), 
+    Eq(Defs),
+    Ord(Defs),
     Functor(Defs), 
     Semigroup(Defs), 
     Monoid(Defs),

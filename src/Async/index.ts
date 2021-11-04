@@ -7,8 +7,7 @@ import {
     Async, 
     AsyncIO, 
     AsyncPartialRep, 
-    AsyncRep, 
-    AsyncWrapper, 
+    AsyncRep,
     getFailure, 
     getHandler, 
     getSuccess, 
@@ -74,12 +73,18 @@ const AsyncType = () => (cases: AnyConstRec, globals: any) => {
         setInnerValue(setHandler(fn)(getInnerValue(cpy)))(cpy)
         return cpy;
     }
+    cases.Success.prototype.ingore = function(){
+        return this.mapTo(undefined);
+    }
     cases.Fail.prototype.recover = function<R,A,A0>(
         this: Async<R,A>,
         fn: (e: any) => Async<unknown, A0>
     ) {
         const cpy = new cases.Fail(getFailure(getInnerValue(this)))
         return setInnerValue(setHandler(fn)(getInnerValue(cpy)))(cpy)
+    }
+    cases.Fail.prototype.ignore = function(){
+        return new cases.Success(undefined)
     }
 
     cases.Fail.prototype.zipWith = pass
@@ -107,15 +112,15 @@ const AsyncDefs: any = {
     overrides: {
       fmap: {
         Success<R,A,B>(this: Async<R,A>, fn: (a: A) => B) {
-          const rep = this.get() as unknown as AsyncWrapper<R,A>;
+          const rep = this.get();
           const suc = getSuccess(rep);
           return Async.Success((env: R) => suc(env).then(fn))
         },
       },
       apply: {
-          Success<A,B>(this: AsyncIO<A>, asyncFn: AsyncIO<(a:A) => B>){
+        Success<A,B>(this: AsyncIO<A>, asyncFn: AsyncIO<(a:A) => B>){
             return this.chain(a => asyncFn.map(fn => fn(a))) 
-          }
+        }
       },
       chain: {
         Success<R,A,R0,B>(this: Async<R,A>, fn: (a: A) => Async<R0,B>) {
@@ -135,7 +140,7 @@ const AsyncDefs: any = {
       },
       run: {
         async Success<R,A>(this: Async<R,A>, env: R = {} as R) {
-            const inner = this.get() as unknown as AsyncWrapper<R,A>;
+            const inner = this.get();
             const handler = getHandler(inner)
             try {
                 return await getSuccess(inner)(env)
@@ -144,7 +149,7 @@ const AsyncDefs: any = {
             }
         },
         Fail<R,A>(this: Async<R,A>){
-            const inner = this.get() as unknown as AsyncWrapper<R,A>;
+            const inner = this.get();
             const handler = getHandler(inner)
             if( handler ){
                 return handler(getFailure(inner)).run()
@@ -198,13 +203,13 @@ const Async = Union(
     ]
 ).constructors({
     of<R=unknown,A=any>(this: AsyncPartialRep, fn: (env: R) => A): Async<R,A> {
-        return this.Success((r: R) => Promise.resolve().then(() => fn(r))) as unknown as Async<R,A>
+        return this.Success((r: R) => Promise.resolve().then(() => fn(r)))
     },
     from<R=never,A=any>(this: AsyncPartialRep, fn: (env: R) => Promise<A>): Async<R,A> {
-        return this.Success(fn) as unknown as Async<R,A>
+        return this.Success(fn)
     },
     fromPromise<A>(this: AsyncPartialRep, p: Promise<A>): Async<unknown,A> {
-        return this.Success(() => p) as unknown as Async<unknown,A>
+        return this.Success(() => p)
     },
     unary<A,B>(this: AsyncPartialRep ,fn: (a: A) => B): (a: A) => Async<unknown,B> {
         return (a: A) => this.Success(() => Promise.resolve(fn(a)))

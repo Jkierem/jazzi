@@ -2,8 +2,8 @@ import type { LiteralShow } from "../Union/show";
 import type { Boxed, IsPrimitive, isUnknown } from "../_internals/types";
 import type { Maybe } from "../Maybe/types"
 import type { Either } from "../Either/types";
-import { getSymbol, setSymbol, WithSymbol } from "../_internals/symbols";
 import type { Monad, MonadRep } from "../Union/monad";
+import { getSymbol, setSymbol, WithSymbol } from "../_internals/symbols";
 
 export type RemoveUnknown<A> = isUnknown<A> extends true ? [env?: never] : [env: A];
 type Env<A> = A extends Async<infer R, any> ? R : never
@@ -52,7 +52,7 @@ export type AsyncIO<A> = Async<unknown,A>
 export type AsyncUnit = AsyncIO<undefined>
 
 export interface Async<R, A> 
-extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>
+extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>, Boxed<AsyncWrapper<R,A>>
 {
     isFail(): boolean;
     isSuccess(): boolean;
@@ -121,6 +121,9 @@ extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>
      * Recover from failures using the provided function
      */
     recover<A0>(fn: (e: any) => AsyncIO<A0>): Async<R, A | A0>
+
+    // TODO: Implement
+    ignore(): AsyncUnit;
 }
 
 export interface AsyncPartialRep {
@@ -144,22 +147,23 @@ extends MonadRep
      */
     Fail<E,A=never>(e: E): AsyncIO<A>;
     /**
-     * Create an Async that executes the given sync computation
+     * Create an Async that stores the given sync computation
      * @param fn 
      */
     of<R,A>(fn: (env: R) => A): Async<R,A>;
     /**
-     * Create an Async that executes the given async computation
+     * Create an Async that stores the given async computation
      * @param fn 
      */
     from<R,A>(fn: (env: R) => Promise<A>): Async<R,A>;
     /**
-     * Create an Async from the given promise
+     * Create an Async from the given promise. The promise still executes resulting in an eager Async. 
+     * For lazyness use any other constructor, passing a function.
      * @param fn 
      */
     fromPromise<A>(p: Promise<A>): AsyncIO<A>;
     /**
-     * Create an Async from a callback based async function, similar to the Promise constructor
+     * Create an Async from a callback based async function, similar to the native Promise constructor
      * @param fn 
      */
     fromCallback<A>(fn: (resolve: (a: A) => void, reject: (e: any) => void) => void): AsyncIO<A>;
@@ -174,7 +178,7 @@ extends MonadRep
      */
     through<A,B>(fn: (...a: A[]) => B): (...a: A[]) => AsyncIO<B>;
     /**
-     * Create an Async that requires an environment. This only makes sense in typescript.
+     * Create an Async that requires an environment. This stores the identity function.
      * @param fn 
      */
     require<Env>(): Async<Env,Env>;

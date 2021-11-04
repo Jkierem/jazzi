@@ -2,13 +2,13 @@ import type { EqRep } from "../Union/eq";
 import type { Functor } from "../Union/functor";
 import type { Monoid, MonoidRep } from "../Union/monoid";
 import type { Thenable } from "../Union/thenable";
-import type { AnyRec, Extractable, Matcher, MatcherRep } from "../_internals/types";
+import type { AnyRec, Boxed, Extractable, Matcher, MatcherRep } from "../_internals/types";
 
 type MergeCases = "Merge" | "Empty"
 
 export interface Merge<A extends AnyRec>
 extends Functor<A>, Monoid<A>, 
-        Thenable<A, never>, Matcher<MergeCases>
+        Thenable<A, never>, Matcher<MergeCases>, Boxed<A>
 {
     onMerge<B>(fn: Extractable<B,[A]>): B ;
     onEmpty<B>(fn: Extractable<B,[A]>): B ;

@@ -49,6 +49,9 @@ extends WithTypeName<string>
 , WithInnerValue<A>
 , WithTypeRep<TRep>
 {
+    /**
+     * *UNSAFE* gets the internal value of a structure. Lazy structures will not contain what you expect
+     */
     get: () => A,
     unwrap: () => Unwrap<A>
 }

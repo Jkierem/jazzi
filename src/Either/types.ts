@@ -5,16 +5,16 @@ import type { Monad, MonadRep } from "../Union/monad";
 import type { Show } from "../Union/show";
 import type { Swap } from "../Union/swap";
 import type { Thenable } from "../Union/thenable";
-import type { Extractable, Matcher, MatcherRep, Nil, Tuple } from "../_internals/types";
+import type { Boxed, Extractable, Matcher, MatcherRep, Nil, Tuple } from "../_internals/types";
 import type { Async } from "../Async/types"
-import { ApplicativeRep } from "../Union/applicative";
+import type { ApplicativeRep } from "../Union/applicative";
 
 type EitherCases = "Left" | "Right";
 
 export interface Either<L,R>
 extends Monad<R>, Matcher<EitherCases>,
     Swap<L,R>, FunctorError<L>, Show,
-    Thenable<R,L>, Foldable
+    Thenable<R,L>, Foldable, Boxed<R>
 {
     get(): R;
     getOr<B>(or: Extractable<B>): R | B;

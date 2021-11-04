@@ -260,6 +260,8 @@ await Async.fromPromise(Promise.resolve(42)).run() // resolves to 42
 await Async.fromCallback((res) => setTimeout(() => res(42),0)).run() // resolves to 42
 ```
 
+***A Note on the Async constructors***: There is no way to stop a created promise from executing. This results in the fromPromise constructor being a sort of eager Async. All other constructors are lazy given that they are passed a function that builds a promise as argument. So keep that in mind if lazyness is desired
+
 ## Sum, Mult and Merge Monoids
 
 `Sum` is the monoid of numbers over addition
@@ -273,7 +275,7 @@ Monoids have an empty case. `Cero` for `Sum`, `One` for `Mult` and `Empty` for `
 ```javascript
 Sum.of(20).concat(Sum.of(22))  // Sum 42
 Mult.of(2).concat(Mult.of(21)) // Mult 42
-Merge.of({ a: 42 }).concat(Merge.of({ b: 42 })) // Merge { a: 42, b: 42 }
+Merge.of({ a: 42 }).concat( Merge.of({ b: 42 })) // Merge { a: 42, b: 42 }
 
 Sum.accumulate([ Sum(20), Sum(22) ]) // Sum 42
 Sum.foldMap([10,12,20]) // Sum 42
@@ -282,7 +284,8 @@ foldMap(Sum,[10,12,20]) // Sum 42
 
 ## A note on Max, Min, First, Last
 
-This monoids abstract operations over arrays with the caveat that for `Max` and `Min` need the values to be comparable with `>` and `<` respectively. `First` and `Last` will return a structure with `undefined` if the array is empty. They all share that calling the default constructor without any arguments returns the empty value. The empty values for each Monoid are as follows:
+This monoids abstract operations over arrays with the caveat that for `Max` and `Min` need the values to be comparable with `>` and `<` respectively or that the values in the array are jazzi unions that implement the Ord typeclass (such as any of the monoids that store numbers).
+`First` and `Last` will return a structure with `undefined` if the array is empty. They all share that calling the default constructor without any arguments returns the empty value. The empty values for each Monoid are as follows:
 
 - `Max.of(-Inifinity)`
 - `Min.of(Infinity)`
@@ -297,9 +300,9 @@ Min.of(20).concat(Min.of(42)) // Max 20
 First.of(20).concat(First.of(42)) // First 20
 Last.of(20).concat(Last.of(42)) // Last 42
 
-const values = [1,2,3,4,5]
-foldMap(Max  ,values)   // Max 5
-foldMap(Min  ,values)   // Min 1
+const values = [1,2,0,6,3,4,5]
+foldMap(Max  ,values)   // Max 6
+foldMap(Min  ,values)   // Min 0
 foldMap(First,values)   // First 1
 foldMap(Last ,values)   // Last 5
 
