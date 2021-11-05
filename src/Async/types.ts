@@ -65,8 +65,8 @@ extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>, Boxed<AsyncW
     applyRight<B>(ap: AsyncIO<(a: A) => B>): AsyncIO<B>;
     applyLeft<B,C>(this: AsyncIO<(b: B) => C>,ap: AsyncIO<B>): AsyncIO<C>;
 
-    join(): A extends Monad<infer B> ? Async<Env<A> & R, B> : A;
-    flat(): A extends Monad<infer B> ? Async<Env<A> & R, B> : A;
+    join(): A extends Monad<infer B> ? Async<Env<A> & R, B> : never;
+    flat(): A extends Monad<infer B> ? Async<Env<A> & R, B> : never;
 
     chain  <B,R0>(fn: (a: A) => Async<R0,B>): Async<R & R0, B>;
     flatMap<B,R0>(fn: (a: A) => Async<R0,B>): Async<R & R0, B>;

@@ -128,7 +128,9 @@ const AsyncDefs: any = {
         },
       },
       join: {
-        Success<R,A,R0>(this: Async<R,Async<R0,A>>){}
+        Success<R,A,R0>(this: Async<R,Async<R0,A>>){
+            return this.chain(identity)
+        }
       },
       show: {
         Success() {

@@ -96,7 +96,7 @@ describe("Async", () => {
         })
 
         describe("Monad Async", () => {
-            it("should chain two Asyncs", async () => {
+            it("should sequence two asyncs using chain/flatMap", async () => {
                 const spy = Spy()
                 const s1 = Async.pure(1).tap(spy)
                 const s2 = Async.pure(2).tap(spy)
@@ -105,6 +105,16 @@ describe("Async", () => {
                 await expect(chained.run()).resolves.toBe(2)
                 expect(spy).toHaveBeenCalledTwice()
                 const [c1,c2] = spy.calls;
+                expect(c1).calledBefore(c2)
+            })
+            it("should flatten nested asyncs using join/flat", async () => {
+                const spy = Spy()
+                const s1 = Async.pure(2).tap(spy)
+                const s2 = Async.pure(1).tap(spy).mapTo(s1).join()
+                await expect(s2.run()).resolves.toBe(2)
+                expect(spy).toHaveBeenCalledTwice()
+                const c1 = spy.findCall(c => c.args[0] === 1)
+                const c2 = spy.findCall(c => c.args[0] === 2)
                 expect(c1).calledBefore(c2)
             })
         })

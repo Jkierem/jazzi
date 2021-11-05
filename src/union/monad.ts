@@ -1,6 +1,6 @@
 import { defineOverrides, prop, propOr } from "../_internals";
 import { setTypeclass } from "../_internals/symbols"
-import type { AnyConstRec, AnyFnRec } from "../_internals/types";
+import type { AnyConstRec, AnyFnRec, Boxed } from "../_internals/types";
 import type { Applicative, ApplicativeRep } from "./applicative";
 
 type MonadDefs = {
@@ -57,13 +57,13 @@ const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, gl
     const lazy = propOr(false,"lazy",defs);
     const pureM = propOr(prop("pure")(defs) as unknown as string, "return", defs)
     trivials.forEach(trivial => {
-        function chain<A,B>(this: Monad<A>, fn: (a: A) => Monad<B>){
+        function chain<A,B>(this: Boxed<A>, fn: (a: A) => Monad<B>){
             return fn(this.get())
         }
         cases[trivial].prototype.chain   = chain
         cases[trivial].prototype.flatMap = chain
 
-        function join<A>(this: Monad<Monad<A>>){
+        function join<A>(this: Boxed<Monad<A>>){
             return this.get()
         }
         cases[trivial].prototype.join = join
