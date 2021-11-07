@@ -23,28 +23,32 @@ type Provide<A,R> = IsPrimitive<R> extends true
 
 const S = Symbol("@@success")
 const F = Symbol("@@failure")
-const E = Symbol("@@handler")
+const C = Symbol("@@critical")
+const I = Symbol("@@ignored")
 
 export const setSuccess = setSymbol(S)
 export const setFailure = setSymbol(F)
-export const setHandler = setSymbol(E)
+export const setCritical = setSymbol(C)
+export const setIgnore = setSymbol(I)
 
 export const getSuccess = getSymbol(S)
 export const getFailure = getSymbol(F)
-export const getHandler = getSymbol(E)
+export const getCritical = getSymbol(C)
+export const getIgnore = getSymbol(I)
 
 type SuccessChannel<R,A> = (r: R) => A
 export interface AsyncWrapper<R,A> 
 extends WithSymbol<typeof S, (r: R) => Promise<A>>, 
         WithSymbol<typeof F, any>,
-        WithSymbol<typeof E, (<A0>(e: any) => AsyncIO<A0>) | undefined>
+        WithSymbol<typeof C, (err: any) => AsyncIO<any>>
 {}
 
 export const makeWrapper = <R,A>(success: SuccessChannel<R,A>, failure: any) => {
     const s = setSuccess(success)
     const f = setFailure(failure)
-    const e = setHandler(undefined)
-    return s(f(e({})))
+    const e = setCritical(undefined)
+    const i = setIgnore(false)
+    return s(f(e(i({}))))
 }
 
 export type AsyncCases = "Success" | "Fail"
@@ -121,8 +125,6 @@ extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>, Boxed<AsyncW
      * Recover from failures using the provided function
      */
     recover<A0>(fn: (e: any) => AsyncIO<A0>): Async<R, A | A0>
-
-    // TODO: Implement
     ignore(): AsyncUnit;
 }
 

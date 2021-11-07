@@ -1,18 +1,20 @@
 import { Applicative, Functor, Monad, Runnable, Show, Tap, Traversable } from "../Union";
 import Union from "../Union/union";
-import { identity, isFunction, isPrimitive, makeTuple, pass } from "../_internals";
+import { identity, isFunction, isPrimitive, makeTuple, pass } from "../_internals/functions";
 import { getInnerValue, setInnerValue } from "../_internals/symbols";
 import { AnyConstRec } from "../_internals/types";
 import { 
-    Async, 
+    Async,
     AsyncIO, 
     AsyncPartialRep, 
     AsyncRep,
-    getFailure, 
-    getHandler, 
+    getCritical,
+    getFailure,
+    getIgnore,
     getSuccess, 
-    makeWrapper, 
-    setHandler 
+    makeWrapper,
+    setCritical,
+    setIgnore
 } from "./types";
 
 const AsyncType = () => (cases: AnyConstRec, globals: any) => {
@@ -65,23 +67,21 @@ const AsyncType = () => (cases: AnyConstRec, globals: any) => {
         }
         return new cases.Success((env: any) => this.run({...p,...env} as any))
     }
-    cases.Success.prototype.recover = function<R,A,A0>(
-        this: Async<R,A>,
-        fn: (e: any) => Async<unknown, A0>
-    ) {
-        const cpy = this.map(x => x)
-        setInnerValue(setHandler(fn)(getInnerValue(cpy)))(cpy)
-        return cpy;
+    cases.Success.prototype.recover = function(fn: any){
+        const cpy = this.map(identity)
+        return setInnerValue(setCritical(fn)(cpy.get()))(cpy)
     }
-    cases.Success.prototype.ingore = function(){
-        return this.mapTo(undefined);
+    cases.Success.prototype.ignore = function(){
+        const a = this.mapTo(undefined);
+        return setInnerValue(setIgnore(true)(getInnerValue(a)))(a)
     }
+
+
     cases.Fail.prototype.recover = function<R,A,A0>(
         this: Async<R,A>,
         fn: (e: any) => Async<unknown, A0>
     ) {
-        const cpy = new cases.Fail(getFailure(getInnerValue(this)))
-        return setInnerValue(setHandler(fn)(getInnerValue(cpy)))(cpy)
+        return new cases.Success(getFailure(getInnerValue(this))).chain(fn)
     }
     cases.Fail.prototype.ignore = function(){
         return new cases.Success(undefined)
@@ -112,9 +112,7 @@ const AsyncDefs: any = {
     overrides: {
       fmap: {
         Success<R,A,B>(this: Async<R,A>, fn: (a: A) => B) {
-          const rep = this.get();
-          const suc = getSuccess(rep);
-          return Async.Success((env: R) => suc(env).then(fn))
+            return Async.Success((env: R) => getSuccess(this.get())(env).then(fn))
         },
       },
       apply: {
@@ -124,7 +122,7 @@ const AsyncDefs: any = {
       },
       chain: {
         Success<R,A,R0,B>(this: Async<R,A>, fn: (a: A) => Async<R0,B>) {
-          return Async.Success((env: any) => this.run(env).then(a => fn(a).run(env)))
+            return Async.Success((env: any) => this.run(env).then(a => fn(a).run(env)))
         },
       },
       join: {
@@ -143,28 +141,23 @@ const AsyncDefs: any = {
       run: {
         async Success<R,A>(this: Async<R,A>, env: R = {} as R) {
             const inner = this.get();
-            const handler = getHandler(inner)
+            const success = getSuccess(inner)
+            const critical = getCritical(inner)
+            const ignore = getIgnore(inner)
             try {
-                return await getSuccess(inner)(env)
-            } catch (e) {
-                return handler ? handler(e).run() : Promise.reject(e)
+                return await success(env)
+            } catch(e) {
+                if( ignore ) {
+                    return undefined
+                }
+                if( critical ){
+                    return critical(e).run()
+                }
+                return await Promise.reject(e)
             }
         },
         Fail<R,A>(this: Async<R,A>){
-            const inner = this.get();
-            const handler = getHandler(inner)
-            if( handler ){
-                return handler(getFailure(inner)).run()
-            }
-            return Promise.reject(getFailure(inner))
-        }
-      },
-      sequence: {
-        Success<A,B>(this: AsyncIO<A>, other: AsyncIO<B>){
-            return this.zip(other)
-        },
-        Fail<A,B>(this: AsyncIO<A>, _other: AsyncIO<B>){
-            return this
+            return Promise.reject(getFailure(this.get()))
         }
       },
       traverse(data: any[], fn: (a: any) => AsyncIO<any>){
