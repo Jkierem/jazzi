@@ -227,7 +227,7 @@ This is simple example but there are tons of uses for the Reader monad.
 
 ## Async
 
-The Async structure represents an async computation that may need some input. It can be seen as a mix between IO, Reader and a Promise. Unlike IO, run returns a promise with the result of the computation and it does not implement applicative. Like IO, it is a lazy monad. Like Reader, the run method must receive the environment.  
+The Async structure represents an async computation that may need some input. It can be seen as a mix between IO, Reader and a Promise. Unlike IO, run returns a promise with the result of the computation. Like IO, it is a lazy monad. Like Reader, the run method must receive the environment.  
 
 ```javascript
 const s42 = Async.Success(42)
