@@ -48,7 +48,7 @@ export interface MonadRep extends ApplicativeRep {
 }
 
 /**
- * Adds chain, bind and flatMap method to proto. Adds pure and do to global.
+ * Adds chain, bind and flatMap method to proto. Adds return and do to global. Requires Applicative
  */
 const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, globals: any) => {
     const trivials = propOr([],"trivials",defs);
@@ -81,7 +81,7 @@ const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, gl
     defineOverrides("chain",["bind","flatMap"],overrides,cases)
     defineOverrides("join",["flat"],overrides,cases)
     globals.return = (...args: any[]) => new cases[pureM](...args);
-    globals.do = function<A>(this: MonadRep, fn: (pure: <Any>(a: Any) => Monad<Any>) => Generator<Monad<any>, Monad<any>, any>){
+    globals.do = function(this: MonadRep, fn: (pure: <Any>(a: Any) => Monad<Any>) => Generator<Monad<any>, Monad<any>, any>){
         let gen: ReturnType<typeof fn> = undefined as any;
         const runDo = (prev: Monad<any>): Monad<any> => {
             let monad = gen.next(prev)
@@ -92,7 +92,7 @@ const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, gl
             }
         }
         if( lazy ){
-            return this.pure((...args: any[]) => {
+            return this.return((...args: any[]) => {
                 gen = fn(this.return)
                 return (runDo(undefined as any) as any).unsafeRun(...args)
             })

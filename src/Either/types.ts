@@ -14,10 +14,11 @@ type EitherCases = "Left" | "Right";
 export interface Either<L,R>
 extends Monad<R>, Matcher<EitherCases>,
     Swap<L,R>, FunctorError<L>, Show,
-    Thenable<R,L>, Foldable, Boxed<R>
+    Thenable<R,L>, Foldable, Boxed<R | L>
 {
-    get(): R;
-    getOr<B>(or: Extractable<B>): R | B;
+    get(): R | L;
+    getRight(): R;
+    getRightOr<B>(or: Extractable<B>): R | B;
     getLeft(): L;
     getLeftOr<B>(or: Extractable<B>): L | B;
     getEither(): L | R;

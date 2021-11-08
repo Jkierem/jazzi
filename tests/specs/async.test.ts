@@ -1,4 +1,6 @@
 import Async from "../../src/Async"
+import Either from "../../src/Either"
+import Maybe from "../../src/Maybe"
 import { Spy } from "../utils/spy"
 
 type DirectSuccessConst =
@@ -31,6 +33,61 @@ describe("Async", () => {
                 await expect(asyncValue.run()).resolves.toBe(result)
             })
         })
+
+        it("should return a Success of A from a Just of A", async () => {
+            const async = Async.fromMaybe(Maybe.Just(42));
+            await expect(async.run()).resolves.toBe(42)
+        })
+
+        it("should return a Fail undefined from a None", async () => {
+            const async = Async.fromMaybe(Maybe.None());
+            await expect(async.run()).rejects.toBeUndefined()
+        })
+
+        it("should return a Success of A from a Right of A", async () => {
+            const async = Async.fromEither(Either.Right(42));
+            await expect(async.run()).resolves.toBe(42)
+        })
+
+        it("should return a Fail of A from a Left of A", async () => {
+            const async = Async.fromEither(Either.Left(42));
+            await expect(async.run()).rejects.toBe(42)
+        })
+
+        it("should return Success of A if predicate returns true", async () => {
+            const async = Async.fromPredicate((x) => x == 42, 42)
+            await expect(async.run()).resolves.toBe(42)
+        })
+
+        it("should return Fail of A if predicate returns false", async () => {
+            const async = Async.fromPredicate((x) => x < 42, 42)
+            await expect(async.run()).rejects.toBe(42)
+        })
+
+        it("should return a function that returns Success of A if predicate returns true", async () => {
+            const async = Async.fromCondition((x: number) => x == 42)(42)
+            await expect(async.run()).resolves.toBe(42)
+        })
+
+        it("should return a function that returns Fail of A if predicate returns false", async () => {
+            const async = Async.fromCondition((x: number) => x < 42)(42)
+            await expect(async.run()).rejects.toBe(42)
+        })
+
+        it("should return an unary function that creates an Async from another unary function", async () => {
+            const asyncFn = Async.unary((x: number) => x + 1)
+            await expect(asyncFn(41).run()).resolves.toBe(42)
+        })
+
+        it("should return a n-ary function that creates an Async from another n-ary function", async () => {
+            const asyncFn = Async.through((x: number, y: number) => x + y + 1)
+            await expect(asyncFn(40,1).run()).resolves.toBe(42)
+        })
+
+        it("identity/require should create the identity Async", async () => {
+            await expect(Async.require<number>().run(42)).resolves.toBe(42)
+            await expect(Async.identity<number>().run(42)).resolves.toBe(42)
+        })
     })
 
     describe("Type Representative", () => {
@@ -56,13 +113,18 @@ describe("Async", () => {
                 expect(traversed).toTypeMatch("Success")
                 await expect(traversed.run()).resolves.toStrictEqual([1,[2,3],4])
             })
-            it("should traverse an array of values defaulting to Fail", async () => {
+            it("should traverse an array of values sequencing them", async () => {
+                const spy = Spy()
                 const traversed = Async.traverse(
                     [1,2,3,4], 
-                    Async.fromCondition((x: number) => x < 3)
+                    (x) => Async.fromPredicate((x: number) => x < 3,x).tap(spy)
                 )
-                expect(traversed).toTypeMatch("Fail")
                 await expect(traversed.run()).rejects.toBe(3)
+                expect(spy).toHaveBeenCalledTwice()
+                expect(spy).toHaveBeenCalledWith(1)
+                expect(spy).toHaveBeenCalledWith(2)
+                expect(spy).not.toHaveBeenCalledWith(3)
+                expect(spy).not.toHaveBeenCalledWith(4)
             })
         })
     })
@@ -141,6 +203,67 @@ describe("Async", () => {
                 const reqAB = reqA.zip(reqB).map(([{a},{b}]) => [a,b] as const)
                 const provided = reqAB.providePartial({ a: 40 })
                 await expect(provided.run({ b: 42 })).resolves.toStrictEqual([40,42])
+            })
+
+            it("should chain and provide an environment", async () => {
+                interface A { a: number }
+                interface B { b: number }
+                const reqA = Async.require<A>().map(({ a: b }) => ({ b } as B))
+                const reqB = Async.require<B>()
+                const chained = reqA.provideTo(reqB).map(({ b }) => b)
+                await expect(chained.run({ a: 42 })).resolves.toBe(42)
+            })
+
+            it("should chain and provide a partial environment from provideSlice", async () => {
+                interface A { a: number }
+                interface B { b: number }
+                interface C { c: number }
+                const reqA = Async.require<A>().map(({ a: b }) => ({ b } as B))
+                const reqBC = Async.require<B & C>()
+                const chained = reqA.provideSliceTo(reqBC).map(({ b, c }) => b + c)
+                await expect(chained.run({ a: 40, c: 2 })).resolves.toBe(42)
+            })
+
+            it("should chain and provide a partial environment from providePartial", async () => {
+                interface A { a: number }
+                interface B { b: number }
+                interface C { c: number }
+                const reqA = Async.require<A>().map(({ a: b }) => ({ b } as B))
+                const reqBC = Async.require<B & C>()
+                const chained = reqA.providePartialTo(reqBC).map(({ b, c }) => b + c)
+                await expect(chained.run({ a: 40, c: 2 })).resolves.toBe(42)
+            })
+
+            it("should get a prop from the value using access", async () => {
+                interface A { a: number }
+                const reqA = Async.require<A>().access("a");
+                await expect(reqA.run({ a: 42 })).resolves.toBe(42)
+            })
+
+            it("should be able to alias a prop from the value using alias", async () => {
+                interface A { a: number }
+                const reqA = Async.require<A>().alias("a","b");
+                await expect(reqA.run({ a: 42 })).resolves.toStrictEqual({ a: 42, b: 42 })
+            })
+
+            it("should be able to rename a prop from the value using rename", async () => {
+                interface A { a: number }
+                const reqA = Async.require<A>().rename("a","b");
+                await expect(reqA.run({ a: 42 })).resolves.toStrictEqual({ b: 42 })
+            })
+
+            it("should be able to chain to another async ignoring the success by using tapEffect", async () => {
+                const spy = Spy()
+                const async = Async.require<number>().tapEffect(a => Async.pure(a + 1).map(spy));
+                await expect(async.run(42)).resolves.toBe(42)
+                expect(spy).toHaveBeenCalledOnce()
+                expect(spy).toHaveBeenCalledWith(43)
+            })
+
+            it("should be able to fail on a condition using continueIf", async () => {
+                const async = Async.require<number>().continueIf((a) => a === 42)
+                await expect(async.run(42)).resolves.toBe(42)
+                await expect(async.run(40)).rejects.toBe(40)
             })
         })
 
@@ -221,6 +344,21 @@ describe("Async", () => {
                 const c1 = spy.findCall(c => c.args[0] === 1)
                 const c2 = spy.findCall(c => c.args[0] === 2)
                 expect(c1).calledBefore(c2)
+            })
+            it("should have lazy do notation", async () => {
+                const spy = Spy()
+                const doNotation = Async.do(function*(pure){
+                    const a = yield pure(20);
+                    spy(a)
+                    const b = yield pure(22);
+                    spy(b)
+                    return pure(a+b)
+                })
+                expect(spy).not.toHaveBeenCalled()
+                await expect(doNotation.run()).resolves.toBe(42)
+                expect(spy).toHaveBeenCalledTwice()
+                expect(spy).toHaveBeenCalledWith(20)
+                expect(spy).toHaveBeenCalledWith(22)
             })
         })
 

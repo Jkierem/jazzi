@@ -67,13 +67,38 @@ const AsyncType = () => (cases: AnyConstRec, globals: any) => {
         }
         return new cases.Success((env: any) => this.run({...p,...env} as any))
     }
-    cases.Success.prototype.recover = function(fn: any){
+    cases.Success.prototype.recover = function(this: Async<any,any>, fn: any){
         const cpy = this.map(identity)
         return setInnerValue(setCritical(fn)(cpy.get()))(cpy)
     }
-    cases.Success.prototype.ignore = function(){
+    cases.Success.prototype.ignore = function(this: Async<any,any>){
         const a = this.mapTo(undefined);
         return setInnerValue(setIgnore(true)(getInnerValue(a)))(a)
+    }
+    cases.Success.prototype.provideTo = function<R,A,B>(this: Async<R,A>, other: Async<A,B>){
+        return this.chain(a => other.provide(a))
+    }
+    cases.Success.prototype.provideSliceTo = function<R,A,A0,B>(this: Async<R,A>, other: Async<A0,B>){
+        return this.chain(a => other.provideSlice(a))
+    }
+    cases.Success.prototype.providePartialTo = function<R,A,A0,B>(this: Async<R,A>, other: Async<A0,B>){
+        return this.chain(a => other.providePartial(a))
+    }
+    cases.Success.prototype.access = function<R,A,K extends keyof A>(this: Async<R,A>, key: K){
+        return this.map(({ [key]: attr }) => attr)
+    }
+    cases.Success.prototype.alias = function<R,A,K extends keyof A,K0 extends string>(this: Async<R,A>, og: K, aliased: K0){
+        return this.map((data) => ({ ...data, [aliased]: data[og] }))
+    }
+    cases.Success.prototype.rename = function<R,A,K extends keyof A,K0 extends string>(this: Async<R,A>, og: K, aliased: K0){
+        /* istanbul ignore next */
+        return this.map(({ [og]: val, ...rest}) => ({ ...rest, [aliased]: val }))
+    }
+    cases.Success.prototype.tapEffect = function<R,A,R0,A0>(this: Async<R,A>, fn: (a: A) => Async<R0,A0>){
+        return this.chain((a) => fn(a).mapTo(a))
+    }
+    cases.Success.prototype.continueIf = function<R,A>(this: Async<R,A>, fn: (a: A) => boolean){
+        return this.tapEffect((a) => fn(a) ? new cases.Success(undefined) : new cases.Fail(a))
     }
 
 
@@ -94,6 +119,13 @@ const AsyncType = () => (cases: AnyConstRec, globals: any) => {
     cases.Fail.prototype.provide = pass
     cases.Fail.prototype.providePartial = pass
     cases.Fail.prototype.provideSlice = pass
+    cases.Fail.prototype.provideTo = pass
+    cases.Fail.prototype.providePartialTo = pass
+    cases.Fail.prototype.provideSliceTo = pass
+    cases.Fail.prototype.access = pass
+    cases.Fail.prototype.alias = pass
+    cases.Fail.prototype.tapEffect = pass
+    cases.Fail.prototype.continueIf = pass
 
     globals.all = function(actions: AsyncIO<any>[]){
         const res: any[] = []
@@ -164,16 +196,8 @@ const AsyncDefs: any = {
         const res: any[] = []
         return data
             .map(x => fn(x).tap(x => res.push(x)))
-            .reduce((acc,next) => {
-                if( acc.isFail() ){
-                    return acc
-                }
-                if( next.isFail() ){
-                    return next
-                }
-                return acc.chain(() => next)
-            })
-            .map(() => res)
+            .reduce((acc,next) => acc.chain(() => next))
+            .fmap(() => res)
       }
     },
 };
@@ -208,6 +232,9 @@ const Async = Union(
     },
     unary<A,B>(this: AsyncPartialRep ,fn: (a: A) => B): (a: A) => Async<unknown,B> {
         return (a: A) => this.Success(() => Promise.resolve(fn(a)))
+    },
+    identity<A>(this: AsyncPartialRep){
+        return this.Success((a: A) => Promise.resolve(a))
     },
     through<A,B>(this: AsyncPartialRep, fn: (...a: A[]) => B): (...a: A[]) => Async<unknown,B> {
         return (...a: A[]) => this.Success(() => Promise.resolve(fn(...a)))

@@ -6,6 +6,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "typeRoots": ["../node_modules/@types","./typings"]
+    // "baseUrl": "../src",
+    // "paths": {
+    //   "@src/*": ["./*"],
+    //   "@utils/*": ["../tests/utils/*"]
+    // }
   },
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Recommended"

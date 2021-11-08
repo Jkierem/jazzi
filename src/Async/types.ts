@@ -3,7 +3,9 @@ import type { Boxed, IsPrimitive, isUnknown } from "../_internals/types";
 import type { Maybe } from "../Maybe/types"
 import type { Either } from "../Either/types";
 import type { Monad, MonadRep } from "../Union/monad";
+import type { Tap } from "../Union/tap";
 import { getSymbol, setSymbol, WithSymbol } from "../_internals/symbols";
+import { Runnable } from "../Union/runnable";
 
 export type RemoveUnknown<A> = isUnknown<A> extends true ? [env?: never] : [env: A];
 type Env<A> = A extends Async<infer R, any> ? R : never
@@ -56,7 +58,8 @@ export type AsyncIO<A> = Async<unknown,A>
 export type AsyncUnit = AsyncIO<undefined>
 
 export interface Async<R, A> 
-extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>, Boxed<AsyncWrapper<R,A>>
+extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>, 
+        Boxed<AsyncWrapper<R,A>,AsyncRep>, Tap<A>, Runnable<RemoveUnknown<R>, Promise<A>>
 {
     isFail(): boolean;
     isSuccess(): boolean;
@@ -125,7 +128,52 @@ extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>, Boxed<AsyncW
      * Recover from failures using the provided function
      */
     recover<A0>(fn: (e: any) => AsyncIO<A0>): Async<R, A | A0>
+    /**
+     * Returns an effect that ignores the result or failure of the effect
+     */
     ignore(): AsyncUnit;
+    /**
+     * Chains two asyncs, using the return of the first as environment to the second.
+     * @param other 
+     */
+    provideTo<B>(other: Async<A,B>): Async<R,B>;
+    /**
+     * Chains two asyncs, using the return of the first as partial environment to the second.
+     * @param other 
+     */
+    providePartialTo<A0,B>(other: Async<A0,B>): Async<R & Provide<A,A0>,B>;
+    /**
+     * Chains two asyncs, using the return of the first as partial environment to the second.
+     * @param other 
+     */
+    provideSliceTo<A0,B>(other: Async<A0,B>): Async<R & ProvideSlice<A,A0>,B>;
+    /**
+     * Shorthand for mapping using a function that extracts a property
+     * @param key 
+     */
+    access<K extends keyof A>(key: K): Async<R,A[K]>;
+    /**
+     * Alias a prop as the given alias
+     * @param original 
+     * @param aliased 
+     */
+    alias<K extends keyof A, K0 extends string>(original: K, aliased: K0): Async<R, A & {[P in K0]: A[K]}>;
+    /**
+     * Rename a prop dropping the original prop
+     * @param original 
+     * @param aliased 
+     */
+    rename<K extends keyof A, K0 extends string>(original: K, aliased: K0): Async<R, Omit<A,K> & {[P in K0]: A[K]}>;
+    /**
+     * Chains using `fn`, ignoring the result.
+     * @param fn 
+     */
+    tapEffect<R0,A0>(fn: (a: A) => Async<R0,A0>): Async<R & R0, A>;
+    /**
+     * Fails with inner value if predicate returns false
+     * @param fn 
+     */
+    continueIf(predicate: (a: A) => boolean): Async<R,A>;
 }
 
 export interface AsyncPartialRep {
@@ -180,10 +228,15 @@ extends MonadRep
      */
     through<A,B>(fn: (...a: A[]) => B): (...a: A[]) => AsyncIO<B>;
     /**
-     * Create an Async that requires an environment. This stores the identity function.
+     * Create an Async that requires an environment. Alias of identity constructor.
      * @param fn 
      */
     require<Env>(): Async<Env,Env>;
+    /**
+     * Create an Async from the identity function
+     * @param fn 
+     */
+    identity<A>(): Async<A,A>;
     /**
      * Create an Async that succeeds with undefined.
      * @param fn 
@@ -194,8 +247,17 @@ extends MonadRep
     fromEither<L,R>(m: Either<L,R>): AsyncIO<R>;
     traverse<A,T>(data: A[], fn: (a: A) => AsyncIO<T>): AsyncIO<T[]>;
     all<A>(actions: AsyncIO<A>[]): AsyncIO<A[]>;
+    /**
+     * Returns Success of the `a` if predicate returns true for `a`. Fail of `a` otherwise
+     * @param fn 
+     */
     fromPredicate(fn: () => boolean): AsyncUnit;
     fromPredicate<A>(fn: (a: A) => boolean, a: A): AsyncIO<A>;
+    /**
+     * Curried version of fromPredicate. Create a new Async constructor from a predicate function. 
+     * Returns Success of the argument if predicate returns true for the argument. Fail of the argument otherwise
+     * @param fn 
+     */
     fromCondition(fn: () => boolean):() => AsyncUnit;
     fromCondition<A>(fn: (a: A) => boolean): (a: A) => AsyncIO<A>;
 }
