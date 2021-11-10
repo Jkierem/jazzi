@@ -4,8 +4,8 @@ import type { Maybe } from "../Maybe/types"
 import type { Either } from "../Either/types";
 import type { Monad, MonadRep } from "../Union/monad";
 import type { Tap } from "../Union/tap";
+import type { Runnable } from "../Union/runnable";
 import { getSymbol, setSymbol, WithSymbol } from "../_internals/symbols";
-import { Runnable } from "../Union/runnable";
 
 export type RemoveUnknown<A> = isUnknown<A> extends true ? [env?: never] : [env: A];
 type Env<A> = A extends Async<infer R, any> ? R : never
@@ -59,7 +59,7 @@ export type AsyncUnit = AsyncIO<undefined>
 
 export interface Async<R, A> 
 extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>, 
-        Boxed<AsyncWrapper<R,A>,AsyncRep>, Tap<A>, Runnable<RemoveUnknown<R>, Promise<A>>
+        Boxed<AsyncWrapper<R,A>,AsyncRep,AsyncCases>, Tap<A>, Runnable<RemoveUnknown<R>, Promise<A>>
 {
     isFail(): boolean;
     isSuccess(): boolean;

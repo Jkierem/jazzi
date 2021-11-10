@@ -7,7 +7,7 @@ import type { Boxed } from "../_internals/types";
 
 export interface Last<A> 
 extends FixedMonoid<Last<A>, A>, Functor<A>, 
-        Thenable<A, undefined>, Show, Eq, Boxed<A>
+        Thenable<A, undefined>, Show, Eq, Boxed<A,LastRep,"Last">
 {
     map <B>(fn: (a: A) => B): Last<B>;
     fmap<B>(fn: (a: A) => B): Last<B>;

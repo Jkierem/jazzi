@@ -6,7 +6,7 @@ import type { Thenable } from "../Union/thenable";
 import type { Boxed } from "../_internals/types";
 
 export interface IO<A> 
-extends Monad<A>, Thenable<A, any>, Tap<A>, LazyShow<"IO", "()">, Runnable<[],A>, Boxed<A>
+extends Monad<A>, Thenable<A, any>, Tap<A>, LazyShow<"IO", "()">, Runnable<[],A>, Boxed<A,IORep,"IO">
 {
     map<B>(fn: (a: A) => B ): IO<B>;
     fmap<B>(fn: (a: A) => B ): IO<B>;

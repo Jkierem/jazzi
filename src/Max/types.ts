@@ -8,7 +8,7 @@ import type { Boxed } from "../_internals/types";
 
 export interface Max 
 extends FixedEndoFunctor<Max,number>, FixedMonoid<Max,number>, 
-        Thenable<number, number>, Eq, Show, Boxed<number>, FixedOrd<Max>
+        Thenable<number, number>, Eq, Show, Boxed<number,MaxRep,"Max">, FixedOrd<Max>
 {
     equals(m: Max): boolean;
 }

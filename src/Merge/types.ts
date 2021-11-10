@@ -8,7 +8,7 @@ type MergeCases = "Merge" | "Empty"
 
 export interface Merge<A extends AnyRec>
 extends Functor<A>, Monoid<A>, 
-        Thenable<A, never>, Matcher<MergeCases>, Boxed<A>
+        Thenable<A, never>, Matcher<MergeCases>, Boxed<A,MergeRep,MergeCases>
 {
     onMerge<B>(fn: Extractable<B,[A]>): B ;
     onEmpty<B>(fn: Extractable<B,[A]>): B ;

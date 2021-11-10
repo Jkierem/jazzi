@@ -10,7 +10,7 @@ type SumCases = "Sum" | "Zero"
 
 export interface Sum
 extends Matcher<SumCases>, FixedEndoFunctor<Sum,number>,
-Show, Eq, Thenable<number, 0>, FixedMonoid<Sum,number>, Boxed<number>,
+Show, Eq, Thenable<number, 0>, FixedMonoid<Sum,number>, Boxed<number,SumRep,SumCases>,
 FixedOrd<Sum>
 {
     onSum <B>(fn: Extractable<B,[number]>): B ;

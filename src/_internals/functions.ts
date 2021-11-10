@@ -1,4 +1,4 @@
-import type { AnyFn, Extractable, Nil, Primitive } from "./types"
+import type { Extractable, Nil, Primitive } from "./types"
 
 export const equals = (a: any, b: any): boolean => {
     const typeA = typeof a

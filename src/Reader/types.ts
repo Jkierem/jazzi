@@ -5,7 +5,7 @@ import type { Thenable } from "../Union/thenable";
 import type { Boxed } from "../_internals/types";
 
 export interface Reader<R,A> 
-extends Monad<A>, Thenable<A, any>, LazyShow<"Reader", "R">, Runnable<[R],A>, Boxed<A>
+extends Monad<A>, Thenable<A, any>, LazyShow<"Reader", "R">, Runnable<[R],A>, Boxed<A,ReaderRep,"Reader">
 {
     map<B>(fn: (a: A) => B ): Reader<R,B>;
     fmap<B>(fn: (a: A) => B ): Reader<R,B>;

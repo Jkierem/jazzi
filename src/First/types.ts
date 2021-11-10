@@ -7,7 +7,7 @@ import { Boxed } from "../_internals/types";
 
 export interface First<A> 
 extends FixedMonoid<First<A>,A>, Functor<A>, 
-        Thenable<A, undefined>, Show, Eq, Boxed<A>
+        Thenable<A, undefined>, Show, Eq, Boxed<A, FirstRep, "First">
 {
     equals(other: First<A>): boolean;
     map <B>(fn: (a: A) => B): First<B>;

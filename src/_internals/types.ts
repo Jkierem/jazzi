@@ -43,11 +43,11 @@ export type ExpandablePattern = {
 
 export type Unwrap<A> = A extends Boxed<infer B> ? Unwrap<B> : A 
 
-export interface Boxed<A, TRep=any> 
+export interface Boxed<A, TypeRep=any, Variants extends string=string> 
 extends WithTypeName<string>
-, WithVariant<string>
+, WithVariant<Variants>
 , WithInnerValue<A>
-, WithTypeRep<TRep>
+, WithTypeRep<TypeRep>
 {
     /**
      * *UNSAFE* gets the internal value of a structure. Lazy structures will not contain what you expect and you shouldn't use this on them.

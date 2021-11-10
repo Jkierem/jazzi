@@ -14,7 +14,7 @@ type EitherCases = "Left" | "Right";
 export interface Either<L,R>
 extends Monad<R>, Matcher<EitherCases>,
     Swap<L,R>, FunctorError<L>, Show,
-    Thenable<R,L>, Foldable, Boxed<R | L>
+    Thenable<R,L>, Foldable, Boxed<R | L, EitherRep, EitherCases>
 {
     get(): R | L;
     getRight(): R;

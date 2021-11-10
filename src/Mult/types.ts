@@ -11,7 +11,7 @@ type MultCases = "Mult" | "One"
 export interface Mult 
 extends FixedMonoid<Mult,number>, 
         FixedEndoFunctor<Mult,number>,
-        Eq, Thenable<number,1>, Show, Matcher<MultCases>, Boxed<number>, FixedOrd<Mult>
+        Eq, Thenable<number,1>, Show, Matcher<MultCases>, Boxed<number,MultRep,MultCases>, FixedOrd<Mult>
 {
     onMult<B>(fn: Extractable<B,[number]>): B;
     onOne<B>(fn: Extractable<B,[number]>): B;

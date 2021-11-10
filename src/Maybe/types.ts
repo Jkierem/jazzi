@@ -15,7 +15,7 @@ type MaybeCases = "Just" | "None";
 
 export interface Maybe<A> extends 
 Monad<A>, Filterable<A>, Monoid<A>, Thenable<A,undefined>, Tap<A>,
-Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>, Boxed<A>
+Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>, Boxed<A,MaybeRep,MaybeCases>
 {
     /**
      * If Just, returns application of argument or argument. 
