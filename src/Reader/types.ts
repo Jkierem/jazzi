@@ -2,9 +2,10 @@ import type { Monad, MonadRep } from "../Union/monad";
 import type { Runnable } from "../Union/runnable";
 import type { LazyShow } from "../Union/show";
 import type { Thenable } from "../Union/thenable";
+import type { Boxed } from "../_internals/types";
 
 export interface Reader<R,A> 
-extends Monad<A>, Thenable<A, any>, LazyShow<"Reader", "R">, Runnable<[R],A>
+extends Monad<A>, Thenable<A, any>, LazyShow<"Reader", "R">, Runnable<[R],A>, Boxed<A,ReaderRep,"Reader">
 {
     map<B>(fn: (a: A) => B ): Reader<R,B>;
     fmap<B>(fn: (a: A) => B ): Reader<R,B>;
@@ -31,6 +32,7 @@ extends MonadRep
      from:   <R,A>(x: A | ((a: R) => A)) => Reader<R,A>;
      Reader: <R,A>(x: A | ((a: R) => A)) => Reader<R,A>;
      pure:   <R,A>(x: A | ((a: R) => A)) => Reader<R,A>;
+     return: <R,A>(x: A | ((a: R) => A)) => Reader<R,A>;
      runReader: <R,A>(reader: Reader<R,A>, env: R) => A;
      do<R,A>(fn: any): Reader<R,A>;
      ask<R,A>(): Reader<R,A>

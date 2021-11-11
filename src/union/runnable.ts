@@ -11,7 +11,15 @@ type RunnableDefs = {
 }
 
 export interface Runnable<Args extends any[], Return> {
+    /**
+     * Perform an effect
+     * @param args 
+     */
     run(...args: Args): Return;
+    /**
+     * Perform an effect
+     * @param args 
+     */
     unsafeRun(...args: Args): Return;
 }
 

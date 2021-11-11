@@ -1,13 +1,14 @@
-import { defineOverrides, propOr } from "../_internals"
+import { defineOverrides, prop, propOr } from "../_internals"
 import { setTypeclass } from "../_internals/symbols"
 import type { AnyConstRec, AnyFnRec } from "../_internals/types";
-import { Functor } from "./functor";
+import type { Functor } from "./functor";
 
 const mark = setTypeclass("Applicative")
 
 type ApplicativeDefs = {
     trivials: string[], 
     identities: string[],
+    pure: string,
     overrides?: {
         apply?: AnyFnRec
     }
@@ -34,13 +35,22 @@ export interface Applicative<A> extends Functor<A> {
     applyLeft<B,C>(this: Applicative<(b: B) => C>,ap: Applicative<B>): Applicative<C>;
 }
 
+export interface ApplicativeRep {
+    /**
+     * Wraps a value of type `a` into an Applicative value `Ap a`
+     * @param x value to be wrapped
+     */   
+    pure<A>(a: A): Applicative<A>;
+}
+
 /**
  * Adds apply, applyLeft, applyRight methods to proto
 */
-const Applicative = (defs: ApplicativeDefs) => mark((cases: AnyConstRec) => {
+const Applicative = (defs: ApplicativeDefs) => mark((cases: AnyConstRec, globals: any) => {
     const trivials = propOr([],"trivials",defs);
     const identities = propOr([],"identities",defs);
     const overrides = propOr({},"overrides",defs);
+    const pure = prop("pure")(defs);
     trivials.forEach((trivial: string) => {
         function ap<A,B>(this: Applicative<A>, other: Applicative<(a: A) => B>){
             return (other as any)?.match?.({
@@ -61,6 +71,7 @@ const Applicative = (defs: ApplicativeDefs) => mark((cases: AnyConstRec) => {
         cases[empt].prototype.applyLeft = id
     })
     defineOverrides("apply",["applyRight"],overrides,cases)
+    globals.pure = (...args: any[]) => new cases[pure](...args)
 })
 
 mark(Applicative);

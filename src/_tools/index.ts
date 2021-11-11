@@ -80,3 +80,28 @@ export const stringMatcher = (str: string) => {
         }
     }
 }
+
+export const lessThan = (l: any, r: any): boolean => {
+    if( hasInstance("Ord",l) && hasInstance("Ord",r) ){
+        return (l as any).lessThan(r)
+    }
+    return l < r
+}
+export const greaterThan = (l: any, r: any): boolean => {
+    if( hasInstance("Ord",l) && hasInstance("Ord",r) ){
+        return (l as any).greaterThan(r)
+    }
+    return l > r
+}
+export const lessThanOrEqual = (l: any, r: any): boolean => {
+    if( hasInstance("Ord",l) && hasInstance("Ord",r) ){
+        return (l as any).lessThanOrEqual(r)
+    }
+    return l <= r
+}
+export const greaterThanOrEqual = (l: any, r: any): boolean => {
+    if( hasInstance("Ord",l) && hasInstance("Ord",r) ){
+        return (l as any).greaterThanOrEqual(r)
+    }
+    return l >= r
+}
