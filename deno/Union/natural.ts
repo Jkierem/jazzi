@@ -12,7 +12,7 @@ type NaturalDefs = {
     }
 }
 
-export interface Natural<A> extends Boxed<A> {
+export interface Natural<A> {
     /**
      * Attempts to perform a natural transformation by calling `natural` method on the argument. *Not actually a proper natural transformation*
      * @param typeRep 

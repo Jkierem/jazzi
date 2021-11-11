@@ -17,6 +17,7 @@ const IODefs: any = {
   trivials: ["IO"],
   identities: [],
   pure: "IO",
+  pureM: "IO",
   lazy: true,
   overrides: {
     fmap: {

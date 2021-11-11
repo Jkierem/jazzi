@@ -10,7 +10,7 @@ type FunctorDefs = {
     }
 }
 
-export interface Functor<A> extends Boxed<A> {
+export interface Functor<A> {
     /**
      * Map a functor over a given function (`fn`)
      * @param fn function used to map inner value
@@ -30,7 +30,7 @@ export interface Functor<A> extends Boxed<A> {
     mapTo<B>(b: B): Functor<B>
 }
 
-export interface EndoFunctor<A> extends Boxed<A> {
+export interface EndoFunctor<A> {
     /**
      * Map a functor over a given function (`fn`)
      * @param fn function used to map inner value

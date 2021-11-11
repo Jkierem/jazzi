@@ -3,10 +3,11 @@ import type { Functor } from "../Union/functor.ts";
 import type { FixedMonoid, MonoidRep } from "../Union/monoid.ts";
 import type { Show } from "../Union/show.ts";
 import type { Thenable } from "../Union/thenable.ts";
+import { Boxed } from "../_internals/types.ts";
 
 export interface First<A> 
 extends FixedMonoid<First<A>,A>, Functor<A>, 
-        Thenable<A, undefined>, Show, Eq
+        Thenable<A, undefined>, Show, Eq, Boxed<A, FirstRep, "First">
 {
     equals(other: First<A>): boolean;
     map <B>(fn: (a: A) => B): First<B>;

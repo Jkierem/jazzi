@@ -12,7 +12,7 @@ type FilterableDefs = {
     }
 }
 
-export interface Filterable<A> extends Boxed<A> {
+export interface Filterable<A> {
     /**
      * Receives a predicate and returns the filtered structure
      * @param fn 
@@ -28,7 +28,7 @@ const Filterable = (defs: FilterableDefs) => mark((cases: AnyConstRec) => {
     const identities = propOr([],"identities",defs);
     const overrides = propOr({},"overrides",defs);
     trivials.forEach(trivial => {
-        function filter<A, FA extends { filter: <B>(b: B) => boolean }>(this: Filterable<FA>, fn: (a: A) => boolean){
+        function filter<A, FA extends { filter: <B>(b: B) => boolean }>(this: Filterable<FA> & Boxed<FA>, fn: (a: A) => boolean){
             return new cases[trivial](this.get().filter(fn))
         }
         cases[trivial].prototype.filter = filter

@@ -5,18 +5,20 @@ import type { Monad, MonadRep } from "../Union/monad.ts";
 import type { Show } from "../Union/show.ts";
 import type { Swap } from "../Union/swap.ts";
 import type { Thenable } from "../Union/thenable.ts";
-import type { Extractable, Matcher, MatcherRep, Nil, Tuple } from "../_internals/types.ts";
+import type { Boxed, Extractable, Matcher, MatcherRep, Nil, Tuple } from "../_internals/types.ts";
 import type { Async } from "../Async/types.ts";
+import type { ApplicativeRep } from "../Union/applicative.ts";
 
 type EitherCases = "Left" | "Right";
 
 export interface Either<L,R>
 extends Monad<R>, Matcher<EitherCases>,
     Swap<L,R>, FunctorError<L>, Show,
-    Thenable<R,L>, Foldable
+    Thenable<R,L>, Foldable, Boxed<R | L, EitherRep, EitherCases>
 {
-    get(): R;
-    getOr<B>(or: Extractable<B>): R | B;
+    get(): R | L;
+    getRight(): R;
+    getRightOr<B>(or: Extractable<B>): R | B;
     getLeft(): L;
     getLeftOr<B>(or: Extractable<B>): L | B;
     getEither(): L | R;
@@ -62,7 +64,7 @@ extends Monad<R>, Matcher<EitherCases>,
 }
 
 export interface EitherRep 
-extends MonadRep, MatcherRep<EitherCases>
+extends MonadRep, MatcherRep<EitherCases>, ApplicativeRep
 {
     Left<L>(l: L): Either<L, never>;
     Right<R>(r: R): Either<never, R>;
@@ -111,5 +113,6 @@ extends MonadRep, MatcherRep<EitherCases>
     collectRights<L,R>(xs: Either<L,R>[]): Either<never, R[]>;
 
     pure<A>(x: A): Either<any,A>;
+    return<A>(x: A): Either<any,A>;
     do<A>(fn: (pure: <T>(a: T) => Either<any,T>) => Generator<any, Either<any,A>, any>): Either<any,A>;
 }

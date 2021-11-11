@@ -1,10 +1,11 @@
 import { defineOverrides, prop, propOr } from "../_internals/mod.ts";
 import { setTypeclass } from "../_internals/symbols.ts";
-import type { AnyConstRec, AnyFnRec } from "../_internals/types.ts";
-import type { Applicative } from "./applicative.ts";
+import type { AnyConstRec, AnyFnRec, Boxed } from "../_internals/types.ts";
+import type { Applicative, ApplicativeRep } from "./applicative.ts";
 
 type MonadDefs = {
-    pure: string,
+    pure?: string,
+    return?: string,
     trivials?: string[],
     identities?: string[],
     lazy?: boolean,
@@ -34,12 +35,12 @@ export interface Monad<A> extends Applicative<A> {
     flatMap <B>(fn: (a: A) => Monad<B>): Monad<B>;
 }
 
-export interface MonadRep { 
+export interface MonadRep extends ApplicativeRep { 
     /**
      * Wraps a value of type `a` into a monadic value `M a`
      * @param x value to be wrapped
      */       
-    pure<A>(x: A): Monad<A>;
+    return<A>(x: A): Monad<A>;
     /**
      * Do notation using generator functions
      */
@@ -47,22 +48,22 @@ export interface MonadRep {
 }
 
 /**
- * Adds pure, chain, bind and flatMap method to proto. Adds pure and do to global.
+ * Adds chain, bind and flatMap method to proto. Adds return and do to global. Requires Applicative
  */
 const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, globals: any) => {
     const trivials = propOr([],"trivials",defs);
     const identities = propOr([],"identities",defs);
     const overrides = propOr({},"overrides",defs);
     const lazy = propOr(false,"lazy",defs);
-    const pure = prop("pure")(defs);
+    const pureM = propOr(prop("pure")(defs) as unknown as string, "return", defs)
     trivials.forEach(trivial => {
-        function chain<A,B>(this: Monad<A>, fn: (a: A) => Monad<B>){
+        function chain<A,B>(this: Boxed<A>, fn: (a: A) => Monad<B>){
             return fn(this.get())
         }
         cases[trivial].prototype.chain   = chain
         cases[trivial].prototype.flatMap = chain
 
-        function join<A>(this: Monad<Monad<A>>){
+        function join<A>(this: Boxed<Monad<A>>){
             return this.get()
         }
         cases[trivial].prototype.join = join
@@ -79,8 +80,8 @@ const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, gl
     })
     defineOverrides("chain",["bind","flatMap"],overrides,cases)
     defineOverrides("join",["flat"],overrides,cases)
-    globals.pure = (...args: any[]) => new cases[pure](...args)
-    globals.do = function<A>(fn: (pure: <Any>(a: Any) => Monad<Any>) => Generator<Monad<any>, Monad<any>, any>){
+    globals.return = (...args: any[]) => new cases[pureM](...args);
+    globals.do = function(this: MonadRep, fn: (pure: <Any>(a: Any) => Monad<Any>) => Generator<Monad<any>, Monad<any>, any>){
         let gen: ReturnType<typeof fn> = undefined as any;
         const runDo = (prev: Monad<any>): Monad<any> => {
             let monad = gen.next(prev)
@@ -91,12 +92,12 @@ const Monad = (defs: MonadDefs) => setTypeclass("Monad")((cases: AnyConstRec, gl
             }
         }
         if( lazy ){
-            return new cases[pure]((...args: any[]) => {
-                gen = fn(this.pure)
+            return this.return((...args: any[]) => {
+                gen = fn(this.return)
                 return (runDo(undefined as any) as any).unsafeRun(...args)
             })
         }
-        gen = fn(this.pure);
+        gen = fn(this.return);
         return runDo(undefined as any)
     }
 })

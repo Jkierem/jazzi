@@ -19,10 +19,18 @@ type AnyEither = Either<any,any>
 
 const EitherType = () => (cases: AnyConstRec, globals: any) => {
   function getImpl(this: AnyEither) {
-    return this.isRight() ? getInnerValue(this) : undefined
+    return getInnerValue(this)
   };
   cases.Right.prototype.get = getImpl;
   cases.Left.prototype.get = getImpl;
+  cases.Right.prototype.getEither = getImpl;
+  cases.Left.prototype.getEither = getImpl;
+
+  function getRightImpl(this: AnyEither) {
+    return this.isRight() ? getInnerValue(this) : undefined
+  };
+  cases.Right.prototype.getRight = getRightImpl
+  cases.Left.prototype.getRight = getRightImpl
 
   function getOrImpl(this: AnyEither, fn: Extractable<any>) {
     return this.isRight() ? getInnerValue(this) : fn()
@@ -42,12 +50,7 @@ const EitherType = () => (cases: AnyConstRec, globals: any) => {
   cases.Right.prototype.getLeftOr = getLeftOrImpl;
   cases.Left.prototype.getLeftOr = getLeftOrImpl;
 
-  function getEitherImpl(this: AnyEither){
-    return getInnerValue(this)
-  }
-  cases.Right.prototype.getEither = getEitherImpl;
-  cases.Left.prototype.getEither = getEitherImpl;
-
+  
   function mapImpl(this: AnyEither, fn: AnyFn){
     return this.isRight() ? this.map(fn) : this
   }
@@ -88,7 +91,7 @@ const EitherType = () => (cases: AnyConstRec, globals: any) => {
     xs
       .filter((x) => x.isRight?.())
       .reduce((acc: Either<never, R[]>, next) => {
-        return acc.map((rs) => rs.concat(next.get()));
+        return acc.map((rs) => rs.concat(next.getRight()));
       }, new cases.Right([]));
 };
 

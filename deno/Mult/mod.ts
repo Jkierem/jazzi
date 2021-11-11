@@ -2,12 +2,14 @@ import {
   Eq,
   Functor,
   Monoid,
+  Ord,
   Semigroup,
   Show,
   Thenable,
 } from "../Union/mod.ts";
 import Union from "../Union/union.ts";
 import { monoidToPromise } from "../_internals/mod.ts";
+import { lessThanOrEqual } from "../_tools/mod.ts";
 import { Mult, MultRep } from "./types.ts";
 
 const Defs: any = {
@@ -21,6 +23,9 @@ const Defs: any = {
       Mult(this: Mult, o: Mult) {
         return Mult.from(this.get() * o.get());
       },
+    },
+    lessThanOrEqual(this: Mult, o: Mult){
+      return lessThanOrEqual(this.get(), o.get());
     },
     toPromise: {
       Mult: monoidToPromise,
@@ -44,6 +49,7 @@ const Mult = Union(
       trivials: ["Mult", "One"],
       empties: [],
     }),
+    Ord(Defs),
     Functor(Defs),
     Semigroup(Defs),
     Monoid(Defs),

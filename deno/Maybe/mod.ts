@@ -12,6 +12,7 @@ import {
   Foldable,
   Filterable,
   Thenable,
+  Traversable,
 } from "../Union/mod.ts";
 import Union from "../Union/union.ts";
 import { AnyConstRec, AnyFn } from "../_internals/types.ts";
@@ -56,6 +57,7 @@ const MaybeDefs = {
     apply: undefined,
     concat: undefined,
     toPromise: undefined,
+    traverse: undefined,
     show: {
       None() {
         return `[Maybe => None]`;
@@ -90,16 +92,17 @@ const Maybe: MaybeRep = Union(
   },
   [
     Functor(MaybeDefs),
+    Applicative(MaybeDefs),
+    Monad(MaybeDefs),
     Tap(MaybeDefs),
     Eq(MaybeDefs),
-    Monad(MaybeDefs),
-    Monoid(MaybeDefs),
-    Applicative(MaybeDefs),
     Semigroup(MaybeDefs),
+    Monoid(MaybeDefs),
     Filterable(MaybeDefs),
     Thenable(MaybeDefs),
     Show(MaybeDefs),
     Foldable(MaybeDefs),
+    Traversable(MaybeDefs),
     MaybeType(),
   ]
 ).constructors({

@@ -3,9 +3,10 @@ import type { Monad, MonadRep } from "../Union/monad.ts";
 import type { LazyShow } from "../Union/show.ts";
 import type { Tap } from "../Union/tap.ts";
 import type { Thenable } from "../Union/thenable.ts";
+import type { Boxed } from "../_internals/types.ts";
 
 export interface IO<A> 
-extends Monad<A>, Thenable<A, any>, Tap<A>, LazyShow<"IO", "()">, Runnable<[],A>
+extends Monad<A>, Thenable<A, any>, Tap<A>, LazyShow<"IO", "()">, Runnable<[],A>, Boxed<A,IORep,"IO">
 {
     map<B>(fn: (a: A) => B ): IO<B>;
     fmap<B>(fn: (a: A) => B ): IO<B>;
@@ -33,5 +34,6 @@ extends MonadRep
     through<Args extends any[], Return>(fn: (...args: Args) => Return): (...args: Args) => IO<Return>;
     unary<Arg, Return>(fn: (a: Arg) => Return): (args: Arg) => IO<Return>;
     pure<A>(x: A): IO<A>;
+    return<A>(x: A): IO<A>;
     do<A>(fn: (pure: <T>(a: T) => IO<T>) => Generator<any, IO<A>, any>): IO<A>;
 }

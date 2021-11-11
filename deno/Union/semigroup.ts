@@ -10,7 +10,7 @@ type SemigroupDefs = {
     }
 }
 
-export interface Semigroup<A> extends Boxed<A> {
+export interface Semigroup<A> {
     /**
      * Semigroup combine method. Takes two semigroups and combines them
      * @param {Semigroup<A>} s Semigroup to be combined
@@ -38,7 +38,7 @@ const Semigroup = (defs: SemigroupDefs) => setTypeclass("Semigroup")((cases: Any
     const identities = propOr([],"identities",defs);
     const overrides = propOr({},"overrides",defs);
     trivials.forEach(trivial => {
-        function concat<A,SA extends Semigroup<A>>(this: Semigroup<SA>, m: Semigroup<SA>){
+        function concat<A,SA extends Semigroup<A>>(this: Semigroup<SA> & Boxed<SA>, m: Semigroup<SA> & Boxed<SA>){
             const mVar = getVariant(m)
             if( mVar !== trivial ){
                 return this

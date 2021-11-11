@@ -2,12 +2,14 @@ import {
   Eq,
   Functor,
   Monoid,
+  Ord,
   Semigroup,
   Show,
   Thenable,
 } from "../Union/mod.ts";
 import Union from "../Union/union.ts";
 import { isNil, monoidThen, monoidToPromise } from "../_internals/mod.ts";
+import { lessThanOrEqual } from "../_tools/mod.ts";
 import { Min, MinRep } from "./types.ts";
 
 const Defs: any = {
@@ -17,13 +19,16 @@ const Defs: any = {
   overrides: {
     concat: {
       Min(this: Min, o: Min) {
-        return this.get() > o.get() ? o : this;
+        return this.greaterThan(o) ? o : this;
       },
     },
     empty: {
       Min() {
         return Min.of(Infinity);
       },
+    },
+    lessThanOrEqual(this: Min, o: Min){
+      return lessThanOrEqual(this.get(), o.get())
     },
     then: {
       Min: monoidThen
@@ -44,7 +49,8 @@ const Min = Union(
     Min: (x) => (isNil(x) ? Infinity : x),
   },
   [
-    Eq(Defs), 
+    Eq(Defs),
+    Ord(Defs),
     Functor(Defs), 
     Semigroup(Defs), 
     Monoid(Defs), 
