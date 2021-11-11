@@ -5,6 +5,7 @@ import type { Either } from "../Either/types";
 import type { Monad, MonadRep } from "../Union/monad";
 import type { Tap } from "../Union/tap";
 import type { Runnable } from "../Union/runnable";
+import type { TraversableRep } from "../Union/traversable";
 import { getSymbol, setSymbol, WithSymbol } from "../_internals/symbols";
 
 export type RemoveUnknown<A> = isUnknown<A> extends true ? [env?: never] : [env: A];
@@ -182,7 +183,7 @@ export interface AsyncPartialRep {
 }
 
 export interface AsyncRep 
-extends MonadRep
+extends MonadRep, TraversableRep
 {
     pure<A>(a: A): AsyncIO<A>;
     return<A>(a: A): AsyncIO<A>;
@@ -246,6 +247,11 @@ extends MonadRep
     fromMaybe<T>(m: Maybe<T>): AsyncIO<T>;
     fromEither<L,R>(m: Either<L,R>): AsyncIO<R>;
     traverse<A,T>(data: A[], fn: (a: A) => AsyncIO<T>): AsyncIO<T[]>;
+    /**
+     * Sequence an array of Asyncs into a single Async that succeeds with an array of all the successes of the passed Asyncs, 
+     * or fails with the first failure
+     * @param actions 
+     */
     all<A>(actions: AsyncIO<A>[]): AsyncIO<A[]>;
     /**
      * Returns Success of the `a` if predicate returns true for `a`. Fail of `a` otherwise
