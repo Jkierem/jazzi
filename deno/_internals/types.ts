@@ -48,6 +48,7 @@ extends WithTypeName<string>
 , WithVariant<Variants>
 , WithInnerValue<A>
 , WithTypeRep<TypeRep>
+, Matcher<Variants>
 {
     /**
      * *UNSAFE* gets the internal value of a structure. Lazy structures will not contain what you expect and you shouldn't use this on them.
@@ -58,7 +59,7 @@ extends WithTypeName<string>
 
 export interface Matcher<Cases extends string> {
     match(pattern: ExpandablePattern): unknown
-    variantMatch(pattern: Pattern<Cases>): unknown
+    tagMatch(pattern: Pattern<Cases>): unknown
 }
 
 export interface MatcherRep<Cases extends string> { 

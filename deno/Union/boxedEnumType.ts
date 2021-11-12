@@ -9,10 +9,10 @@ import Tap from "./tap.ts";
 import BoxedEnum, { BoxedEnumRep, BoxedEnum as TBoxedEnum } from "./boxedEnum.ts";
 
 type BoxedEnumTypeRep<Cases extends string> = 
-    & BoxedEnumRep 
+    & BoxedEnumRep<Cases>
     & EqRep
     & EnumRep
-    & Record<Cases, <A>(a: A) => TBoxedEnum<A>>
+    & Record<Cases, <A>(a: A) => TBoxedEnum<A, BoxedEnumTypeRep<Cases>, Cases>>
 
 /**
  * Creates an enum type that can contain a value.
