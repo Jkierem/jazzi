@@ -60,7 +60,7 @@ export type AsyncUnit = AsyncIO<undefined>
 
 export interface Async<R, A> 
 extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>, 
-        Boxed<AsyncWrapper<R,A>,AsyncRep,AsyncCases>, Tap<A>, Runnable<RemoveUnknown<R>, Promise<A>>
+        Boxed<AsyncWrapper<R,A>, AsyncRep,AsyncCases>, Tap<A>, Runnable<RemoveUnknown<R>, Promise<A>>
 {
     isFail(): boolean;
     isSuccess(): boolean;
