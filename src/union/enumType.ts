@@ -6,25 +6,25 @@ import Eq, { Eq as TEq, EqRep } from "./eq";
 import Ord, { Ord as TOrd } from "./ord";
 import { Boxed, Matcher } from "../_internals/types";
 
-export interface EnumTypeValue<Cases extends string> 
+export interface EnumValue<Cases extends string> 
 extends TEq, TOrd, TEnum, TShow, Boxed<undefined,EnumTypeRep<Cases>,Cases>, Matcher<Cases> {
-    succ(): EnumTypeValue<Cases>;
-    pred(): EnumTypeValue<Cases>;
+    succ(): EnumValue<Cases>;
+    pred(): EnumValue<Cases>;
     getVariant(): Cases;
     getTag(): Cases;
 }
 
 export type EnumTypeRep<Cases extends string> = 
-    & Record<Cases,EnumTypeValue<Cases>>
+    & Record<Cases,EnumValue<Cases>>
     & EqRep 
     & EnumRep 
     & {
-        equals(ea: EnumTypeValue<Cases>, eb: EnumTypeValue<Cases>): boolean;
-        pred(v: EnumTypeValue<Cases>): EnumTypeValue<Cases> | undefined;
-        succ(v: EnumTypeValue<Cases>): EnumTypeValue<Cases> | undefined;
-        range(start: EnumTypeValue<Cases>, end: EnumTypeValue<Cases>): EnumTypeValue<Cases>[];
-        fromEnum(en: EnumTypeValue<Cases>): number;
-        toEnum(i: number): EnumTypeValue<Cases> | undefined;
+        equals(ea: EnumValue<Cases>, eb: EnumValue<Cases>): boolean;
+        pred(v: EnumValue<Cases>): EnumValue<Cases> | undefined;
+        succ(v: EnumValue<Cases>): EnumValue<Cases> | undefined;
+        range(start: EnumValue<Cases>, end: EnumValue<Cases>): EnumValue<Cases>[];
+        fromEnum(en: EnumValue<Cases>): number;
+        toEnum(i: number): EnumValue<Cases> | undefined;
     }
 /**
  * Creates an enum type which is an Union that implements Eq, Ord, Enum, and Show. 
