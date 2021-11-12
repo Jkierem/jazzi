@@ -37,7 +37,7 @@ const Box = (config?: { noHelpers?: boolean }) => <K extends AnyFnRec>(cases: Co
         cases[trivial].prototype.match = function(this: Boxed<any>, patterns: AnyFnRec){
             return extractWith([this.get()])(getCase(getVariant(this),expandCases(patterns)));
         }
-        cases[trivial].prototype.variantMatch = function(this: Boxed<any>, patterns: AnyFnRec){
+        cases[trivial].prototype.tagMatch = function(this: Boxed<any>, patterns: AnyFnRec){
             return extractWith([this.get()])(getCase(getVariant(this),patterns));
         }
 

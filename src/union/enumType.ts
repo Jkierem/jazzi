@@ -4,23 +4,27 @@ import Show, { Show as TShow } from "./show";
 import Enum, { Enum as TEnum, EnumRep } from "./enum";
 import Eq, { Eq as TEq, EqRep } from "./eq";
 import Ord, { Ord as TOrd } from "./ord";
+import { Boxed, Matcher } from "../_internals/types";
 
-interface EnumTypeValue 
-extends TEq, TOrd, TEnum, TShow {
-    match(patterns: any): any
+export interface EnumTypeValue<Cases extends string> 
+extends TEq, TOrd, TEnum, TShow, Boxed<undefined,EnumTypeRep<Cases>,Cases>, Matcher<Cases> {
+    succ(): EnumTypeValue<Cases>;
+    pred(): EnumTypeValue<Cases>;
+    getVariant(): Cases;
+    getTag(): Cases;
 }
 
-type EnumTypeRep<Cases extends string> = 
-    & Record<Cases,EnumTypeValue>
+export type EnumTypeRep<Cases extends string> = 
+    & Record<Cases,EnumTypeValue<Cases>>
     & EqRep 
     & EnumRep 
     & {
-        equals(ea: EnumTypeValue, eb: EnumTypeValue): boolean;
-        pred(v: EnumTypeValue): EnumTypeValue | undefined;
-        succ(v: EnumTypeValue): EnumTypeValue | undefined;
-        range(start: EnumTypeValue, end: EnumTypeValue): EnumTypeValue[];
-        fromEnum(en: EnumTypeValue): number;
-        toEnum(i: number): EnumTypeValue | undefined;
+        equals(ea: EnumTypeValue<Cases>, eb: EnumTypeValue<Cases>): boolean;
+        pred(v: EnumTypeValue<Cases>): EnumTypeValue<Cases> | undefined;
+        succ(v: EnumTypeValue<Cases>): EnumTypeValue<Cases> | undefined;
+        range(start: EnumTypeValue<Cases>, end: EnumTypeValue<Cases>): EnumTypeValue<Cases>[];
+        fromEnum(en: EnumTypeValue<Cases>): number;
+        toEnum(i: number): EnumTypeValue<Cases> | undefined;
     }
 /**
  * Creates an enum type which is an Union that implements Eq, Ord, Enum, and Show. 
@@ -44,6 +48,8 @@ const EnumType = <K extends string>(name: string, rawCases: readonly K[]) => {
             (cases,globals) => {
                 rawCases.forEach((key) => {
                     globals[key] = new cases[key]();
+                    cases[key].prototype.getTag = () => key
+                    cases[key].prototype.getVariant = () => key
                 })
             }
         ]
