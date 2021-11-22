@@ -19,6 +19,12 @@ export { default as Tap } from "./tap.ts";
 export { default as Thenable } from "./thenable.ts";
 export { default as Traversable } from "./traversable.ts";
 export { default as Runnable } from "./runnable.ts";
+
+import type { BoxedEnum, BoxedEnumRep } from "./boxedEnum.ts";
+import type { BoxedEnumTypeRep } from "./boxedEnumType.ts";
+
+import type { EnumValue, EnumTypeRep } from "./enumType.ts";
+import type { Boxed, Matcher, MatcherRep } from "../_internals/types.ts";
 import { default as _RawUnion } from "./union.ts";
 
 type UnionDefinition = {
@@ -44,3 +50,16 @@ export const Union = (data: UnionDefinition) => {
 export * from "./functor.ts";
 export { AutoType, NewType, createAutoDefinition } from "./union.ts";
 export { Ordering } from "./ord.ts";
+
+export type TagOf<Type> =
+  Type extends Boxed<any,any,infer Cases>     ? Cases :
+  Type extends EnumValue<infer Cases>         ? Cases :
+  Type extends EnumTypeRep<infer Cases>       ? Cases :
+  Type extends BoxedEnum<any,any,infer Cases> ? Cases :
+  Type extends BoxedEnumRep<infer Cases>      ? Cases :
+  Type extends BoxedEnumTypeRep<infer Cases>  ? Cases :
+  Type extends Matcher<infer Cases>           ? Cases :
+  Type extends MatcherRep<infer Cases>        ? Cases :
+  never
+
+export type VariantOf<Type> = TagOf<Type>
