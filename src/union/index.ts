@@ -40,5 +40,6 @@ export const Union = (data: UnionDefinition) => {
   const { name, cases, extensions=[], config={}, constructors={} } = data;
   return _RawUnion(name, cases, extensions, config).constructors(constructors);
 }
+export * from "./functor"
 export { AutoType, NewType, createAutoDefinition } from "./union";
 export { Ordering } from "./ord";

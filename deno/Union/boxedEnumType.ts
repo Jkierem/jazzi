@@ -8,7 +8,7 @@ import Functor from "./functor.ts";
 import Tap from "./tap.ts";
 import BoxedEnum, { BoxedEnumRep, BoxedEnum as TBoxedEnum } from "./boxedEnum.ts";
 
-type BoxedEnumTypeRep<Cases extends string> = 
+export type BoxedEnumTypeRep<Cases extends string> = 
     & BoxedEnumRep<Cases>
     & EqRep
     & EnumRep

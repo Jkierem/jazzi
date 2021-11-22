@@ -8,8 +8,8 @@ import { Boxed, Matcher } from "../_internals/types.ts";
 
 export interface EnumValue<Cases extends string> 
 extends TEq, TOrd, TEnum, TShow, Boxed<undefined,EnumTypeRep<Cases>,Cases>, Matcher<Cases> {
-    succ(): EnumValue<Cases>;
-    pred(): EnumValue<Cases>;
+    succ(): EnumValue<Cases> | undefined;
+    pred(): EnumValue<Cases> | undefined;
     getVariant(): Cases;
     getTag(): Cases;
 }
