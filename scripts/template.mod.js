@@ -29,15 +29,12 @@ const fixImports = (data) => {
     const isFolder = Boolean(path.match(/(\/[A-Z_][^\/]*)$/))
     const isUrl = Boolean(path.startsWith("https"))
     if( isUrl ){
-      console.log("url")
       return path.match(/.[t]s;$/gm) ? `from "${path}";` : `from "${path}.ts";`
     } else {
       if( isFolder ){
-        console.log("folder")
         return `from "${path}/mod.ts";\n`
       }
       if( isFile ){
-        console.log("file")
         return `from "${path}.ts";\n`
       }
     }
