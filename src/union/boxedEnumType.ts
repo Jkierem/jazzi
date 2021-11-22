@@ -8,7 +8,7 @@ import Functor from "./functor";
 import Tap from "./tap"
 import BoxedEnum, { BoxedEnumRep, BoxedEnum as TBoxedEnum } from "./boxedEnum"
 
-type BoxedEnumTypeRep<Cases extends string> = 
+export type BoxedEnumTypeRep<Cases extends string> = 
     & BoxedEnumRep<Cases>
     & EqRep
     & EnumRep

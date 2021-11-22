@@ -48,20 +48,19 @@ export interface BoxedEnumRep<Cases extends string> {
 const BoxedEnum = () => mark((cases: AnyConstRec, globals: any) => {
     function next(this: BoxedEnum<any,any,any>){
         const val = this.get();
-        const suc = this.succ?.();
-        return isNil(suc) ? undefined : suc.map(() => val);
+        const suc = this.succ();
+        return isNil(suc) ? undefined : suc.mapTo(val);
     }
 
     function prev(this: BoxedEnum<any,any,any>){
         const val = this.get();
-        const pre = this.pred?.();
-        return isNil(pre) ? undefined : pre.map(() => val);
+        const pre = this.pred();
+        return isNil(pre) ? undefined : pre.mapTo(val);
     }
 
     function getTag(this: BoxedEnum<any,any,any>){
         return getVariant(this)
     }
-
     forEachValue((c) => {
         c.prototype.next = next;
         c.prototype.prev = prev;

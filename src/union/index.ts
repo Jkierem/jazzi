@@ -1,8 +1,8 @@
 export { default as Applicative } from "./applicative";
-export { default as BoxedEnum } from "./boxedEnum";
-export { default as BoxedEnumType } from "./boxedEnumType";
-export { default as EnumType } from "./enumType";
-export { default as Enum } from "./enum";
+export { default as BoxedEnum, BoxedEnumRep } from "./boxedEnum";
+export { default as BoxedEnumType, BoxedEnumTypeRep } from "./boxedEnumType"; 
+export { default as EnumType, EnumValue, EnumTypeRep } from "./enumType";
+export { default as Enum, EnumRep } from "./enum";
 export { default as Eq } from "./eq";
 export { default as Filterable } from "./filterable";
 export { default as Foldable } from "./foldable";
@@ -40,6 +40,5 @@ export const Union = (data: UnionDefinition) => {
   const { name, cases, extensions=[], config={}, constructors={} } = data;
   return _RawUnion(name, cases, extensions, config).constructors(constructors);
 }
-export * from "./functor";
 export { AutoType, NewType, createAutoDefinition } from "./union";
 export { Ordering } from "./ord";
