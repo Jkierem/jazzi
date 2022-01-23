@@ -57,8 +57,19 @@ const Box = (config?: { noHelpers?: boolean }) => <K extends AnyFnRec>(cases: Co
     })
 }
 
+const Pipeable = () => <K extends AnyFnRec>(cases: ConstCases<K>) => {
+    Object.keys(cases).forEach((trivial) => {
+        cases[trivial].prototype.pipe = function pipe(fns: AnyFn){
+            return fns(this)
+        }
+        cases[trivial].prototype['|>'] = function pipe(fns: AnyFn){
+            return fns(this)
+        }
+    })
+}
+
 const Union = <K extends AnyFnRec>(name: string, cases: K, exts: TypeClassInstance<K>[], config?: { noHelpers?: boolean }) => {
-    const extensions = [ Box(config), ...exts ]
+    const extensions = [ Box(config), Pipeable(), ...exts ]
     const tcs =  extensions.map(tc => getTypeclass(tc)).filter(Boolean)
     let typeRep = {}
     const mappedCases = mapObj(([key,val]: [string, AnyFn]) => {

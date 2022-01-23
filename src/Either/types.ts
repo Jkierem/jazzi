@@ -11,6 +11,10 @@ import type { ApplicativeRep } from "../Union/applicative";
 
 type EitherCases = "Left" | "Right";
 
+interface EitherWrapper<L,R> {
+    either: Either<L,R>
+}
+
 export interface Either<L,R>
 extends Monad<R>, Matcher<EitherCases>,
     Swap<L,R>, FunctorError<L>, Show,
@@ -61,6 +65,12 @@ extends Monad<R>, Matcher<EitherCases>,
      * Fail on Left
      */
     toAsync(): Async<unknown, R>;
+    pipe<A0>(fn: (self: Either<L,R>) => A0): A0;
+    /**
+     * Terse pipe operator
+     * @param fn 
+     */
+    ['|>']<A0>(fn: (self: Either<L,R>) => A0): A0;
 }
 
 export interface EitherRep 
@@ -71,20 +81,26 @@ extends MonadRep, MatcherRep<EitherCases>, ApplicativeRep
 
     of<R>(x: R): Either<Nil, NonNullable<R>>;
     from<L,R>(l: L, r: R): Either<L, NonNullable<R>>;
+    fromNullish<L,R>(l: L, r: R): Either<L, NonNullable<R>>;
     fromFalsy<L,R>(l: L, r: R): Either<L,R>;
     fromPredicate<R>(pred: (r: R) => boolean, r: R): Either<R,R>;
     fromMaybe<R>(m: Maybe<R>): Either<undefined, R>;
     defaultTo<L,R>(l: L): (r: R) => Either<L, NonNullable<R>>;
     /**
      * Recieves a function `fn` that returns something of type `R` or may throw something of type `E`, 
-     * and tries to run it, wrapping the result or error in an Either<E,R>
+     * and tries to run it, wrapping the result or error in an Either<E,R>. For async functions use `asyncAttempt`
      * @param fn 
      * @param args 
      */
     attempt<E=never,R=unknown>(fn: () => R): Either<E, R>;
     attempt<Args,E=never,R=unknown>(fn: (...args: Args[]) => R, ...args: Args[]): Either<E, R>;
-    asyncAttempt<E=never,R=unknown>(fn: () => R): Promise<Either<E, R>>;
-    asyncAttempt<Args,E=never,R=unknown>(fn: (...args: Args[]) => R, ...args: Args[]): Promise<Either<E, R>>;
+    /**
+     * Async version of `attempt`. 
+     * @param fn 
+     * @param args
+     */
+    asyncAttempt<E=never,R=unknown>(fn: () => R): Promise<Either<E, Awaited<R>>>;
+    asyncAttempt<Args,E=never,R=unknown>(fn: (...args: Args[]) => R, ...args: Args[]): Promise<Either<E, Awaited<R>>>;
 
     /**
      * returns a new array with all the Lefts

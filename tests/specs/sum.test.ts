@@ -143,7 +143,7 @@ describe("Sum", () => {
             it("then should call first function on sum", () => {
                 const res = Spy<[number],number>()
                 const rej = Spy<[number],number>()
-                Sum.Sum(42).then(res, rej)
+                Sum.Sum(42).toThenable().then(res, rej)
                 expect(res).toHaveBeenCalled()
                 expect(res).toHaveBeenCalledWith(42)
                 expect(rej).not.toHaveBeenCalled()
@@ -151,7 +151,7 @@ describe("Sum", () => {
             it("then should call second function on zero", () => {
                 const res = Spy<[number],number>()
                 const rej = Spy<[number],number>()
-                Sum.Zero().then(res, rej)
+                Sum.Zero().toThenable().then(res, rej)
                 expect(rej).toHaveBeenCalled()
                 expect(rej).toHaveBeenCalledWith(0)
                 expect(res).not.toHaveBeenCalled()
@@ -159,11 +159,11 @@ describe("Sum", () => {
     
             it("catch should work like then on error", () => {
                 const rej = Spy<[number],number>()
-                Sum.Zero().catch(rej);
+                Sum.Zero().toThenable().catch(rej);
                 expect(rej).toHaveBeenCalled()
                 expect(rej).toHaveBeenCalledWith(0)
                 rej.reset()
-                Sum.Sum(42).catch(rej)
+                Sum.Sum(42).toThenable().catch(rej)
                 expect(rej).not.toHaveBeenCalled()
             })
         })

@@ -166,7 +166,7 @@ const Either = Union(
     } catch(e) {
       return this.Left(e)
     }
-  }
+  },
 }) as unknown as EitherRep;
 
 export default Either;

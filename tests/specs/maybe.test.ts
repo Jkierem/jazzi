@@ -266,14 +266,14 @@ describe("Maybe", () => {
             it("should resolve on Just", () => {
                 const thenSpy = Spy()
                 const catchSpy = Spy()
-                Maybe.Just(42).then(thenSpy,catchSpy)
+                Maybe.Just(42).toThenable().then(thenSpy,catchSpy)
                 expect(thenSpy.calledWith(42)).toBeTruthy()
                 expect(catchSpy.called).toBeFalsy()
             })
             it("should reject on None", () => {
                 const thenSpy = Spy()
                 const catchSpy = Spy()
-                Maybe.None().then(thenSpy,catchSpy)
+                Maybe.None().toThenable().then(thenSpy,catchSpy)
                 expect(catchSpy.calledWith(undefined)).toBeTruthy()
                 expect(thenSpy.called).toBeFalsy()
             })

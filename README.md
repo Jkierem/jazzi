@@ -12,7 +12,7 @@ Implementations of common functional structures. Available structures and featur
 - A way to implement typeclasses and use prototype inheritance. More on this on API.md
 - Pre built typeclasses available to use. More on this on API.md 
 - A way to create Enums with a haskell-ish feel: the EnumType function
-- All structures are thenable objects and have a toPromise method
+- All structures have a toPromise and toThenable methods
 
 # Installing
 
@@ -34,7 +34,7 @@ import * as jazzi from 'https://deno.land/x/jazzi/mod.ts'
 
 This README.md is a summary of all that is available in jazzi. For more details go to API.md
 
-All functionalities are exported as named exports from the jazzi module
+All structures and global functions are exported as named exports from the jazzi module
 
 ```javascript
 import { Maybe, Either, IO, Reader, foldMap, match } from 'jazzi';
@@ -42,9 +42,36 @@ import { Maybe, Either, IO, Reader, foldMap, match } from 'jazzi';
 import { Maybe, Either, IO, Reader, foldMap, match } from 'https://deno.land/x/jazzi/mod.ts'; 
 ```
 
+Pipeable operators are exported as named exports of the structure they are meant to be used on. 
+
+```javascript
+import { Maybe } from 'jazzi';
+import { map } from 'jazzi/Pipe/Maybe';
+
+Maybe
+.of(40)
+.pipe(map(x => x + 2)) // Just 42
+```
+
 # Summary
 
 **From this point onwards, all imports are omitted**
+
+The library has three kinds of functions inside: Data first, methods or pipeable operators. Data first are functions that are brought from the `jazzi` export and receive all the data they need from parameters. Methods are baked into the structures and are to be used as you would use methods of a class. Pipeable operators are functions that do the same as the method counterpart but do so through the pipe method. The method chaining style is suggested but other ways are completely equivalent.
+
+```javascript
+const m42 = Maybe.of(42)
+// Data first style
+show(m42)
+
+// Method style
+m42.show()
+
+// Pipe style
+m42.pipe(show)
+// And alternate pipe style inspired by other libraries and the pipeline proposal
+m42['|>'](show)
+```
 
 All structures share a common set of functions to be used. In terms of nomenclature, all constructor functions start with "from". All structures have a default constructor named "of" and "from" that are the most common use of the structure. They all have a "match" function that is case-insensitive to make matches. Due to the use of objects for matching, Order of cases does not alter the result. Matching has two reserved keys for default cases: "default" and "_"(underscore). "default" precedes over underscore and a matching type precedes over default cases. Matching is done with the name of the variant meaning you match using `Just` instead of `Maybe` and is not possible the other way around. Match will return evaluation of the case with the inner value or `undefined` if no case matches.
 
@@ -58,6 +85,15 @@ match(Maybe.of(42), {
     Just: x  => console.log(`The answer is ${x}`),
     None: () => console.log("Nothing")
 })
+// Or using the pipeable match operator
+Maybe
+.of(42)
+.pipe(
+    match({
+        Just: x  => console.log(`The answer is ${x}`),
+        None: () => console.log("Nothing")
+    })
+)
 ```
 
 If you want to validate that a value is an instance of a type you can use the `instanceof` operator and you can use the `hasInstance` function to check if it implements a typeclass
@@ -120,13 +156,13 @@ Maybe.do(function*(){
 
 Also all Monads have a `run` and an `unsafeRun` method. This methods make sense for the lazy monads that store computations (`IO`,`Reader`). For the other Monads, it will do nothing.
 
-All structures have a `then` function that complies with the thenable interface. This allows for ease of composition with JS Promises and to be used with async/await syntax. In general, all happy cases return inner value, all adverse cases throw inner value.
+All structures have a `toThenable` function that returns an object complies with the thenable interface. This allows for ease of composition with JS Promises and to be used with async/await syntax. In general, all happy cases return inner value, all adverse cases throw inner value. In versions <=2.2.1, the structure was a thenable with a then function. This caused some implicit behavior and the thenable feature was made opt-in with the `toThenable` function.
 
 ```javascript
 const eitherLeftOrRight = Either.from(/*...*/);
 const example = async () => {
     try {
-        const x = await eitherLeftOrRight
+        const x = await eitherLeftOrRight.toThenable()
         console.log(`It was Right ${x}`);
     } catch(e){
         console.log(`It was Left ${e}`)
@@ -244,9 +280,10 @@ const withEnvProvided = Async.from(async (x) => x + 2).provide(40)
 await withEnvProvided.run() // resolves with 42
 
 // Zip sequences two Asyncs and collects the result in a tuple. Left and Right variants discard one result.
-await zip(s42,s42).run() // resolves to [42,42]
-await zipRight(s42, Async.Success("right")).run() // resolves to "right"
-await zipLeft(Async.Success("left"), s42).run() // resolves to "left"
+// a.zip(b) is equivalent to a.flatMap(x => b.map(y => [x,y]))
+await s42.zip(s42).run() // resolves to [42,42]
+await s42.zipRight(Async.Success("right")).run() // resolves to "right"
+await Async.Success("left").zipLeft(s42).run() // resolves to "left"
 
 // Similar to Promise.all
 await Async.all([s42,s42,s42]).run() // resolves to [42,42,42]
@@ -262,50 +299,19 @@ await Async.fromCallback((res) => setTimeout(() => res(42),0)).run() // resolves
 
 ***A Note on the Async constructors***: There is no way to stop a created promise from executing. This results in the fromPromise constructor being a sort of eager Async. All other constructors are lazy given that they are passed a function that builds a promise as argument. So keep that in mind if lazyness is desired
 
-## Sum, Mult and Merge Monoids
-
-`Sum` is the monoid of numbers over addition
-
-`Mult` is the monoid of numbers over multiplication
+## Merge Monoid
 
 `Merge` is the monoid of objects over object shallow merging. 
 
-Monoids have an empty case. `Cero` for `Sum`, `One` for `Mult` and `Empty` for `Merge`. All Monoid types have a `foldMap` method and an `accumulate` method. There is also a standalone foldMap that receives the Monoid type. They all implement equality and are functors
+Monoids have an empty case. `Empty` for `Merge`. All Monoid types have a `foldMap` method and an `accumulate` method. There is also a standalone foldMap that receives the Monoid type. They all implement equality and are functors. Previously, there were more monoids implemented (Min, Max, Sum, Mult, First and Last) but they had little use so they were removed. Check versions before v3 to see them.
 
 ```javascript
-Sum.of(20).concat(Sum.of(22))  // Sum 42
-Mult.of(2).concat(Mult.of(21)) // Mult 42
 Merge.of({ a: 42 }).concat( Merge.of({ b: 42 })) // Merge { a: 42, b: 42 }
 
-Sum.accumulate([ Sum(20), Sum(22) ]) // Sum 42
-Sum.foldMap([10,12,20]) // Sum 42
-foldMap(Sum,[10,12,20]) // Sum 42
-```
-
-## A note on Max, Min, First, Last
-
-This monoids abstract operations over arrays with the caveat that for `Max` and `Min` need the values to be comparable with `>` and `<` respectively or that the values in the array are jazzi unions that implement the Ord typeclass (such as any of the monoids that store numbers).
-`First` and `Last` will return a structure with `undefined` if the array is empty. They all share that calling the default constructor without any arguments returns the empty value. The empty values for each Monoid are as follows:
-
-- `Max.of(-Inifinity)`
-- `Min.of(Infinity)`
-- `First.of(undefined)`
-- `Last.of(undefined)`
-
-You can use them like you would use the previous Monoids:
-
-```javascript
-Max.of(20).concat(Max.of(42)) // Max 42
-Min.of(20).concat(Min.of(42)) // Max 20
-First.of(20).concat(First.of(42)) // First 20
-Last.of(20).concat(Last.of(42)) // Last 42
-
-const values = [1,2,0,6,3,4,5]
-foldMap(Max  ,values)   // Max 6
-foldMap(Min  ,values)   // Min 0
-foldMap(First,values)   // First 1
-foldMap(Last ,values)   // Last 5
-
+Merge.accumulate([ Merge({ a: 43 }), Merge({ a: 42 }) ]) // Merge { a: 42 }
+Merge.foldMap([{ a: 42 },{ b: 42 },{ c: 42 }]) // Merge { a: 42, b: 42, c: 42 }
+foldMap(Merge,[{ a: 42 },{ b: 42 },{ c: 42 }]) // Merge { a: 42, b: 42, c: 42 }
+Merge.pipe(foldMap([{ a: 42 },{ b: 42 },{ c: 42 }])) //  Merge { a: 42, b: 42, c: 42 }
 ```
 
 ## Creating Tagged Unions/Sum types and Typeclasses

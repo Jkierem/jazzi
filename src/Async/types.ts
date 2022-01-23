@@ -9,16 +9,16 @@ import type { TraversableRep } from "../Union/traversable";
 import { getSymbol, setSymbol, WithSymbol } from "../_internals/symbols";
 
 export type RemoveUnknown<A> = isUnknown<A> extends true ? [env?: never] : [env: A];
-type Env<A> = A extends Async<infer R, any> ? R : never
-type Remove<A,B> = B extends A & infer C 
+export type Env<A> = A extends Async<infer R, any> ? R : never
+export type Remove<A,B> = B extends A & infer C 
     ? C
     : B;
-type ProvideSlice<A,R> = IsPrimitive<R> extends true 
+export type ProvideSlice<A,R> = IsPrimitive<R> extends true 
     ? unknown 
     : keyof R extends keyof A 
         ? unknown
         : Remove<A,R>
-type Provide<A,R> = IsPrimitive<R> extends true 
+export type Provide<A,R> = IsPrimitive<R> extends true 
     ? unknown 
     : keyof R extends keyof A 
         ? unknown
@@ -39,7 +39,7 @@ export const getFailure = getSymbol(F)
 export const getCritical = getSymbol(C)
 export const getIgnore = getSymbol(I)
 
-type SuccessChannel<R,A> = (r: R) => A
+export type SuccessChannel<R,A> = (r: R) => A
 export interface AsyncWrapper<R,A> 
 extends WithSymbol<typeof S, (r: R) => Promise<A>>, 
         WithSymbol<typeof F, any>,
@@ -175,6 +175,16 @@ extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>,
      * @param fn 
      */
     continueIf(predicate: (a: A) => boolean): Async<R,A>;
+    /**
+     * Transform an Async value through `fn`. It is an alternate way of using jazzi.
+     * @param fn 
+     */
+    pipe<A0>(fn: (self: Async<R,A>) => A0): A0;
+    /**
+     * Terse pipe operator. Transform an Async value through `fn`. It is an alternate way of using jazzi.
+     * @param fn 
+     */
+    ['|>']<A0>(fn: (self: Async<R,A>) => A0): A0;
 }
 
 export interface AsyncPartialRep {
