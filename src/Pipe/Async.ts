@@ -1,5 +1,6 @@
 import type { Async, AsyncIO, AsyncUnit, Env, Provide, ProvideSlice, RemoveUnknown } from "../Async/types";
 import type { Monad } from "../Union/monad";
+export { show } from "./_common"
 
 export const map = <R,A,B>(fn: (a: A) => B ) => (self: Async<R,A>): Async<R,B> => self.map(fn)
 export const fmap = <R,A,B>(fn: (a: A) => B ) => (self: Async<R,A>): Async<R,B> => self.fmap(fn)
