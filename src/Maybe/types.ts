@@ -88,17 +88,6 @@ Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>, Boxed<A,MaybeRep,MaybeCases
      */
     toPromise(): Promise<A>;
     /**
-     * Call onResolve if Just. Call onReject if None
-     * @param onResolve 
-     * @param onReject 
-     */
-    then(onResolve: (value: A) => void, onReject: (err: undefined) => void): void;
-    /**
-     * Calls onReject if None
-     * @param onReject 
-     */
-    catch(onReject: (err: undefined) => void): void;
-    /**
      * Success if Just
      * Fail if None
      */
