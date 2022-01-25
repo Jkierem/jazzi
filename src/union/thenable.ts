@@ -79,6 +79,7 @@ const Thenable = (defs: ThenableDefs) => mark((cases: AnyConstRec) => {
     })
 
     defineOverrides("toPromise",[],overrides,cases);
+    defineOverrides("toThenable",[],overrides,cases);
 })
 
 mark(Thenable)

@@ -379,5 +379,34 @@ describe("Async", () => {
                 expect(f.show()).toBe("[Async => Fail => (R -> _)]")
             })
         })
+
+        describe("Thenable Async", () => {
+            it("toPromise should resolve on success", async () => {
+                const a42 = Async.of(() => 42)
+                await expect(a42.toPromise()).resolves.toBe(42)
+            })
+            it("toPromise should reject on Fail", async () => {
+                const a42 = Async.Fail(42)
+                await expect(a42.toPromise()).rejects.toBe(42)
+            })
+            it("toThenable should resolve on success", async () => {
+                const a42 = Async.of(() => 42)
+                await expect(a42.toThenable()).resolves.toBe(42)
+            })
+            it("toThenable should reject on Fail", async () => {
+                const a42 = Async.Fail(42)
+                await expect(a42.toThenable()).rejects.toBe(42)
+            })
+            it("toThenable should have catch method", async () => {
+                const f42 = Async.Fail(42)
+                const promF = new Promise((_,rej) => f42.toThenable().catch(rej))
+                await expect(promF).rejects.toBe(42)
+            })
+            it("toThenable then second argument should be optional", async () => {
+                const a42 = Async.Success(42)
+                const promS = new Promise((res) => a42.toThenable().then(res))
+                await expect(promS).resolves.toBe(42)
+            })
+        })
     })
 })

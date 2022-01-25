@@ -6,6 +6,7 @@ import type { Monad, MonadRep } from "../Union/monad";
 import type { Tap } from "../Union/tap";
 import type { Runnable } from "../Union/runnable";
 import type { TraversableRep } from "../Union/traversable";
+import type { Thenable, ThenableOf } from "../Union/thenable";
 import { getSymbol, setSymbol, WithSymbol } from "../_internals/symbols";
 
 export type RemoveUnknown<A> = isUnknown<A> extends true ? [env?: never] : [env: A];
@@ -60,7 +61,8 @@ export type AsyncUnit = AsyncIO<undefined>
 
 export interface Async<R, A> 
 extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>, 
-        Boxed<AsyncWrapper<R,A>, AsyncRep,AsyncCases>, Tap<A>, Runnable<RemoveUnknown<R>, Promise<A>>
+        Boxed<AsyncWrapper<R,A>, AsyncRep,AsyncCases>, Tap<A>, Runnable<RemoveUnknown<R>, Promise<A>>,
+        Thenable<A,any>
 {
     isFail(): boolean;
     isSuccess(): boolean;
@@ -84,6 +86,16 @@ extends LiteralShow<"Async",`${AsyncCases} => (R -> _)`>, Monad<A>,
     matchEffect(patterns: any): Async<R,A>;
     when(patterns: any): Async<R,A>;
 
+    /**
+     * Convert Async to Thenable, executing the stored computation
+     * @param args 
+     */
+    toThenable(...args: RemoveUnknown<R>): ThenableOf<A,any>;
+    /**
+     * Convert Async to Promise, executing the stored computation
+     * @param args 
+     */
+    toPromise(...args: RemoveUnknown<R>): Promise<A>;
     run(...args: RemoveUnknown<R>): Promise<A>;
     unsafeRun(...args: RemoveUnknown<R>): Promise<A>;
 

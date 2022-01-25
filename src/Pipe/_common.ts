@@ -7,6 +7,7 @@ type InferShow<A> =
     A extends Show ? string :
     never
 export const show = <A extends Show>(value: A) => value.show() as InferShow<A>
+export const toString = <A extends Show>(value: A) => value.toString()
 
 type InferToPromise<A> = A extends Thenable<infer Res,any> ? Promise<Res>: never
 export const toPromise = <A extends Thenable<any,any>>(value: A) => value.toPromise() as InferToPromise<A> 

@@ -1,6 +1,7 @@
 import type { Async, AsyncIO, AsyncUnit, Env, Provide, ProvideSlice, RemoveUnknown } from "../Async/types";
 import type { Monad } from "../Union/monad";
-export { show } from "./_common"
+import type { ThenableOf } from "../Union/thenable";
+export { show, toString } from "./_common"
 
 export const map = <R,A,B>(fn: (a: A) => B ) => (self: Async<R,A>): Async<R,B> => self.map(fn)
 export const fmap = <R,A,B>(fn: (a: A) => B ) => (self: Async<R,A>): Async<R,B> => self.fmap(fn)
@@ -20,6 +21,16 @@ export const tap = <R,A>(fn: (x: A) => void) => (self: Async<R,A>): Async<R,A> =
 export const matchEffect = <R,A>(patterns: any) => (self: Async<R,A>): Async<R,A> => self.matchEffect(patterns)
 export const when = <R,A>(patterns: any) => (self: Async<R,A>): Async<R,A> => self.when(patterns)
 
+/**
+ * Convert Async to Thenable, executing the stored computation
+ * @param args 
+ */
+export const toThenable = <R,A>(...args: RemoveUnknown<R>) => (self: Async<R,A>): ThenableOf<A,any> => self.toThenable(...args)
+/**
+ * Convert Async to Promise, executing the stored computation
+ * @param args 
+ */
+export const toPromise = <R,A>(...args: RemoveUnknown<R>) => (self: Async<R,A>): Promise<A> => self.toPromise(...args)
 export const run = <R,A>(...args: RemoveUnknown<R>) => (self: Async<R,A>): Promise<A> => self.run(...args)
 export const unsafeRun = <R,A>(...args: RemoveUnknown<R>) => (self: Async<R,A>): Promise<A> => self.unsafeRun(...args)
 

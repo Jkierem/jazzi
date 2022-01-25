@@ -39,7 +39,8 @@ export const getTypeRep = S.getTypeRep
 export const hasInstance = (tc: any, x: any) => includes(S.getTypeclass(tc) || tc, (S.getTypeclasses(x) as any)?.() || [])
 export const foldMap = <A,T extends { concat: (other: T) => T } >(t: { empty: () => T, of: (a: A) => T }, values: A[]) => values.reduce((acc,next) => acc.concat(t.of(next)) , t.empty())
 
-export const show = (x: { show: () => string }) => x.show()
+export const show = <A>(x: { show: () => A }) => x.show()
+export const toString = (x: { toString: () => string }) => x.toString()
 
 export const stringSwitch = (str: string, _patt: AnyFnRec) => {
     return extractWith([])(getCaseSensitive(str,_patt))

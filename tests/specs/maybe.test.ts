@@ -1,6 +1,6 @@
 import Maybe from '../../src/Maybe'
+import Merge from '../../src/Merge'
 import type { Maybe as M } from "../../src/Maybe/types"
-import Sum from '../../src/Sum'
 import { isEmpty } from '../../src/_internals';
 import { Spy } from "../utils/spy";
 
@@ -221,10 +221,10 @@ describe("Maybe", () => {
             })
     
             it("empty (Just x) is Just (empty x). None if isNil(empty x)", () => {
-                const emptyJust = Maybe.Just(Sum.from(42)).empty()
+                const emptyJust = Maybe.Just(Merge.from({ a: 42 })).empty()
                 expect(emptyJust).toTypeMatch("Just")
-                expect(emptyJust.get()).toTypeMatch("Zero")
-                expect(emptyJust.unwrap()).toBe(0)
+                expect(emptyJust.get()).toTypeMatch("Empty")
+                expect(emptyJust.unwrap()).toStrictEqual({})
     
                 const emptyPrim = just42.empty()
                 expect(emptyPrim).toTypeMatch("None");

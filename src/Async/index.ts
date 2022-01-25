@@ -1,4 +1,4 @@
-import { Applicative, Functor, Monad, Runnable, Show, Tap, Traversable } from "../Union";
+import { Applicative, Functor, Monad, Runnable, Show, Tap, Thenable, Traversable } from "../Union";
 import Union from "../Union/union";
 import { identity, isFunction, isPrimitive, makeTuple, pass } from "../_internals/functions";
 import { getInnerValue, setInnerValue } from "../_internals/symbols";
@@ -16,6 +16,13 @@ import {
     setCritical,
     setIgnore
 } from "./types";
+
+const thenableOf = (thenImpl: (res: any, rej: any) => void) => ({
+    then: thenImpl,
+    catch(rej: any){
+        this.then(undefined, rej)
+    }
+})
 
 const AsyncType = () => (cases: AnyConstRec, globals: any) => {
     cases.Success.prototype.zipWith = function<R,R0,A,A0,C>(
@@ -198,6 +205,18 @@ const AsyncDefs: any = {
             .map(x => fn(x).tap(x => res.push(x)))
             .reduce((acc,next) => acc.chain(() => next))
             .fmap(() => res)
+      },
+      toPromise: {
+          Success(this: Async<any,any>, ...args: any[]){ return this.run(...args) },
+          Fail(this: Async<any,any>, ...args: any[]){ return this.run(...args) },
+      },
+      toThenable: {
+          Success(this: Async<any,any>, ...args: any[]){
+            return thenableOf((res, rej=identity) => this.run(...args).then(res,rej))
+          },
+          Fail(this: Async<any,any>,...args: any[]){
+            return thenableOf((res, rej) => this.run(...args).then(res,rej))
+          }
       }
     },
 };
@@ -218,6 +237,7 @@ const Async = Union(
         Runnable(AsyncDefs),
         Show(AsyncDefs),
         Traversable(AsyncDefs),
+        Thenable(AsyncDefs),
         AsyncType()
     ]
 ).constructors({
