@@ -45,14 +45,22 @@ describe("Maybe", () => {
         const True = () => true;
         const False = () => false;
 
+        it("fromCondition should create a just with a predicate that returns true", () => {
+            expect(Maybe.fromCondition(is42,42)).toTypeMatch("Just")
+            expect(Maybe.fromCondition(True)).toTypeMatch("Just")
+        })
+
+        it("fromCondition should create a none with a predicate that returns false", () => {
+            expect(Maybe.fromCondition(is42,2)).toTypeMatch("None")
+            expect(Maybe.fromCondition(False)).toTypeMatch("None")
+        })
+
         it("fromPredicate should create a just with a predicate that returns true", () => {
-            expect(Maybe.fromPredicate(is42,42)).toTypeMatch("Just")
-            expect(Maybe.fromPredicate(True)).toTypeMatch("Just")
+            expect(Maybe.fromPredicate((x): x is 42 => is42(x),42)).toTypeMatch("Just")
         })
 
         it("fromPredicate should create a none with a predicate that returns false", () => {
-            expect(Maybe.fromPredicate(is42,2)).toTypeMatch("None")
-            expect(Maybe.fromPredicate(False)).toTypeMatch("None")
+            expect(Maybe.fromPredicate((x): x is 42 => is42(x),2)).toTypeMatch("None")
         })
     })
 

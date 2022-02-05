@@ -55,22 +55,22 @@ describe("Async", () => {
         })
 
         it("should return Success of A if predicate returns true", async () => {
-            const async = Async.fromPredicate((x) => x == 42, 42)
+            const async = Async.fromPredicate((x): x is 42 => x == 42, 42)
             await expect(async.run()).resolves.toBe(42)
         })
 
         it("should return Fail of A if predicate returns false", async () => {
-            const async = Async.fromPredicate((x) => x < 42, 42)
+            const async = Async.fromPredicate((x): x is 42 => x < 42, 42)
             await expect(async.run()).rejects.toBe(42)
         })
 
         it("should return a function that returns Success of A if predicate returns true", async () => {
-            const async = Async.fromCondition((x: number) => x == 42)(42)
+            const async = Async.fromCondition((x: number) => x == 42,42)
             await expect(async.run()).resolves.toBe(42)
         })
 
         it("should return a function that returns Fail of A if predicate returns false", async () => {
-            const async = Async.fromCondition((x: number) => x < 42)(42)
+            const async = Async.fromCondition((x: number) => x < 42,42)
             await expect(async.run()).rejects.toBe(42)
         })
 
@@ -117,7 +117,7 @@ describe("Async", () => {
                 const spy = Spy()
                 const traversed = Async.traverse(
                     [1,2,3,4], 
-                    (x) => Async.fromPredicate((x: number) => x < 3,x).tap(spy)
+                    (x) => Async.fromCondition((x: number) => x < 3, x).tap(spy)
                 )
                 await expect(traversed.run()).rejects.toBe(3)
                 expect(spy).toHaveBeenCalledTwice()
@@ -131,9 +131,10 @@ describe("Async", () => {
 
     describe("Typeclass Instances", () => {
         describe("Async type", () => {
+
             it("should be recoverable", async () => {
                 const spy = Spy()
-                const a42 = Async.Fail(1).recover((err) => {
+                const a42 = Async.Fail(1).recover((err: number) => {
                     spy(err)
                     return Async.pure(42)
                 })

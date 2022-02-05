@@ -11,10 +11,6 @@ import type { ApplicativeRep } from "../Union/applicative";
 
 type EitherCases = "Left" | "Right";
 
-interface EitherWrapper<L,R> {
-    either: Either<L,R>
-}
-
 export interface Either<L,R>
 extends Monad<R>, Matcher<EitherCases>,
     Swap<L,R>, FunctorError<L>, Show,
@@ -64,7 +60,7 @@ extends Monad<R>, Matcher<EitherCases>,
      * Success on Right
      * Fail on Left
      */
-    toAsync(): Async<unknown, R>;
+    toAsync(): Async<unknown, L, R>;
     pipe<A0>(fn: (self: Either<L,R>) => A0): A0;
     /**
      * Terse pipe operator

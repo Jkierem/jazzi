@@ -43,4 +43,4 @@ export const applyLeft = <L,B,C>(ap: Either<L,B>) => (e: Either<L,(b: B) => C>):
  * Success on Right
  * Fail on Left
  */
-export const toAsync = <L,R>(e: Either<L,R>): Async<unknown, R> => e.toAsync();
+export const toAsync = <L,R>(e: Either<L,R>): Async<unknown, L, R> => e.toAsync();

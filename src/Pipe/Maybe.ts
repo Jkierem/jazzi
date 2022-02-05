@@ -72,4 +72,4 @@ export const fold = <A,B,C>(onNone: () => B, onJust: (a: A) => C) => (m: Maybe<A
  * Success if Just
  * Fail if None
  */
-export const toAsync = <A>(m: Maybe<A>): Async<unknown, A> => m.toAsync()
+export const toAsync = <A>(m: Maybe<A>): Async<unknown, undefined, A> => m.toAsync()

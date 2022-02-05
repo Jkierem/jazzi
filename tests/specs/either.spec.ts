@@ -43,12 +43,22 @@ describe("Either", () => {
             expect(e).toHaveValueOf(42)
         })
         it("fromPredicate(fn, x) should return Right of x if fn(x) == true", () => {
-            const e = Either.fromPredicate(x => x % 2 === 0, 42)
+            const e = Either.fromPredicate((x): x is number => typeof(x) === "number", 42)
             expect(e).toTypeMatch("Right")
             expect(e).toHaveValueOf(42)
         })
         it("fromPredicate(fn, x) should return Left of x if fn(x) == false", () => {
-            const e = Either.fromPredicate(x => x % 2 !== 0, 42)
+            const e = Either.fromPredicate((x): x is number => typeof(x) === "number", "42" as string | number)
+            expect(e).toTypeMatch("Left")
+            expect(e).toHaveValueOf("42")
+        })
+        it("fromCondition(fn, x) should return Right of x if fn(x) == true", () => {
+            const e = Either.fromCondition(x => x % 2 === 0, 42)
+            expect(e).toTypeMatch("Right")
+            expect(e).toHaveValueOf(42)
+        })
+        it("fromCondition(fn, x) should return Left of x if fn(x) == false", () => {
+            const e = Either.fromCondition(x => x % 2 !== 0, 42)
             expect(e).toTypeMatch("Left")
             expect(e).toHaveValueOf(42)
         })

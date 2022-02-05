@@ -91,7 +91,7 @@ Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>, Boxed<A,MaybeRep,MaybeCases
      * Success if Just
      * Fail if None
      */
-    toAsync(): Async<unknown, A>
+    toAsync(): Async<unknown, undefined, A>
 }
 
 export interface MaybeRep 
