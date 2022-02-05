@@ -260,8 +260,8 @@ const Async = Union(
     fromPredicate<A>(this: AsyncPartialRep, fn: (a?: A) => boolean, a?: A){
         return fn(a) ? this.Success(() => Promise.resolve(a)) : this.Fail(a)
     },
-    fromCondition<A>(this: AsyncPartialRep, fn: (a?: A) => boolean){
-        return (a?: A) => fn(a) ? this.Success(() => Promise.resolve(a)) : this.Fail(a)
+    fromCondition<A>(this: AsyncPartialRep, fn: (a?: A) => boolean, a?: A){
+        return fn(a) ? this.Success(() => Promise.resolve(a)) : this.Fail(a)
     },
     fromCallback(this: AsyncRep, fn: (res: <T>(t: T) => void, rej: (t: any) => void) => void){
         return this.Success(() => new Promise(fn))

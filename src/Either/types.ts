@@ -83,7 +83,8 @@ extends MonadRep, MatcherRep<EitherCases>, ApplicativeRep
     from<L,R>(l: L, r: R): Either<L, NonNullable<R>>;
     fromNullish<L,R>(l: L, r: R): Either<L, NonNullable<R>>;
     fromFalsy<L,R>(l: L, r: R): Either<L,R>;
-    fromPredicate<R>(pred: (r: R) => boolean, r: R): Either<R,R>;
+    fromPredicate<R, T extends R>(pred: (r: R) => r is T, r: R): Either<Exclude<R,T>,T>;
+    fromCondition<R>(pred: (r: R) => boolean, r: R): Either<R,R>;
     fromMaybe<R>(m: Maybe<R>): Either<undefined, R>;
     defaultTo<L,R>(l: L): (r: R) => Either<L, NonNullable<R>>;
     /**

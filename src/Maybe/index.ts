@@ -70,7 +70,7 @@ const MaybeDefs = {
     },
     filter: {
       Just<A>(this: Maybe<A>, fn: (a: A) => boolean) {
-        return Maybe.fromPredicate(fn, this.get());
+        return Maybe.fromCondition(fn, this.get());
       },
     },
     fold: {
@@ -118,7 +118,10 @@ const Maybe: MaybeRep = Union(
   fromEmpty<A>(this: MaybeRep, x: A): Maybe<A> {
     return isEmpty(x) ? this.None() : this.Just(x);
   },
-  fromPredicate<A>(this: MaybeRep, pred: (a: A) => boolean, val: A) {
+  fromPredicate<A, T extends A>(this: MaybeRep, pred: (a: A) => a is T, val: A) {
+    return pred(val) ? this.Just(val) : this.None();
+  },
+  fromCondition<A>(this: MaybeRep, pred: (a?: A) => boolean, val?: A) {
     return pred(val) ? this.Just(val) : this.None();
   },
   isEmpty(x: any) {

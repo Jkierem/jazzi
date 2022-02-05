@@ -265,15 +265,15 @@ extends MonadRep, TraversableRep
     all<A>(actions: AsyncIO<A>[]): AsyncIO<A[]>;
     /**
      * Returns Success of the `a` if predicate returns true for `a`. Fail of `a` otherwise
+     * For a version without type narrowing see `fromCondition`
      * @param fn 
      */
-    fromPredicate(fn: () => boolean): AsyncUnit;
-    fromPredicate<A>(fn: (a: A) => boolean, a: A): AsyncIO<A>;
+    fromPredicate<A, T extends A>(fn: (a: A) => a is T, a: A): AsyncIO<T>;
     /**
-     * Curried version of fromPredicate. Create a new Async constructor from a predicate function. 
+     * Create a new Async constructor from a predicate function. 
      * Returns Success of the argument if predicate returns true for the argument. Fail of the argument otherwise
+     * For a version with type narrowing see `fromPredicate`
      * @param fn 
      */
-    fromCondition(fn: () => boolean):() => AsyncUnit;
-    fromCondition<A>(fn: (a: A) => boolean): (a: A) => AsyncIO<A>;
+    fromCondition<A>(fn: (a: A) => boolean, a?: A): AsyncIO<A>;
 }
