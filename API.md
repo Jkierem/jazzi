@@ -400,7 +400,7 @@ Swaps the context of the structure. Requires a left and right case. If called on
 
 ## Thenable
 
-Defines a type that meets with the Thenable spec. This means it has a `then` method. It also provides a `toPromise` method that returns a promise that resolves on resolve cases and rejects on reject cases. Additionally, has a `catch` utility method.
+Defines a type that can be cast to an object that meets with the Thenable spec. It also provides a `toPromise` method that returns a promise that resolves on resolve cases and rejects on reject cases.
 
 - Definitions:
     - resolve: string[]
@@ -408,12 +408,19 @@ Defines a type that meets with the Thenable spec. This means it has a `then` met
 - Overrides:
     - then
     - toPromise
+    - toThenable
+
+| method | description |
+| ------ | ----------- |
+| toPromise :: Thenable t => t a ~> ( ) -> Promise a | returns a promise that resolves on resolve case and rejects on reject case |
+| toThenable :: Thenable t => t a ~> ( ) -> ThenableObject a | returns a ThenableObject that resolves on resolve case and rejects on reject case |
+
+Thenable Object Spec
 
 | method | description |
 | ------ | ----------- |
 | then :: Thenable t => t a ~> (a -> undefined) -> (a -> undefined) -> undefined | calls first argument if resolve case. calls second argument if reject case |
 | catch :: Thenable t => t a ~> (a -> undefined) -> undefined | calls argument if reject case |
-| toPromise :: Thenable t => t a ~> ( ) -> Promise a | returns a promise that resolves on resolve case and rejects on reject case |
 
 ## Box
 
@@ -551,28 +558,17 @@ Definitions for typeclasses:
 - right: Right
 - errors: Left
 
-## IO
+## Merge
 
-The Monad wraps a computation to be ran at a later point in time. Unlike other Monads, it is lazy and will not perform the computations unless `unsafeRun` is called. `map`, `show`, `apply` and `chain` are strict in their default implementations but IO provides lazy overrides for these operations by means of composition. The constructor expects a function but if a value is received, it will be wrapped in a function.
-
-| methods | descriptions |
-| ------- | ------------ |
-| unsafeRun :: IO f => f a ~> () -> a | runs the computation |
-
-
-## Sum, Mult, Merge
-
-These three are Monoids. Sum and Mult are Monoids of numbers under addition and multiplication respectively (using 0 and 1 as their respective identities). Merge is the Monoid for objects under the merge operation (using empty object "{}" as the identity). 
+Merge is the Monoid for objects under the merge operation (using empty object "{}" as the identity). 
 
 ```
-Sum<A> = Sum<A> | Zero
-Mult<A> = Mult<A> | One
 Merge<A> = Merge<A> | Empty
 ```
 
-All three types have exactly four constructors: The two cases, `of` and `from`.
+It has exactly four constructors: `Merge`, `Empty`, `of` and `from`.
 
-They all trivialy implement the following typeclasses:
+It trivialy implements the following typeclasses:
 
 - Eq
     - trivials: All cases
@@ -584,12 +580,20 @@ They all trivialy implement the following typeclasses:
 - Show
 
 Definitions for all other typeclasses:
-- pure: Sum, Mult, Merge 
-- zero: Zero, One, Empty 
-- trivials: Sum, Mult, Merge 
-- identities: Zero, One, Empty 
+- pure: Merge 
+- zero: Empty 
+- trivials: Merge 
+- identities: Empty 
 
-They all override the concat function. Sum uses addition, Mult uses multiplication and Merge uses the merge operation.
+Merge overrides the concat operation. It uses the shallow merge operation.
+
+## IO
+
+The Monad wraps a computation to be ran at a later point in time. Unlike other Monads, it is lazy and will not perform the computations unless `unsafeRun` is called. `map`, `show`, `apply` and `chain` are strict in their default implementations but IO provides lazy overrides for these operations by means of composition. The constructor expects a function but if a value is received, it will be wrapped in a function.
+
+| methods | descriptions |
+| ------- | ------------ |
+| unsafeRun :: IO f => f a ~> () -> a | runs the computation |
 
 ## Reader
 
@@ -600,3 +604,7 @@ Reader monad is used to supply a common value to a group of functions. It is laz
 | local :: Reader r => r a b ~> (a -> c) -> r c b | transforms the enviroment before passing it to the computaions using the given function. |
 
 It also provides `runReader` to run a reader and a `ask` constructor that returns `Reader.of(x => x)`
+
+## Async
+
+The Async structure could be seen as a mix of Reader and IO. It is lazy and represents an async computation, that may or may not have an environment needed to run. Unlike IO, Async is forcefully asynchronous (as the name implies). Unlike Reader, Async has many methods to supply the environment and the `run` method may not even need arguments. The `get` method should not be called as the internal representation of Async is a bit complicated. Async has three type arguments: one for the environment, one for the error and one for the result, so `Async r e a` is an Async that needs `r` to run, may fail with `e` and result in `a`

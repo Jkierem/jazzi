@@ -7,7 +7,7 @@ import {
   Thenable,
 } from "../Union";
 import Union from '../Union/union'
-import { equals, monoidToPromise, merge } from "../_internals";
+import { equals, monoidToPromise, merge, monoidThen } from "../_internals";
 import { Merge, MergeRep } from "./types";
 
 const Defs: any = {
@@ -25,6 +25,10 @@ const Defs: any = {
     toPromise: {
       Merge: monoidToPromise,
       Empty: monoidToPromise,
+    },
+    toThenable: {
+      Merge: monoidThen,
+      Empty: monoidThen,
     }
   },
 };

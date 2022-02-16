@@ -401,7 +401,7 @@ const doSomethingAsync = async (name) => {
             yield Either.fromFalsy(ValidationError.TooLong , name.length < 21)
             yield Either.fromFalsy(ValidationError.TooShort, name.length > 4 )
             return pure(name)
-        })
+        }).toThenable()
     } catch(e) {
         if( e instanceof ValidationError ){
             const errorMessage = e.match({
@@ -429,6 +429,35 @@ NewTypes are unary Unions with a single variant with the name of the type (which
 const Boxed = NewType("Boxed",[
     Functor({ trivials: ["Boxed"] })
 ])
+
+Boxed.of(42).fmap(x => x + 1) // Boxed 43
+```
+
+More on this on API.md
+
+## AutoTypes
+
+AutoTypes are NewTypes with a predefined definition for typeclasses. The definition is generated assuming the trivial cases for the passed typeclasses. The function `createAutoDefinition` generates the definition used for the typeclasses based on the name of the type.
+
+```javascript
+const createAutoDefinition = (name) => ({
+    trivials: [name],
+    pure: [name],
+    resolve: [name],
+    order: [name],
+    first: name,
+    config: { noHelpers: true },
+    overrides: {
+        fold: {
+            [name](fn){ return fn(this.get()) }
+        }
+    }
+})
+```
+
+```javascript
+// Simple Auto functor
+const Boxed = AutoType("Boxed",[Functor])
 
 Boxed.of(42).fmap(x => x + 1) // Boxed 43
 ```
