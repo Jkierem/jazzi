@@ -54,9 +54,17 @@ const Defs: any = {
         return this.get()(...env);
       },
     },
-    then: {
-      Reader(this: Reader<unknown,any>, res: AnyFn){
-        res(this.run(undefined))
+    toThenable: {
+      Reader(this: Reader<any,any>) {
+        return {
+          then: (res: (data: any) => void, rej: (e: any) => void) => {
+            try {
+              res(this.run(undefined))
+            } catch(e) {
+              rej(e)
+            }
+          } 
+        }
       }
     },
     toPromise: {

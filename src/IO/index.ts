@@ -50,11 +50,6 @@ const IODefs: any = {
         return this.get()();
       },
     },
-    then: {
-      IO(this: IO<any>, res: AnyFn){
-        res(this.run());
-      }
-    },
     toPromise: {
       IO(this: IO<any>) {
         return Promise.resolve(this.run())
