@@ -147,6 +147,9 @@ const Either = Union(
   fromPredicate(this: EitherRep, pred: any, x: any) {
     return pred(x) ? this.Right(x) : this.Left(x);
   },
+  fromCondition(this: EitherRep, pred: any, x: any) {
+    return pred(x) ? this.Right(x) : this.Left(x);
+  },
   fromMaybe(this: EitherRep, m: any) {
     return m.match({ Just: this.Right, None: this.Left });
   },
@@ -166,7 +169,7 @@ const Either = Union(
     } catch(e) {
       return this.Left(e)
     }
-  }
+  },
 }) as unknown as EitherRep;
 
 export default Either;

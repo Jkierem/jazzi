@@ -88,21 +88,10 @@ Natural<A>, Show, Foldable, Eq, Matcher<MaybeCases>, Boxed<A,MaybeRep,MaybeCases
      */
     toPromise(): Promise<A>;
     /**
-     * Call onResolve if Just. Call onReject if None
-     * @param onResolve 
-     * @param onReject 
-     */
-    then(onResolve: (value: A) => void, onReject: (err: undefined) => void): void;
-    /**
-     * Calls onReject if None
-     * @param onReject 
-     */
-    catch(onReject: (err: undefined) => void): void;
-    /**
      * Success if Just
      * Fail if None
      */
-    toAsync(): Async<unknown, A>
+    toAsync(): Async<unknown, undefined, A>
 }
 
 export interface MaybeRep 
@@ -141,7 +130,7 @@ export interface MaybeRep
      * If null or undefined returns None. Just otherwise
      * @param x inner value
      */
-    fromNullish<T>(x: T): Maybe<T>;
+    fromNullish<T>(x: T): Maybe<NonNullable<T>>;
     /**
      * If given a value considered empty, returns None. Just otherwise.
      * Empty values are {}, [], "", or the result of calling empty on either the value or its' constructor.
@@ -149,10 +138,17 @@ export interface MaybeRep
      */
     fromEmpty<T>(x: T): Maybe<T>;
     /**
-     * If predicate evaluates to true returns Just of second argument. None otherwise
+     * If type predicate evaluates to true returns Just of second argument. None otherwise.
+     * Narrows the type of the second argument. See `fromCondition` for the non type predicate version
      * @param x inner value
      */
-    fromPredicate<A>(pred: (a: A) => boolean, val?: A ): Maybe<A>;
+    fromPredicate<A,T extends A>(pred: (a: A) => a is T, val: A ): Maybe<T>;
+    /**
+     * If predicate evaluates to true returns Just of second argument. None otherwise.
+     * For version that expects a type predicate see `fromPredicate`
+     * @param x inner value
+     */
+    fromCondition<A>(pred: (a: A) => boolean, val?: A ): Maybe<A>;
     /**
      * Returns true if the inner value of the given maybe is considered an empty value. 
      * None is also itself considered as empty

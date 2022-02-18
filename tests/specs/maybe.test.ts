@@ -1,6 +1,6 @@
 import Maybe from '../../src/Maybe'
+import Merge from '../../src/Merge'
 import type { Maybe as M } from "../../src/Maybe/types"
-import Sum from '../../src/Sum'
 import { isEmpty } from '../../src/_internals';
 import { Spy } from "../utils/spy";
 
@@ -45,14 +45,22 @@ describe("Maybe", () => {
         const True = () => true;
         const False = () => false;
 
+        it("fromCondition should create a just with a predicate that returns true", () => {
+            expect(Maybe.fromCondition(is42,42)).toTypeMatch("Just")
+            expect(Maybe.fromCondition(True)).toTypeMatch("Just")
+        })
+
+        it("fromCondition should create a none with a predicate that returns false", () => {
+            expect(Maybe.fromCondition(is42,2)).toTypeMatch("None")
+            expect(Maybe.fromCondition(False)).toTypeMatch("None")
+        })
+
         it("fromPredicate should create a just with a predicate that returns true", () => {
-            expect(Maybe.fromPredicate(is42,42)).toTypeMatch("Just")
-            expect(Maybe.fromPredicate(True)).toTypeMatch("Just")
+            expect(Maybe.fromPredicate((x): x is 42 => is42(x),42)).toTypeMatch("Just")
         })
 
         it("fromPredicate should create a none with a predicate that returns false", () => {
-            expect(Maybe.fromPredicate(is42,2)).toTypeMatch("None")
-            expect(Maybe.fromPredicate(False)).toTypeMatch("None")
+            expect(Maybe.fromPredicate((x): x is 42 => is42(x),2)).toTypeMatch("None")
         })
     })
 
@@ -221,10 +229,10 @@ describe("Maybe", () => {
             })
     
             it("empty (Just x) is Just (empty x). None if isNil(empty x)", () => {
-                const emptyJust = Maybe.Just(Sum.from(42)).empty()
+                const emptyJust = Maybe.Just(Merge.from({ a: 42 })).empty()
                 expect(emptyJust).toTypeMatch("Just")
-                expect(emptyJust.get()).toTypeMatch("Zero")
-                expect(emptyJust.unwrap()).toBe(0)
+                expect(emptyJust.get()).toTypeMatch("Empty")
+                expect(emptyJust.unwrap()).toStrictEqual({})
     
                 const emptyPrim = just42.empty()
                 expect(emptyPrim).toTypeMatch("None");
@@ -266,14 +274,14 @@ describe("Maybe", () => {
             it("should resolve on Just", () => {
                 const thenSpy = Spy()
                 const catchSpy = Spy()
-                Maybe.Just(42).then(thenSpy,catchSpy)
+                Maybe.Just(42).toThenable().then(thenSpy,catchSpy)
                 expect(thenSpy.calledWith(42)).toBeTruthy()
                 expect(catchSpy.called).toBeFalsy()
             })
             it("should reject on None", () => {
                 const thenSpy = Spy()
                 const catchSpy = Spy()
-                Maybe.None().then(thenSpy,catchSpy)
+                Maybe.None().toThenable().then(thenSpy,catchSpy)
                 expect(catchSpy.calledWith(undefined)).toBeTruthy()
                 expect(thenSpy.called).toBeFalsy()
             })
