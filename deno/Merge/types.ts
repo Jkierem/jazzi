@@ -1,6 +1,7 @@
 import type { EqRep } from "../Union/eq.ts";
 import type { Functor } from "../Union/functor.ts";
 import type { Monoid, MonoidRep } from "../Union/monoid.ts";
+import type { Show } from "../Union/show.ts";
 import type { Thenable } from "../Union/thenable.ts";
 import type { AnyRec, Boxed, Extractable, Matcher, MatcherRep } from "../_internals/types.ts";
 
@@ -8,7 +9,7 @@ type MergeCases = "Merge" | "Empty"
 
 export interface Merge<A extends AnyRec>
 extends Functor<A>, Monoid<A>, 
-        Thenable<A, never>, Matcher<MergeCases>, Boxed<A,MergeRep,MergeCases>
+        Thenable<A, never>, Matcher<MergeCases>, Boxed<A,MergeRep,MergeCases>, Show
 {
     onMerge<B>(fn: Extractable<B,[A]>): B ;
     onEmpty<B>(fn: Extractable<B,[A]>): B ;
@@ -33,6 +34,16 @@ extends Functor<A>, Monoid<A>,
     map <B extends AnyRec>(fn: (a: A) => B): Merge<B>;
     fmap<B extends AnyRec>(fn: (a: A) => B): Merge<B>;
     mapTo<B extends AnyRec>(obj: B): Merge<B>;
+    /**
+     * Transform an Async value through `fn`. It is an alternate way of using jazzi.
+     * @param fn 
+     */
+    pipe<A0>(fn: (self: Merge<A>) => A0): A0;
+    /**
+     * Terse pipe operator. Transform an Async value through `fn`. It is an alternate way of using jazzi.
+     * @param fn 
+     */
+    ['|>']<A0>(fn: (self: Merge<A>) => A0): A0;
 }
 
 export interface MergeRep

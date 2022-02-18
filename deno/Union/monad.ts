@@ -11,6 +11,7 @@ type MonadDefs = {
     lazy?: boolean,
     overrides?: {
         chain?: AnyFnRec
+        join?: AnyFnRec
     }
 }
 

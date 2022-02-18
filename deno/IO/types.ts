@@ -22,6 +22,12 @@ extends Monad<A>, Thenable<A, any>, Tap<A>, LazyShow<"IO", "()">, Runnable<[],A>
     tap(fn: (x: A) => void): IO<A>;
     matchEffect(patterns: any): IO<A>;
     when(patterns: any): IO<A>;
+    pipe<A0>(fn: (self: IO<A>) => A0): A0;
+    /**
+     * Terse pipe operator
+     * @param fn 
+     */
+    ['|>']<A0>(fn: (self: IO<A>) => A0): A0;
 }
 
 export interface IORep 

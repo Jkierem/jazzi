@@ -90,3 +90,7 @@ export type Primitive =
     | null 
     | undefined
 export type IsPrimitive<T> = T extends Primitive ? true : false
+
+export interface Pipeable {
+    pipe(...fns: AnyFn[]): any;
+}

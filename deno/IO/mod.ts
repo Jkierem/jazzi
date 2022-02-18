@@ -50,14 +50,22 @@ const IODefs: any = {
         return this.get()();
       },
     },
-    then: {
-      IO(this: IO<any>, res: AnyFn){
-        res(this.run());
-      }
-    },
     toPromise: {
       IO(this: IO<any>) {
         return Promise.resolve(this.run())
+      }
+    },
+    toThenable: {
+      IO(this: IO<any>) {
+        return {
+          then: (res: (data: any) => void, rej: (e: any) => void) => {
+            try {
+              res(this.run())
+            } catch(e) {
+              rej(e)
+            }
+          } 
+        }
       }
     }
   },

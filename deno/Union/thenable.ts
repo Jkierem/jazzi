@@ -1,4 +1,4 @@
-import { propOr, identity, defineOverrides, forEachValue } from "../_internals/mod.ts";
+import { propOr, identity, defineOverrides } from "../_internals/mod.ts";
 import { setTypeclass } from "../_internals/symbols.ts";
 import { AnyConstRec } from "../_internals/types.ts";
 
@@ -14,11 +14,7 @@ type ThenableDefs = {
     }
 }
 
-export interface Thenable<Resolve,Reject> {
-    /**
-     * Converts to a promise
-     */
-    toPromise(): Promise<Resolve>;
+export interface ThenableOf<Resolve,Reject> {
     /**
      * Calls onResolve if success case, calls onReject otherwise
      * @param onResolve 
@@ -32,8 +28,28 @@ export interface Thenable<Resolve,Reject> {
     catch(onReject: (value: Reject) => void): void
 }
 
+export interface Thenable<Resolve,Reject> {
+    /**
+     * Converts to a promise
+     */
+    toPromise(): Promise<Resolve>;
+    /**
+     * Converts to a thenable object
+     */
+    toThenable(): ThenableOf<Resolve,Reject>;
+}
+
+const thenableOf = (thenImpl: (a: any, b: any) =>void) => {
+    return {
+        then: thenImpl,
+        catch(fn=identity){
+            this.then(undefined,fn)
+        }
+    }
+}
+
 /**
- * Add toPromise, then and catch methods to proto
+ * Add toPromise and toThenable methods to proto
  */
 const Thenable = (defs: ThenableDefs) => mark((cases: AnyConstRec) => {
     const resolvers = propOr([],"resolve",defs)
@@ -44,8 +60,10 @@ const Thenable = (defs: ThenableDefs) => mark((cases: AnyConstRec) => {
         cases[variant].prototype.toPromise = function(){
             return Promise.resolve(this.get())
         }
-        cases[variant].prototype.then = function(resolve=identity){
-            resolve(this.get())
+        cases[variant].prototype.toThenable = function(){
+            return thenableOf((resolve=identity) => {
+                resolve(this.get())
+            })
         }
     })
 
@@ -53,20 +71,15 @@ const Thenable = (defs: ThenableDefs) => mark((cases: AnyConstRec) => {
         cases[variant].prototype.toPromise = function(){
             return Promise.reject(this.get())
         }
-        cases[variant].prototype.then = function(__: any, reject=identity){
-            reject(this.get())
+        cases[variant].prototype.toThenable = function(){
+            return thenableOf((__: any, reject=identity) => {
+                reject(this.get())
+            })
         }
     })
 
-    defineOverrides("then",[],overrides,cases);
     defineOverrides("toPromise",[],overrides,cases);
-
-    forEachValue((variant) => {
-        variant.prototype.catch = function(reject=identity) {
-            return this.then(undefined,reject);
-        }
-    },cases)
-
+    defineOverrides("toThenable",[],overrides,cases);
 })
 
 mark(Thenable)
