@@ -1,7 +1,11 @@
 import { defineOverrides, prop, propOr } from "../_internals/mod.ts";
+
 import { setTypeclass } from "../_internals/symbols.ts";
+
 import type { AnyConstRec, AnyFnRec } from "../_internals/types.ts";
+
 import type { FixedSemigroup, Semigroup } from "./semigroup.ts";
+
 
 type MonoidDefs = {
     trivials: string[], 

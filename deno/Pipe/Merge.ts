@@ -1,7 +1,10 @@
 import type { Merge } from "../Merge/types.ts";
+
 import type { AnyRec, Extractable } from "../_internals/types.ts";
 
+
 export * from "./_common/mod.ts";
+
 
 export const onMerge = <A,B>(fn: Extractable<B,[A]>) => (m: Merge<A>): B  => m.onMerge(fn);
 export const onEmpty = <A,B>(fn: Extractable<B,[A]>) => (m: Merge<A>): B  => m.onEmpty(fn);

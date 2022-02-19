@@ -1,4 +1,5 @@
 import { isNil } from "../_internals/functions.ts";
+
 import {
   Applicative,
   Foldable,
@@ -9,11 +10,17 @@ import {
   Show,
   Swap
 } from "../Union/mod.ts";
+
 import Union from "../Union/union.ts";
+
 import { AnyConstRec, AnyFn, Extractable } from "../_internals/types.ts";
+
 import { Either, EitherRep } from "./types.ts";
+
 import { getInnerValue } from "../_internals/symbols.ts";
+
 import Async from "../Async/mod.ts";
+
 
 type AnyEither = Either<any,any>
 

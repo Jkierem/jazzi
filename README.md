@@ -7,7 +7,7 @@ Implementations of common functional structures. Available structures and featur
 - Maybe
 - Reader
 - Async
-- Monoids: Sum, Mult, Merge, Max, Min, First, Last
+- Merge Monoid
 - A function to create Tagged Unions/Sum types: Union
 - A way to implement typeclasses and use prototype inheritance. More on this on API.md
 - Pre built typeclasses available to use. More on this on API.md 

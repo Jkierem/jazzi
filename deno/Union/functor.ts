@@ -1,6 +1,9 @@
 import { defineOverrides, forEachValue, splitBy, propOr, includes } from "../_internals/mod.ts";
+
 import { setTypeclass } from "../_internals/symbols.ts";
+
 import { AnyBoxed, AnyConstRec, AnyFnRec, Boxed } from "../_internals/types.ts";
+
 
 type FunctorDefs = {
     trivials?: string[],

@@ -1,9 +1,15 @@
 import { Applicative, Functor, Monad, Show, Thenable } from "../Union/mod.ts";
+
 import Union from "../Union/union.ts";
+
 import { extractWith } from "../_internals/mod.ts";
+
 import { getTypeRep } from "../_internals/symbols.ts";
+
 import { AnyConstRec, AnyFn } from "../_internals/types.ts";
+
 import { Reader, ReaderRep } from "./types.ts";
+
 
 const ReaderMonad = () => (cases: AnyConstRec, global: any) => {
   cases.Reader.prototype.local = function (this: Reader<any,any>, fn: AnyFn) {

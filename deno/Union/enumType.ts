@@ -1,10 +1,17 @@
 import { assoc } from "../_internals/mod.ts";
+
 import Union from "./union.ts";
+
 import Show, { Show as TShow } from "./show.ts";
+
 import Enum, { Enum as TEnum, EnumRep } from "./enum.ts";
+
 import Eq, { Eq as TEq, EqRep } from "./eq.ts";
+
 import Ord, { Ord as TOrd } from "./ord.ts";
+
 import { Boxed, Matcher } from "../_internals/types.ts";
+
 
 export interface EnumValue<Cases extends string> 
 extends TEq, TOrd, TEnum, TShow, Boxed<undefined,EnumTypeRep<Cases>,Cases>, Matcher<Cases> {

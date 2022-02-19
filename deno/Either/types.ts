@@ -1,13 +1,31 @@
 import type { Maybe } from "../Maybe/types.ts";
+
 import type { Foldable } from "../Union/foldable.ts";
+
 import type { FunctorError } from "../Union/functor.ts";
+
 import type { Monad, MonadRep } from "../Union/monad.ts";
+
 import type { Show } from "../Union/show.ts";
+
 import type { Swap } from "../Union/swap.ts";
+
 import type { Thenable } from "../Union/thenable.ts";
+
 import type { Boxed, Extractable, Matcher, MatcherRep, Nil, Tuple } from "../_internals/types.ts";
+
 import type { Async } from "../Async/types.ts";
+
 import type { ApplicativeRep } from "../Union/applicative.ts";
+
+
+// Awaited implementation
+type _Awaited<T> =
+    T extends null | undefined ? T : 
+        T extends object & { then(onfulfilled: infer F): any } ?
+            F extends ((value: infer V, ...args: any) => any) ?
+                _Awaited<V> : 
+                never : T; 
 
 type EitherCases = "Left" | "Right";
 
@@ -96,8 +114,8 @@ extends MonadRep, MatcherRep<EitherCases>, ApplicativeRep
      * @param fn 
      * @param args
      */
-    asyncAttempt<E=never,R=unknown>(fn: () => R): Promise<Either<E, Awaited<R>>>;
-    asyncAttempt<Args,E=never,R=unknown>(fn: (...args: Args[]) => R, ...args: Args[]): Promise<Either<E, Awaited<R>>>;
+    asyncAttempt<E=never,R=unknown>(fn: () => R): Promise<Either<E, _Awaited<R>>>;
+    asyncAttempt<Args,E=never,R=unknown>(fn: (...args: Args[]) => R, ...args: Args[]): Promise<Either<E, _Awaited<R>>>;
 
     /**
      * returns a new array with all the Lefts

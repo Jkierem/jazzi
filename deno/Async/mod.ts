@@ -1,8 +1,13 @@
 import { Applicative, Functor, Monad, Runnable, Show, Tap, Thenable, Traversable } from "../Union/mod.ts";
+
 import Union from "../Union/union.ts";
+
 import { identity, isFunction, isPrimitive, makeTuple, pass } from "../_internals/functions.ts";
+
 import { getInnerValue, setInnerValue } from "../_internals/symbols.ts";
+
 import { AnyConstRec } from "../_internals/types.ts";
+
 import { 
     Async,
     AsyncIO, 
@@ -16,6 +21,7 @@ import {
     setCritical,
     setIgnore
 } from "./types.ts";
+
 
 const thenableOf = (thenImpl: (res: any, rej: any) => void) => ({
     then: thenImpl,
