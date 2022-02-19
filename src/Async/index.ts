@@ -135,11 +135,13 @@ const AsyncType = () => (cases: AnyConstRec, globals: any) => {
     cases.Fail.prototype.continueIf = pass
 
     globals.all = function(actions: AsyncIO<any,any>[]){
-        const res: any[] = []
-        return actions
-            .map(x => x.tap(x => res.push(x)))
-            .reduce((acc,next) => acc.chain(() => next))
-            .map(() => res)
+        return new cases.Success(() => [])
+            .chain((data: any[]) => {
+                return actions
+                    .map(x => x.tap(x => data.push(x)))
+                    .reduce((acc,next) => acc.chain(() => next))
+                    .map(() => data)
+            })
     }
 }
 

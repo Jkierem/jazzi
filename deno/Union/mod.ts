@@ -1,12 +1,20 @@
 export { default as Applicative } from "./applicative.ts";
 
-export { default as BoxedEnum, BoxedEnumRep } from "./boxedEnum.ts";
+export { default as BoxedEnum } from "./boxedEnum.ts";
 
-export { default as BoxedEnumType, BoxedEnumTypeRep } from "./boxedEnumType.ts";
+export type { BoxedEnumRep } from "./boxedEnum.ts";
 
-export { default as EnumType, EnumValue, EnumTypeRep } from "./enumType.ts";
+export { default as BoxedEnumType } from "./boxedEnumType.ts";
 
-export { default as Enum, EnumRep } from "./enum.ts";
+export type { BoxedEnumTypeRep } from "./boxedEnumType.ts";
+
+export { default as EnumType } from "./enumType.ts";
+
+export type { EnumValue, EnumTypeRep } from "./enumType.ts";
+
+export { default as Enum } from "./enum.ts";
+
+export type { EnumRep } from "./enum.ts";
 
 export { default as Eq } from "./eq.ts";
 

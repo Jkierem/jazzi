@@ -1,8 +1,12 @@
 export { default as Applicative } from "./applicative";
-export { default as BoxedEnum, BoxedEnumRep } from "./boxedEnum";
-export { default as BoxedEnumType, BoxedEnumTypeRep } from "./boxedEnumType"; 
-export { default as EnumType, EnumValue, EnumTypeRep } from "./enumType";
-export { default as Enum, EnumRep } from "./enum";
+export { default as BoxedEnum } from "./boxedEnum";
+export type { BoxedEnumRep } from "./boxedEnum";
+export { default as BoxedEnumType } from "./boxedEnumType"; 
+export type { BoxedEnumTypeRep } from "./boxedEnumType";
+export { default as EnumType } from "./enumType";
+export type { EnumValue, EnumTypeRep } from "./enumType";
+export { default as Enum } from "./enum";
+export type { EnumRep } from './enum';
 export { default as Eq } from "./eq";
 export { default as Filterable } from "./filterable";
 export { default as Foldable } from "./foldable";
