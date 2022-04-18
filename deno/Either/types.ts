@@ -1,23 +1,13 @@
 import type { Maybe } from "../Maybe/types.ts";
-
 import type { Foldable } from "../Union/foldable.ts";
-
 import type { FunctorError } from "../Union/functor.ts";
-
 import type { Monad, MonadRep } from "../Union/monad.ts";
-
 import type { Show } from "../Union/show.ts";
-
 import type { Swap } from "../Union/swap.ts";
-
 import type { Thenable } from "../Union/thenable.ts";
-
 import type { Boxed, Extractable, Matcher, MatcherRep, Nil, Tuple } from "../_internals/types.ts";
-
 import type { Async } from "../Async/types.ts";
-
 import type { ApplicativeRep } from "../Union/applicative.ts";
-
 
 // Awaited implementation
 type _Awaited<T> =

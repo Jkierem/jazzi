@@ -1,11 +1,7 @@
 import { defineOverrides, prop, propOr } from "../_internals/mod.ts";
-
 import { setTypeclass } from "../_internals/symbols.ts";
-
 import type { AnyConstRec, AnyFnRec, Boxed } from "../_internals/types.ts";
-
 import type { Applicative, ApplicativeRep } from "./applicative.ts";
-
 
 type MonadDefs = {
     pure?: string,

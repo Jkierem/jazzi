@@ -1,10 +1,7 @@
 import { isEmpty, identity, isNil } from "./functions.ts";
-
 import { AnyConstRec, AnyFnRec, AnyFn } from "./types.ts";
 
-
 export * from "./functions.ts";
-
 
 export const fromPairs = <T>(pairs: [string,T][]) => pairs.reduce((acc,[key,val]) => {
     (acc as any)[key] = val;

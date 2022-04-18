@@ -1,27 +1,23 @@
 import { Applicative, Functor, Monad, Runnable, Show, Tap, Thenable, Traversable } from "../Union/mod.ts";
-
 import Union from "../Union/union.ts";
-
 import { identity, isFunction, isPrimitive, makeTuple, pass } from "../_internals/functions.ts";
-
 import { getInnerValue, setInnerValue } from "../_internals/symbols.ts";
-
 import { AnyConstRec } from "../_internals/types.ts";
-
 import { 
     Async,
     AsyncIO, 
     AsyncPartialRep, 
     AsyncRep,
     getCritical,
+    getEnv,
     getFailure,
     getIgnore,
     getSuccess, 
     makeWrapper,
     setCritical,
+    setEnv,
     setIgnore
 } from "./types.ts";
-
 
 const thenableOf = (thenImpl: (res: any, rej: any) => void) => ({
     then: thenImpl,
@@ -60,25 +56,37 @@ const AsyncType = () => (cases: AnyConstRec, globals: any) => {
         this: Async<R,E,A>,
         p: R
     ){
-        return new cases.Success(() => this.run(p as any))
+        const ret = new cases.Success(() => {})
+        const cpy = { ...this.get() }
+        let inner = undefined
+        if( isPrimitive(p) ){
+            inner = setEnv(() => p)(cpy)
+        } else {
+            const currentEnv = getEnv(cpy)
+            inner = setEnv((e: any) => {
+                const prev = currentEnv(e)
+                if( isPrimitive(prev) ){
+                    return p
+                }
+                return {
+                    ...prev,
+                    ...p
+                }
+            })(cpy)
+        }
+        return setInnerValue(inner)(ret)
     }
     cases.Success.prototype.providePartial = function<R,E,A>(
         this: Async<R,E,A>,
         p: Partial<R>
     ){
-        if( isPrimitive(p) ){
-            return this.provide(p as any)
-        }
-        return new cases.Success((env: any) => this.run({...p,...env} as any))
+        return this.provide(p as any)
     }
     cases.Success.prototype.provideSlice = function<R,E,A>(
         this: Async<R,E,A>,
         p: Partial<R>
     ){
-        if( isPrimitive(p) ){
-            return this.provide(p as any)
-        }
-        return new cases.Success((env: any) => this.run({...p,...env} as any))
+        return this.provide(p as any)
     }
     cases.Success.prototype.recover = function(this: Async<any,any,any>, fn: any){
         const cpy = this.map(identity)
@@ -188,11 +196,12 @@ const AsyncDefs: any = {
       run: {
         async Success<R,E,A>(this: Async<R,E,A>, env: R = {} as R) {
             const inner = this.get();
+            const provision = getEnv(inner)
             const success = getSuccess(inner)
             const critical = getCritical(inner)
             const ignore = getIgnore(inner)
             try {
-                return await success(env)
+                return await success(provision(env))
             } catch(e) {
                 if( ignore ) {
                     return undefined

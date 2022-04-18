@@ -1,13 +1,8 @@
 import type { Monad, MonadRep } from "../Union/monad.ts";
-
 import type { Runnable } from "../Union/runnable.ts";
-
 import type { LazyShow } from "../Union/show.ts";
-
 import type { Thenable } from "../Union/thenable.ts";
-
 import type { Boxed } from "../_internals/types.ts";
-
 
 export interface Reader<R,A> 
 extends Monad<A>, Thenable<A, any>, LazyShow<"Reader", "R">, Runnable<[R],A>, Boxed<A,ReaderRep,"Reader">

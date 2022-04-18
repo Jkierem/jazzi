@@ -1,12 +1,8 @@
 import type { Async } from "../Async/types.ts";
-
 import type { Maybe } from "../Maybe/types.ts";
-
 import type { Monad } from "../Union/monad.ts";
 
-
 export * from "./_common/mod.ts";
-
 /**
  * If Just, returns application of argument or argument. 
  * If None, returns undefined. 

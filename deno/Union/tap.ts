@@ -1,11 +1,7 @@
 import { defineOverrides, forEachValue, propOr } from "../_internals/mod.ts";
-
 import { setTypeclass } from "../_internals/symbols.ts";
-
 import { AnyConstRec, Matcher } from "../_internals/types.ts";
-
 import { Functor } from "./functor.ts";
-
 
 const mark = setTypeclass("Tap")
 

@@ -1,15 +1,9 @@
 import type { EqRep } from "../Union/eq.ts";
-
 import type { Functor } from "../Union/functor.ts";
-
 import type { Monoid, MonoidRep } from "../Union/monoid.ts";
-
 import type { Show } from "../Union/show.ts";
-
 import type { Thenable } from "../Union/thenable.ts";
-
 import type { AnyRec, Boxed, Extractable, Matcher, MatcherRep } from "../_internals/types.ts";
-
 
 type MergeCases = "Merge" | "Empty"
 

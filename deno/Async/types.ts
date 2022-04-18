@@ -1,23 +1,13 @@
 import type { LiteralShow } from "../Union/show.ts";
-
 import type { Boxed, IsPrimitive, isUnknown } from "../_internals/types.ts";
-
 import type { Maybe } from "../Maybe/types.ts";
-
 import type { Either } from "../Either/types.ts";
-
 import type { Monad, MonadRep } from "../Union/monad.ts";
-
 import type { Tap } from "../Union/tap.ts";
-
 import type { Runnable } from "../Union/runnable.ts";
-
 import type { TraversableRep } from "../Union/traversable.ts";
-
 import type { Thenable, ThenableOf } from "../Union/thenable.ts";
-
 import { getSymbol, setSymbol, WithSymbol } from "../_internals/symbols.ts";
-
 
 export type RemoveUnknown<A> = isUnknown<A> extends true ? [env?: never] : [env: A];
 export type Env<A> = A extends Async<infer R, any, any> ? R : never
@@ -36,16 +26,19 @@ export type Provide<A,R> = IsPrimitive<R> extends true
         ? unknown
         : Omit<R, keyof A>
 
+const E = Symbol("@@env")
 const S = Symbol("@@success")
 const F = Symbol("@@failure")
 const C = Symbol("@@critical")
 const I = Symbol("@@ignored")
 
+export const setEnv = setSymbol(E)
 export const setSuccess = setSymbol(S)
 export const setFailure = setSymbol(F)
 export const setCritical = setSymbol(C)
 export const setIgnore = setSymbol(I)
 
+export const getEnv = getSymbol(E)
 export const getSuccess = getSymbol(S)
 export const getFailure = getSymbol(F)
 export const getCritical = getSymbol(C)
@@ -55,15 +48,17 @@ export type SuccessChannel<R,A> = (r: R) => A
 export interface AsyncWrapper<R,A> 
 extends WithSymbol<typeof S, (r: R) => Promise<A>>, 
         WithSymbol<typeof F, any>,
-        WithSymbol<typeof C, (err: any) => AsyncIO<never,any>>
+        WithSymbol<typeof C, (err: any) => AsyncIO<never,any>>,
+        WithSymbol<typeof E, (env: any) => any>
 {}
 
 export const makeWrapper = <R,A>(success: SuccessChannel<R,A>, failure: any) => {
+    const env = setEnv((x: any) => x)
     const s = setSuccess(success)
     const f = setFailure(failure)
     const e = setCritical(undefined)
     const i = setIgnore(false)
-    return s(f(e(i({}))))
+    return s(f(e(i(env({})))))
 }
 
 export type AsyncCases = "Success" | "Fail"

@@ -1,9 +1,6 @@
 import { prop } from "../_internals/mod.ts";
-
 import { setTypeclass } from "../_internals/symbols.ts";
-
 import { AnyConstRec, AnyFnRec, AnyFn } from "../_internals/types.ts";
-
 
 const mark = setTypeclass("Foldable")
 

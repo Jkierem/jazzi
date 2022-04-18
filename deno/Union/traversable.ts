@@ -1,9 +1,6 @@
 import { prop } from "../_internals/mod.ts";
-
 import { setTypeclass } from "../_internals/symbols.ts";
-
 import { Applicative, ApplicativeRep } from "./applicative.ts";
-
 
 const mark = setTypeclass("Traversable")
 

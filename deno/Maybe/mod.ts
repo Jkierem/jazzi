@@ -1,7 +1,5 @@
 import { equals, isNil, isEmpty, empty } from "../_internals/functions.ts";
-
 import { match } from "../_tools/mod.ts";
-
 import {
   Functor,
   Monad,
@@ -16,17 +14,11 @@ import {
   Thenable,
   Traversable,
 } from "../Union/mod.ts";
-
 import Union from "../Union/union.ts";
-
 import { AnyConstRec, AnyFn } from "../_internals/types.ts";
-
 import { Maybe, MaybeRep } from "./types.ts";
-
 import { getTypeName } from "../_internals/symbols.ts";
-
 import Async from "../Async/mod.ts";
-
 
 const MaybeType = () => (cases: AnyConstRec) => {
   cases.Just.prototype.ifNone = function () {

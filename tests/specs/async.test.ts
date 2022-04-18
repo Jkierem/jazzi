@@ -164,10 +164,31 @@ describe("Async", () => {
                 const a42 = Async.of(() => { throw 42 })
                 await expect(a42.run()).rejects.toBe(42)
             })
-
+            
             it("should be able to receive a primitive environment from provide", async () => {
                 const reqNum = Async.require<number>().provide(42)
                 await expect(reqNum.run()).resolves.toBe(42)
+            })
+
+            it("should override multiple calls to provide on primitive values", async () => {
+                const reqNum = Async.require<number>()
+                    .provide(41)
+                    .provide(42)
+                await expect(reqNum.run()).resolves.toBe(42)
+            })
+            
+            it("should merge multiple calls to provide on object values", async () => {
+                const reqNum = Async.require<{ a: number}>()
+                    .provide({ a: 41 })
+                    .provide({ a: 42 })
+                await expect(reqNum.run()).resolves.toStrictEqual({ a: 42 })
+            })
+
+            it("should override with object if previous call was primitive", async () => {
+                const reqNum = Async.require<{ a: number}>()
+                    .provide(41 as any)
+                    .provide({ a: 42 })
+                await expect(reqNum.run()).resolves.toStrictEqual({ a: 42 })
             })
             
             it("should be able to receive a primitive environment from provideSlice", async () => {

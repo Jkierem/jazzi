@@ -1,9 +1,6 @@
 import { propOr } from "../_internals/mod.ts";
-
 import { getVariant, getInnerValue, setTypeclass, getTypeName } from "../_internals/symbols.ts";
-
 import { AnyBoxed, AnyConstRec, AnyFn } from "../_internals/types.ts";
-
 
 type ShowDefs = {
     overrides?: {

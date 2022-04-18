@@ -1,11 +1,7 @@
 import { defineOverrides, forEachValue, propOr, getFirstCaseSensitive as getFirst } from "../_internals/mod.ts";
-
 import { getTypeclasses, setTypeclass } from "../_internals/symbols.ts";
-
 import { AnyConstRec, AnyFn, Boxed } from "../_internals/types.ts";
-
 import { hasInstance } from "../_tools/mod.ts";
-
 
 const mark = setTypeclass("Natural")
 

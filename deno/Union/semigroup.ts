@@ -1,9 +1,6 @@
 import { forEachValue, propOr } from "../_internals/mod.ts";
-
 import { setTypeclass, getVariant } from "../_internals/symbols.ts";
-
 import type { AnyConstRec, AnyFnRec, Boxed } from "../_internals/types.ts";
-
 
 type SemigroupDefs = {
     trivials: string[], 

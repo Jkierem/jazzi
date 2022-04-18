@@ -1,9 +1,6 @@
 import { forEachValue, propOr, equals as eq } from "../_internals/mod.ts";
-
 import { getTypeName, getVariant, setTypeclass } from "../_internals/symbols.ts";
-
 import { AnyBoxed, AnyConstRec } from "../_internals/types.ts";
-
 
 const mark = setTypeclass("Eq")
 

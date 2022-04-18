@@ -1,17 +1,10 @@
 import { forEachValue, assoc, propOr, identity } from "../_internals/mod.ts";
-
 import { getVariant, setTypeclass } from "../_internals/symbols.ts";
-
 import { AnyConstRec } from "../_internals/types.ts";
-
 import Enum, { Enum as TEnum, EnumRep } from "./enum.ts";
-
 import Eq, { Eq as TEq, EqRep } from "./eq.ts";
-
 import Show, { Show as TShow } from "./show.ts";
-
 import Union from "./union.ts";
-
 
 const mark = setTypeclass("Ord")
 

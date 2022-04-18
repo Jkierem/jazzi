@@ -1,11 +1,7 @@
 import { propOr, prop, forEachValue } from "../_internals/mod.ts";
-
 import { getVariant, setTypeclass } from "../_internals/symbols.ts";
-
 import { AnyConstRec } from "../_internals/types.ts";
-
 import { Eq } from "./eq.ts";
-
 
 const mark = setTypeclass("Enum")
 

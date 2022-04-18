@@ -1,19 +1,11 @@
 import { forEachValue, isNil } from "../_internals/mod.ts";
-
 import { getVariant, setTypeclass } from "../_internals/symbols.ts";
-
 import { AnyConstRec, Boxed } from "../_internals/types.ts";
-
 import { Enum } from "./enum.ts";
-
 import { Eq } from "./eq.ts";
-
 import { Functor } from "./functor.ts";
-
 import { Ord } from "./ord.ts";
-
 import { Show } from "./show.ts";
-
 
 const mark = setTypeclass("BoxedEnum")
 
