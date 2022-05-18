@@ -32,11 +32,11 @@ const EitherType = () => (cases: AnyConstRec, globals: any) => {
   cases.Right.prototype.getRight = getRightImpl
   cases.Left.prototype.getRight = getRightImpl
 
-  function getOrImpl(this: AnyEither, fn: Extractable<any>) {
+  function getRightOrImpl(this: AnyEither, fn: Extractable<any>) {
     return this.isRight() ? getInnerValue(this) : fn()
   };
-  cases.Right.prototype.getOr = getOrImpl;
-  cases.Left.prototype.getOr = getOrImpl;
+  cases.Right.prototype.getRightOr = getRightOrImpl;
+  cases.Left.prototype.getRightOr = getRightOrImpl;
 
   function getLeftImpl(this: AnyEither) {
     return this.isLeft() ? getInnerValue(this) : undefined
