@@ -44,13 +44,13 @@ const AsyncType = () => (cases: AnyConstRec, globals: any) => {
         this: Async<R,E,A>, 
         right: Async<R0,E0,A0>, 
     ){
-        return this.zipWith(right, a => a)
+        return this.chain((a) => right.mapTo(a))
     }
     cases.Success.prototype.zipRight = function<R,R0,E,E0,A,A0>(
         this: Async<R,E,A>, 
         right: Async<R0,E0,A0>, 
     ){
-        return this.zipWith(right, (_,b) => b)
+        return this.chain(() => right)
     }
     cases.Success.prototype.provide = function<R,E,A>(
         this: Async<R,E,A>,
