@@ -1,7 +1,10 @@
 import type { Reader } from "../Reader/types.ts";
+
 import type { Monad } from "../Union/monad.ts";
 
+
 export * from "./_common/mod.ts";
+
 
 export const map = <R,A,B>(fn: (a: A) => B ) => (r: Reader<R,A>): Reader<R,B> => r.map(fn);
 export const fmap = <R,A,B>(fn: (a: A) => B ) => (r: Reader<R,A>): Reader<R,B> => r.fmap(fn);

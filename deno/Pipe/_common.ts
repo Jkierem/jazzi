@@ -1,5 +1,7 @@
 import type { Thenable, ThenableOf } from "../union/thenable.ts";
+
 import type { LazyShow, LiteralShow, Show } from "../union/show.ts";
+
 
 type InferShow<A> = 
     A extends LiteralShow<infer T, infer V> ? `[${T} => ${V}]` :

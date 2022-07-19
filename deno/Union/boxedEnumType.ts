@@ -1,12 +1,21 @@
 import { assoc, identity } from "../_internals/mod.ts";
+
 import Union from "./union.ts";
+
 import Show from "./show.ts";
+
 import Enum, { EnumRep } from "./enum.ts";
+
 import Eq, { EqRep } from "./eq.ts";
+
 import Ord from "./ord.ts";
+
 import Functor from "./functor.ts";
+
 import Tap from "./tap.ts";
+
 import BoxedEnum, { BoxedEnumRep, BoxedEnum as TBoxedEnum } from "./boxedEnum.ts";
+
 
 export type BoxedEnumTypeRep<Cases extends string> = 
     & BoxedEnumRep<Cases>

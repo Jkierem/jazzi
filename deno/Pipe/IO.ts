@@ -1,7 +1,10 @@
 import type { IO } from "../IO/types.ts";
+
 import type { Monad } from "../Union/monad.ts";
 
+
 export * from "./_common/mod.ts";
+
 
 export const map = <A,B>(fn: (a: A) => B ) => (io: IO<A>): IO<B> => io.map(fn);
 export const fmap = <A,B>(fn: (a: A) => B ) => (io: IO<A>): IO<B> => io.fmap(fn);

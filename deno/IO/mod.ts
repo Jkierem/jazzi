@@ -1,6 +1,9 @@
 import { extractWith, compose2 } from "../_internals/mod.ts";
+
 import { getInnerValue } from "../_internals/symbols.ts";
+
 import { AnyFn } from "../_internals/types.ts";
+
 import {
   Monad,
   Applicative,
@@ -10,8 +13,11 @@ import {
   Thenable,
   Runnable
 } from "../Union/mod.ts";
+
 import Union from "../Union/union.ts";
+
 import { IO, IORep } from "./types.ts";
+
 
 const IODefs: any = {
   trivials: ["IO"],

@@ -1,4 +1,5 @@
 import { extractWith, getCase, expandCases, fromPairs, toPairs } from "../_internals/mod.ts";
+
 import { 
     setTypeRep, 
     setInnerValue, 
@@ -11,8 +12,11 @@ import {
     setRepHasInstance,
     setCaseHasInstance
 } from "../_internals/symbols.ts";
+
 import type { AnyFn, AnyFnRec, Boxed } from "../_internals/types.ts";
+
 import Show from "./show.ts";
+
 
 type ConstCases<K extends AnyFnRec> = {
     [P in keyof K]: new (...args: Parameters<K[P]>) => any

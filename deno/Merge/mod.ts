@@ -6,9 +6,13 @@ import {
   Show,
   Thenable,
 } from "../Union/mod.ts";
+
 import Union from "../Union/union.ts";
+
 import { equals, monoidToPromise, merge, monoidThen } from "../_internals/mod.ts";
+
 import { Merge, MergeRep } from "./types.ts";
+
 
 const Defs: any = {
   trivials: ["Merge"],

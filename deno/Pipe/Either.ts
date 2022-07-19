@@ -1,9 +1,14 @@
 import type { Async } from "../Async/types.ts";
+
 import type { Either } from "../Either/types.ts";
+
 import type { Monad } from "../Union/monad.ts";
+
 import type { Extractable } from "../_internals/types.ts";
 
+
 export * from "./_common/mod.ts";
+
 
 export const get = <L,R>(e: Either<L,R>): R | L => e.get()
 export const getRight = <L,R>(e: Either<L,R>): R => e.getRight();

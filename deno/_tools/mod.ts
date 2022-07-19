@@ -1,6 +1,9 @@
 import { extractWith, getCaseSensitive, safeMatch, includes } from "../_internals/mod.ts";
+
 import { AnyFnRec, Boxed, Unwrap } from "../_internals/types.ts";
+
 import * as S from "../_internals/symbols.ts";
+
 
 /**
  * Type match a value

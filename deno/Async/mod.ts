@@ -1,8 +1,13 @@
 import { Applicative, Functor, Monad, Runnable, Show, Tap, Thenable, Traversable } from "../Union/mod.ts";
+
 import Union from "../Union/union.ts";
+
 import { identity, isFunction, isPrimitive, makeTuple, pass } from "../_internals/functions.ts";
+
 import { getInnerValue, setInnerValue } from "../_internals/symbols.ts";
+
 import { AnyConstRec } from "../_internals/types.ts";
+
 import { 
     Async,
     AsyncIO, 
@@ -18,6 +23,7 @@ import {
     setEnv,
     setIgnore
 } from "./types.ts";
+
 
 const thenableOf = (thenImpl: (res: any, rej: any) => void) => ({
     then: thenImpl,
@@ -44,13 +50,13 @@ const AsyncType = () => (cases: AnyConstRec, globals: any) => {
         this: Async<R,E,A>, 
         right: Async<R0,E0,A0>, 
     ){
-        return this.zipWith(right, a => a)
+        return this.chain((a) => right.mapTo(a))
     }
     cases.Success.prototype.zipRight = function<R,R0,E,E0,A,A0>(
         this: Async<R,E,A>, 
         right: Async<R0,E0,A0>, 
     ){
-        return this.zipWith(right, (_,b) => b)
+        return this.chain(() => right)
     }
     cases.Success.prototype.provide = function<R,E,A>(
         this: Async<R,E,A>,

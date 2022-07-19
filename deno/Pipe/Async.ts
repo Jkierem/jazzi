@@ -1,7 +1,11 @@
 import type { Async, AsyncIO, AsyncUIO, AsyncUnit, Env, Err, Provide, ProvideSlice, RemoveUnknown } from "../Async/types.ts";
+
 import type { Monad } from "../Union/monad.ts";
+
 import type { ThenableOf } from "../Union/thenable.ts";
+
 export { show, toString } from "./_common/mod.ts";
+
 
 export const map = <R,E,A,B>(fn: (a: A) => B ) => (self: Async<R,E,A>): Async<R,E,B> => self.map(fn)
 export const fmap = <R,E,A,B>(fn: (a: A) => B ) => (self: Async<R,E,A>): Async<R,E,B> => self.fmap(fn)

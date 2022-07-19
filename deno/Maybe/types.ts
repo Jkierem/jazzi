@@ -1,15 +1,27 @@
 import type { Eq, EqRep } from "../Union/eq.ts";
+
 import type { Filterable } from "../Union/filterable.ts";
+
 import type { Foldable } from "../Union/foldable.ts";
+
 import type { Monad, MonadRep } from "../Union/monad.ts";
+
 import type { Monoid, MonoidRep } from "../Union/monoid.ts";
+
 import type { Natural, NaturalRep } from "../Union/natural.ts";
+
 import type { Show } from "../Union/show.ts";
+
 import type { Tap } from "../Union/tap.ts";
+
 import type { Thenable } from "../Union/thenable.ts";
+
 import type { Boxed, Matcher, MatcherRep } from "../_internals/types.ts";
+
 import type { Async } from "../Async/types.ts";
+
 import type { TraversableRep } from "../Union/traversable.ts";
+
 
 type MaybeCases = "Just" | "None";
 
