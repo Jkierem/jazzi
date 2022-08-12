@@ -1,4 +1,4 @@
-import { Applicative, Functor, Monad, Show, Thenable } from "../Union";
+import { Applicative, Functor, Monad, Runnable, Show, Thenable } from "../Union";
 import Union from '../Union/union'
 import { extractWith } from "../_internals";
 import { getTypeRep } from "../_internals/symbols";
@@ -81,6 +81,7 @@ const Reader = Union(
     Reader: (fn) => (env: any) => extractWith([env])(fn),
   },
   [
+    Runnable(Defs),
     Functor(Defs), 
     Applicative(Defs), 
     Monad(Defs), 

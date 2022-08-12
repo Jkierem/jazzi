@@ -59,7 +59,7 @@ export const merge = <A,B>(a: A, b: B): A & B => ({ ...a, ...b })
 
 export const prop = <K extends string | number | symbol>(key: K) => <T>(obj: T): K extends keyof T ? T[K] : undefined => (obj as any)?.[key]
 
-export const propOr = <T, K extends keyof T>(or: NonNullable<T[K]>, key: K, obj: T) => obj[key] ?? or
+export const propOr = <T, K extends keyof T>(or: NonNullable<T[K]>, key: K, obj: T) => prop(key)(obj) ?? or
 
 export const assoc = <T, K extends keyof T>(key: K, value: T[K], obj: T): T => ({ ...obj, [key]: value })
 
