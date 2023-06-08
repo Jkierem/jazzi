@@ -1,17 +1,16 @@
+import { getVariant } from "../src/_internals/symbols";
 import { Spy } from "./utils/spy"
 
 expect.extend({
     toTypeMatch(value,name) {
-        if(!value?.match){
+        const variant = getVariant("unwrap" in value ? value.unwrap() : value);
+        if(!variant){
             return {
-                pass: this.isNot,
-                message: () => `Expected ${value} to have match function`
+                pass: Boolean(this.isNot),
+                message: () => `Expected ${value} to have a variant attribute`
             }
         } else {
-            const matched = value.match({
-                [name]: true,
-                _: false
-            })
+            const matched = name === variant;
             if( matched ){
                 return {
                     pass: true,
@@ -20,7 +19,7 @@ expect.extend({
             } else {
                 return {
                     pass: false,
-                    message: () => `Expected ${value} to match to ${name}`
+                    message: () => `Expected ${value} to match to ${name}, instead matched ${variant}`
                 }
             }
         }
@@ -41,7 +40,7 @@ expect.extend({
             }
         }
         return {
-            pass: this.isNot,
+            pass: Boolean(this.isNot),
             message: () => `Expected a jazzi spy`
         }
     },
@@ -61,7 +60,7 @@ expect.extend({
             }
         }
         return {
-            pass: this.isNot,
+            pass: Boolean(this.isNot),
             message: () => `Expected a jazzi spy`
         }
     },
@@ -81,7 +80,7 @@ expect.extend({
             }
         }
         return {
-            pass: this.isNot,
+            pass: Boolean(this.isNot),
             message: () => `Expected a jazzi spy`
         }
     },
@@ -101,7 +100,7 @@ expect.extend({
             }
         }
         return {
-            pass: this.isNot,
+            pass: Boolean(this.isNot),
             message: () => `Expected a jazzi spy`
         }
     },
@@ -121,7 +120,7 @@ expect.extend({
             }
         }
         return {
-            pass: this.isNot,
+            pass: Boolean(this.isNot),
             message: () => `Expected a jazzi spy`
         }
     },
@@ -141,7 +140,7 @@ expect.extend({
             }
         }
         return {
-            pass: this.isNot,
+            pass: Boolean(this.isNot),
             message: () => `Expected a jazzi construct`
         }
     },
@@ -161,7 +160,27 @@ expect.extend({
             }
         }
         return {
-            pass: this.isNot,
+            pass: Boolean(this.isNot),
+            message: () => `Expected a jazzi spy`
+        }
+    },
+    toHaveBeenCalledNTimesWith(value: Spy<any, any>, n: number, args: any[]){
+        if( value.isJazziSpy ){
+            const pass = value.filterCalls(call => this.equals(call.args, args)).length === n;
+            if( pass ){
+                return {
+                    pass,
+                    message: () => `Expected spy to not have been called with ${args}`
+                }
+            } else {
+                return {
+                    pass,
+                    message: () => `Expected spy to have been called with ${args} but wasn't`
+                }
+            }
+        }
+        return {
+            pass: Boolean(this.isNot),
             message: () => `Expected a jazzi spy`
         }
     },
@@ -181,7 +200,7 @@ expect.extend({
             }
         }
         return {
-            pass: this.isNot,
+            pass: Boolean(this.isNot),
             message: () => `Expected a jazzi spy call`
         }
     },
@@ -201,7 +220,7 @@ expect.extend({
             }
         }
         return {
-            pass: this.isNot,
+            pass: Boolean(this.isNot),
             message: () => `Expected a jazzi spy call`
         }
     }

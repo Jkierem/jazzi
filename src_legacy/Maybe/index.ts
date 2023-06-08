@@ -14,6 +14,7 @@ type MaybeHelper<A, V extends Key> =
     & S.WithValue<A> 
     & S.WithVariant<V>
     & S.WithType<Type>
+    & ThenableOf<A, undefined>
     & Pipeable
 
 export type None = MaybeHelper<undefined, typeof NoneV>;
@@ -21,7 +22,20 @@ export type Just<A> = MaybeHelper<A, typeof JustV>;
 export type Maybe<A> = Just<A> | None
 
 const build = <A>(a: A | undefined, vari: Variant) => {
-    const base = baseObject({})
+    const base = baseObject({
+        then(this: Maybe<A> , onResolve: (value: A) => void, onReject?: () => void): void {
+            if(isJust(this)){
+                onResolve(get(this));
+            } else {
+                onReject?.();
+            }
+        },
+        catch(this: Maybe<A>, onReject: () => void): void {
+            if(isNone(this)){
+                onReject();
+            }
+        }
+    })
     const value = S.setValue(a);
     const mtype = S.setType(MaybeT);
     const variant = S.setVariant(vari);
@@ -32,7 +46,7 @@ export const Just = <A>(data: A): Maybe<A> => build<A>(data, JustV);
 
 export const None = <A>() => build<A>(undefined, NoneV);
 
-export const of = <A>(data: A) => data ? Just(data): None<A>();
+export const of = <A>(data: A) => data ? None<A>() : Just(data);
 
 export const from = of
 
@@ -97,21 +111,6 @@ export const toPromise = <A>(self: Maybe<A>) => fold(
     () => Promise.reject<A>() as Promise<Awaited<A>>, 
     (a: A) => Promise.resolve(a)
 )(self)
-
-export const toThenable = <A>(self: Maybe<A>): ThenableOf<A, undefined> => ({
-    then(onResolve: (value: A) => void, onReject?: (val: undefined) => void): void {
-        if(isJust(self)){
-            onResolve(get(self));
-        } else {
-            onReject?.(undefined);
-        }
-    },
-    catch(onReject: (va: undefined) => void): void {
-        if(isNone(self)){
-            onReject(undefined);
-        }
-    }
-})
 
 /** TODO: Implement */
 export const toAsync = <A>(self: A): any => ({} as any)

@@ -10,7 +10,7 @@ export type WithValue<T> = WithSymbol<typeof Value, T>
 export type WithType<TName extends Key> = WithSymbol<typeof Type, TName>
 export type WithVariant<VName extends Key> = WithSymbol<typeof Variant, VName>
 
-export const getSymbol = <Sym extends symbol>(sym: Sym) => <T>(withSym: T): T extends WithSymbol<Sym, infer U> ? U : undefined => (withSym as any)?.[sym]!
+export const getSymbol = <Sym extends symbol>(sym: Sym) => <T>(withSym: T): T extends WithSymbol<Sym, infer U> ? U : undefined => (withSym as any)[sym]!
 
 export const getValue = getSymbol(Value)
 export const getType = getSymbol(Type)
