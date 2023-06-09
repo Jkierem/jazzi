@@ -455,6 +455,21 @@ describe("Either", () => {
                     return expect(doTest(buildLeft(40))).rejects.toBe(40);
                 })
             })
+
+            describe("toMaybe", () => {
+                const cast = call("toMaybe")
+
+                it("should return Just<R> if Right<R>", () => {
+                    const e = cast(buildRight(42));
+                    expect(e).toTypeMatch("Just");
+                    expect(e).toHaveValueOf(42);
+                })
+
+                it("should return None if Left<unknown>", () => {
+                    const e = cast(buildLeft(42));
+                    expect(e).toTypeMatch("None");
+                })
+            })
         }
 
         describe("Pipeable", () => {

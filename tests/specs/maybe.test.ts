@@ -352,6 +352,22 @@ describe("Maybe", () => {
                     return expect(doTest(buildNone(  ))).rejects.toBeUndefined();
                 })
             })
+
+            describe("toEither", () => {
+                const cast = call("toEither");
+
+                it("should return Right<A> if Just<A>", () => {
+                    const e = cast(buildJust(42))
+                    expect(e).toTypeMatch("Right")
+                    expect(e).toHaveValueOf(42)
+                })
+
+                it("should return Left<undefined> if None", () => {
+                    const e = cast(buildNone())
+                    expect(e).toTypeMatch("Left")
+                    expect(e).toHaveValueOf(undefined)
+                })
+            })
         }
 
         describe("Pipeable", () => {
@@ -379,11 +395,6 @@ describe("Maybe", () => {
 
 
         describe.skip("toAsync", () => {
-            it("not implemented", () => {
-                expect(true).toBe(false);
-            })
-        })
-        describe.skip("toEither", () => {
             it("not implemented", () => {
                 expect(true).toBe(false);
             })

@@ -4,13 +4,14 @@ import * as M from "./index"
 
 const NullaryOperators = [
     "isJust", "isNone", "get", "show",
-    "toThenable", "toPromise", "toAsync",
+    "toThenable", "toPromise", "toAsync", 
+    "toEither"
 ]
 
 const Operators = [
     ...NullaryOperators,
     "fold", "match", "map", "chain", "tap", "mapTo", 
-    "zipWith", "zip", "zipLeft", "zipRight", 
+    "zipWith", "zip", "zipLeft", "zipRight",
     "unwrap"
 ]
 
@@ -93,8 +94,8 @@ const fluent = <T>(m: M.Maybe<T>) => {
                 }
             }
         },
-        has(_, p: keyof Maybe<T>) {
-            return Operators.includes(p)
+        has(target, p: keyof Maybe<T>) {
+            return Operators.includes(p) || p in target
         }
     });
     return proxy;
