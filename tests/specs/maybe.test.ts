@@ -1,7 +1,6 @@
 import * as M from "../../src/Maybe/index"
 import * as Fluent from "../../src/Maybe/fluent"
 
-import { isEmpty } from '../../src/_internals/functions';
 import { Spy } from "../utils/spy";
 
 describe("Maybe", () => {
@@ -57,9 +56,9 @@ describe("Maybe", () => {
 
     describe("Operators", () => {
         const sharedTests = (
-            buildJust: <A>(data: A) => M.Maybe<A> | Fluent.MaybeFluent<A>,
-            buildNone: <A>() => M.Maybe<A> | Fluent.MaybeFluent<A>,
-            call: (what: string, ...args: any[]) => (self: M.Maybe<any> | Fluent.MaybeFluent<any>) => any
+            buildJust: <A>(data: A) => M.Maybe<A> | Fluent.Maybe<A>,
+            buildNone: <A>() => M.Maybe<A> | Fluent.Maybe<A>,
+            call: (what: string, ...args: any[]) => (self: M.Maybe<any> | Fluent.Maybe<any>) => any
         ) => {
 
             describe("get", () => {
@@ -136,7 +135,6 @@ describe("Maybe", () => {
             describe("map", () => {
                 const mapSpy = Spy(x => x + 1);
                 const doTest = call("map", mapSpy);
-                const getVal = call("get");
 
                 it("should call function with inner value, creating a new Maybe, if Just", () => {
                     doTest(buildNone())
@@ -147,14 +145,13 @@ describe("Maybe", () => {
                     expect(mapSpy).toHaveBeenCalledWith(42)
                     expect(result).toTypeMatch("Just")
                     expect(result).not.toBe(just);
-                    expect(getVal(result)).toBe(43);
+                    expect(result).toHaveValueOf(43);
                 })
             })
 
             describe("chain", () => {
                 const chainSpy = Spy(x => buildJust(x + 1));
                 const doTest = call("chain", chainSpy);
-                const getVal = call("get");
 
                 it("should call function with inner value, creating a new Maybe, if Just", () => {
                     doTest(buildNone())
@@ -165,14 +162,13 @@ describe("Maybe", () => {
                     expect(chainSpy).toHaveBeenCalledWith(42)
                     expect(result).toTypeMatch("Just")
                     expect(result).not.toBe(just);
-                    expect(getVal(result)).toBe(43);
+                    expect(result).toHaveValueOf(43);
                 })
             })
 
             describe("tap", () => {
                 const tapSpy = Spy(x => x + 1);
                 const doTest = call("tap", tapSpy);
-                const getVal = call("get");
 
                 it("should call function with inner value, creating a new Maybe with the same value, if Just", () => {
                     doTest(buildNone())
@@ -183,7 +179,7 @@ describe("Maybe", () => {
                     expect(tapSpy).toHaveBeenCalledWith(42)
                     expect(result).toTypeMatch("Just")
                     expect(result).not.toBe(just);
-                    expect(getVal(result)).toBe(42);
+                    expect(result).toHaveValueOf(42);
                 })
             })
 
@@ -191,9 +187,8 @@ describe("Maybe", () => {
                 it("should be a shorthand for map(() => a)", () => {
                     const contant = { ref: undefined };
                     const doTest = call("mapTo", contant);
-                    const getVal = call("get");
 
-                    expect(getVal(doTest(buildJust(42)))).toBe(contant);
+                    expect(doTest(buildJust(42))).toHaveValueOf(contant);
                     expect(doTest(buildNone(  ))).toTypeMatch("None");
                 })
             })
@@ -203,12 +198,11 @@ describe("Maybe", () => {
                     const just41 = buildJust(41)
                     const just42 = buildJust(42)
                     const fnSpy  = Spy((x, y) => x + y);
-                    const getVal = call("get");
                     const doTest = call("zipWith", just42, fnSpy)
                     const result = doTest(just41);
                     
                     expect(result).toTypeMatch("Just")
-                    expect(getVal(result)).toBe(83);
+                    expect(result).toHaveValueOf(83);
                     expect(fnSpy).toHaveBeenCalledOnce();
                     expect(fnSpy).toHaveBeenCalledWith(41, 42);
                 })
@@ -235,12 +229,11 @@ describe("Maybe", () => {
                 it("should collect both inner values in a tuple", () => {
                     const just41 = buildJust(41)
                     const just42 = buildJust(42)
-                    const getVal = call("get");
                     const doTest = call("zip", just42)
                     const result = doTest(just41);
                     
                     expect(result).toTypeMatch("Just")
-                    expect(getVal(result)).toStrictEqual([41,42]);
+                    expect(result).toHaveStrictValueOf([41,42]);
                 })
 
                 it("should return None if any Maybe is None", () => {
@@ -263,13 +256,12 @@ describe("Maybe", () => {
                 it("should return left inner value if both are Just", () => {
                     const just41 = buildJust(41)
                     const just42 = buildJust(42)
-                    const getVal = call("get");
                     const doTest = call("zipLeft", just42)
                     // This is read as: just41 zipLeft just42
                     const result = doTest(just41);
                     
                     expect(result).toTypeMatch("Just")
-                    expect(getVal(result)).toStrictEqual(41);
+                    expect(result).toHaveValueOf(41);
                 })
 
                 it("should return None if any Maybe is None", () => {
@@ -292,13 +284,12 @@ describe("Maybe", () => {
                 it("should return right inner value if both are Just", () => {
                     const just41 = buildJust(41)
                     const just42 = buildJust(42)
-                    const getVal = call("get");
                     const doTest = call("zipRight", just42)
                     // This is read as: just41 zipRight just42
                     const result = doTest(just41);
                     
                     expect(result).toTypeMatch("Just")
-                    expect(getVal(result)).toStrictEqual(42);
+                    expect(result).toHaveValueOf(42);
                 })
 
                 it("should return None if any Maybe is None", () => {

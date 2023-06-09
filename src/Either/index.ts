@@ -49,14 +49,6 @@ export const fromCondition = <R>(pred: (r: R) => boolean, r: R): Either<R,R> => 
 
 export const defaultTo = <L>(l: L) => <R>(r: R) => from(l, r);
 
-export const attempt = <E=never, R=unknown>(fn: () => R): Either<E,R> => {
-    try {
-        return Right(fn())
-    } catch(e: unknown){
-        return Left(e as E);
-    }
-}
-
 export const attemptR = <Args, E=never, R=unknown>(fn: (...args: Args[]) => R, ...args: Args[]): Either<E,R> => {
     try {
         return Right(fn(...args))
@@ -65,13 +57,11 @@ export const attemptR = <Args, E=never, R=unknown>(fn: (...args: Args[]) => R, .
     }
 }
 
-export const asyncAttempt = async <E=never, R=unknown>(fn: () => R): Promise<Either<E, Awaited<R>>> => {
-    try {
-        return Right(await fn())
-    } catch(e: unknown){
-        return Left(e as E);
-    }
-}
+export const attempt = <E=never, R=unknown>(fn: () => R): Either<E,R> => attemptR(fn)
+
+export const asyncAttempt = <E=never, R=unknown>(
+    fn: () => Promise<Awaited<R>>
+): Promise<Either<E, Awaited<R>>> => asyncAttemptR(fn)
 
 export const asyncAttemptR = async <Args, E=never, R=unknown>(
     fn: (...args: Args[]) => Promise<Awaited<R>>, 
@@ -120,6 +110,20 @@ export const mapLeft = <L,B>(fn: (l: L) => B) => <R>(self: Either<L,R>): Either<
 export const mapTo = <B>(b: B) => <L,R>(self: Either<L,R>) => self["|>"](map(() => b))
 
 export const mapLeftTo = <B>(b: B) => <L,R>(self: Either<L,R>) => self["|>"](mapLeft(() => b))
+
+export type Pattern<L,R,A,B> = {
+    Left: (l: L) => A,
+    Right: (r: R) => B
+}
+
+export const match = <L,R,A,B>({ Left, Right }: Pattern<L,R,A,B>) => fold(Left, Right)
+
+export const show = <L,R>(self: Either<L,R>) => fold(
+    l => `[Either => Left => ${l}]`,
+    r => `[Either => Right => ${r}]`
+)(self)
+
+export const tap = <R>(fn: (r: R) => void) => chain((r: R) => (fn(r), Right(r)))
 
 export const zipWith = <A,B,C>(fn: (a: A, b: B) => C) => 
     <L0>(other: Either<L0, B>) => 

@@ -1,4 +1,4 @@
-import { getVariant } from "../src/_internals/symbols";
+import { getValue, getVariant } from "../src/_internals/symbols";
 import { Spy } from "./utils/spy"
 
 expect.extend({
@@ -125,8 +125,8 @@ expect.extend({
         }
     },
     toHaveValueOf(value: any, expectedInner: any){
-        if( value.get ){
-            const pass = this.equals(value.get(), expectedInner)
+        if( getVariant(value) ){
+            const pass = Object.is(getValue(value), expectedInner)
             if( pass ){
                 return {
                     pass,
@@ -135,7 +135,27 @@ expect.extend({
             } else {
                 return {
                     pass,
-                    message: () => `Expected inner value to be ${expectedInner} but got ${value.get()}`
+                    message: () => `Expected inner value to be ${expectedInner} but got ${getValue(value)}`
+                }
+            }
+        }
+        return {
+            pass: Boolean(this.isNot),
+            message: () => `Expected a jazzi construct`
+        }
+    },
+    toHaveStrictValueOf(value: any, expectedInner: any){
+        if( getVariant(value) ){
+            const pass = this.equals(getValue(value), expectedInner)
+            if( pass ){
+                return {
+                    pass,
+                    message: () => `Expected inner value not to be ${expectedInner}`
+                }
+            } else {
+                return {
+                    pass,
+                    message: () => `Expected inner value to be ${expectedInner} but got ${getValue(value)}`
                 }
             }
         }
