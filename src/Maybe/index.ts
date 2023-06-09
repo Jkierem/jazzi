@@ -10,14 +10,14 @@ const NoneV = "None"
 type Type = typeof MaybeT;
 type Variant = typeof JustV | typeof NoneV;
 
-type MaybeHelper<A, V extends Key> = 
+type Base<A, V extends Key> = 
     & S.WithValue<A> 
     & S.WithVariant<V>
     & S.WithType<Type>
     & Pipeable
 
-export type None = MaybeHelper<undefined, typeof NoneV>;
-export type Just<A> = MaybeHelper<A, typeof JustV>;
+export type None = Base<undefined, typeof NoneV>;
+export type Just<A> = Base<A, typeof JustV>;
 export type Maybe<A> = Just<A> | None
 
 const build = <A>(a: A | undefined, vari: Variant) => {
@@ -115,4 +115,3 @@ export const toThenable = <A>(self: Maybe<A>): ThenableOf<A, undefined> => ({
 
 /** TODO: Implement */
 export const toAsync = <A>(self: A): any => ({} as any)
-export const toEither = <A>(self: A): any => ({} as any)

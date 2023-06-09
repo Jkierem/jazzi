@@ -42,7 +42,6 @@ export interface MaybeFluent<A> {
 
     /** TODO implement */
     toAsync(): any
-    toEither(): any
 }
 
 const fluent = <T>(m: M.Maybe<T>) => {

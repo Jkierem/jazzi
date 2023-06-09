@@ -1,4 +1,5 @@
-import type { Extractable, Nil, Primitive } from "./types"
+import { WithVariant, getValue, getVariant } from "./symbols"
+import type { Extractable, Key, Nil, Primitive } from "./types"
 
 export const equals = (a: any, b: any): boolean => {
     const typeA = typeof a
@@ -78,3 +79,7 @@ export const isFunction = (x: any): x is Function => typeof x === "function"
 export const makeTuple = <A,B>(a: A, b: B): [A,B] => [a,b];
 
 export const isPrimitive = (a: any): a is Primitive => typeof a !== "object" && typeof a !== "function"
+
+export const match = <V extends Key, T extends WithVariant<V>>(
+    pattern: Record<V, (...args: any[]) => any>) => 
+    (self: T) => pattern[getVariant(self)](getValue(self))

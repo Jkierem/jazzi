@@ -1,7 +1,11 @@
 Objectives: 
 
-- [ ] Remove typeclasses
-- [ ] Leave only Async, Maybe and Either
-- [ ] Define structure's interfaces
-- [ ] Unify each struct in a sinlge file as modules
-- [ ] Implement using functional modeling
+- [X] Maybe Pipeable
+- [ ] Either Pipeable
+- [ ] IO Pipeable
+- [ ] Async Pipeable
+- [X] Maybe Fluent
+- [ ] Either Fluent
+- [ ] IO Fluent
+- [ ] Async Fluent
+- [ ] Conversions Module
