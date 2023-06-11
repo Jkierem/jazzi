@@ -1,3 +1,4 @@
+import { run } from "../../src/Async"
 import * as E from "../../src/Either"
 import * as F from "../../src/Either/fluent"
 import { Spy } from "../utils/spy"
@@ -470,6 +471,20 @@ describe("Either", () => {
                     expect(e).toTypeMatch("None");
                 })
             })
+
+            describe("toAsync", () => {
+                it("should succeed if Right", async () => {
+                    const result = await run(call("toAsync")(buildRight(42)))
+
+                    expect(result).toBe(42);
+                })
+
+                it("should fail if Left", async () => {
+                    const result = run(call("toAsync")(buildLeft(41)));
+
+                    await expect(result).rejects.toBe(41);
+                })
+            })
         }
 
         describe("Pipeable", () => {
@@ -489,6 +504,12 @@ describe("Either", () => {
             )
         })
 
-        describe("Fluent", () => {})
+        describe("Fluent", () => {
+            sharedTests(
+                F.Left,
+                F.Right,
+                (op: any, ...args: any[]) => (self: any) => self[op](...args)
+            )
+        })
     })
 })

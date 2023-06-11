@@ -1,3 +1,4 @@
+import { fromMaybe } from "../Async";
 import { Either, Left, Right } from "../Either/constructors";
 import * as S from "../_internals/symbols"
 import { ThenableOf } from "../_internals/types";
@@ -72,5 +73,4 @@ export const toThenable = <A>(self: Maybe<A>): ThenableOf<A, undefined> => ({
 
 export const toEither = <A>(self: Maybe<A>): Either<undefined, A> => fold(() => Left(undefined), Right)(self)
 
-/** TODO: Implement */
-export const toAsync = <A>(self: A): any => ({} as any)
+export const toAsync = <A>(self: Maybe<A>) => fromMaybe(self)

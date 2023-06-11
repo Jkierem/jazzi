@@ -1,5 +1,6 @@
 import * as M from "../../src/Maybe/index"
 import * as Fluent from "../../src/Maybe/fluent"
+import { run } from "../../src/Async"
 
 import { Spy } from "../utils/spy";
 
@@ -368,6 +369,20 @@ describe("Maybe", () => {
                     expect(e).toHaveValueOf(undefined)
                 })
             })
+
+            describe("toAsync", () => {
+                it("should succeed if Just", async () => {
+                    const result = await run(call("toAsync")(buildJust(42)))
+
+                    expect(result).toBe(42);
+                })
+
+                it("should fail if None", async () => {
+                    const result = run(call("toAsync")(buildNone()));
+
+                    await expect(result).rejects.toBeUndefined();
+                })
+            })
         }
 
         describe("Pipeable", () => {
@@ -391,13 +406,6 @@ describe("Maybe", () => {
                 Fluent.Just, Fluent.None, 
                 (op: string, ...args: any[]) => (self: any) => self[op](...args)
             );
-        })
-
-
-        describe.skip("toAsync", () => {
-            it("not implemented", () => {
-                expect(true).toBe(false);
-            })
         })
     })
 })
