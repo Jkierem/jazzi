@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-explicit-any
 import * as S from "../_internals/symbols.ts";
 
 import { Nil, Pipeable } from "../_internals/types.ts";
@@ -12,26 +11,47 @@ import * as E from "../Either/mod.ts";
 import * as M from "../Maybe/mod.ts";
 
 
-export type isNever<T> = [T] extends [never] ? true : false
+type isNever<T> = [T] extends [never] ? true : false
 
-export type isUnknown<T> = isNever<T> extends false 
+type isUnknown<T> = isNever<T> extends false 
     ? unknown extends T
         ? true
         : false
     : false
+
+export type RemoveUnknown<A> = isUnknown<A> extends true ? [env?: never] : [env: A];
 
 const AsyncT: unique symbol = Symbol("Async")
 
 type Type = typeof AsyncT;
 type Variant = "Async";
 
-type Base<R, E, A> = 
-    & S.WithValue<(r: R) => Promise<A>>
-    & S.WithVariant<Variant>
+type UnitOf<K extends string, A> = { type: K, op: (prev: any) => A }
+
+type Head<A> = UnitOf<"HEAD", Promise<A>>
+type Map<A> = UnitOf<"MAP", A>
+type MapError<A> = UnitOf<"MAP_ERROR", A>
+type Recover<A> = UnitOf<"RECOVER", AsyncUIO<A>>
+type Chain<A> = UnitOf<"CHAIN", Async<unknown,unknown,A>>
+type RecurIf = UnitOf<"RECUR_IF", AsyncUIO<boolean>>
+type RecurWhile = UnitOf<"RECUR_WHILE", boolean>
+type Unit<A> = 
+ | Head<A>
+ | Map<A>
+ | Chain<A>
+ | MapError<A>
+ | Recover<A>
+ | RecurIf
+ | RecurWhile
+
+type EnvUnit<R> = ((arg: any) => R)
+
+type Base<R,E,A> = 
     & S.WithType<Type>
-    & S.WithEnv<(...args: any) => R>
-    & S.WithErrorMap<(e: unknown) => E>
-    & S.WithRecovery<((e: E) => AsyncUIO<any>) | undefined>
+    & S.WithVariant<Variant>
+    & S.WithEnv<EnvUnit<R>[]>
+    & S.WithValue<Unit<A>[]>
+    & S.WithErrorMap<E>
     & Pipeable
 
 export type Async<R,E,A> = Base<R, E, A>
@@ -39,58 +59,70 @@ export type AsyncIO<E,A> = Async<unknown,E,A>
 export type AsyncRIO<R,A> = Async<R,unknown,A>
 export type AsyncUIO<A> = Async<unknown,never,A>
 
-const build = <R,E,A>(a: (r: R) => Promise<A>) => {
+const makeHead = <R,A>(op: (r: R) => Promise<A>):  Head<A> => ({ type: "HEAD", op })
+const makeMap = <A,B>(op: (a: A) => B): Map<B> => ({ type: "MAP", op })
+const makeMapError = <A,B>(op: (a: A) => B): MapError<B> => ({ type: "MAP_ERROR", op })
+const makeChain = <A,R,E,B>(op: (a: A) => Async<R,E,B>): Chain<B> => ({ type: "CHAIN", op })
+const makeRecover = <A,B>(op: (a: A) => AsyncUIO<B>): Recover<B> => ({ type: "RECOVER", op })
+const makeRecurIf = <A>(op: (a: A) => AsyncUIO<boolean>): RecurIf => ({ type: "RECUR_IF", op })
+const makeRecurWhile = <A>(op: (a: A) => boolean): RecurWhile => ({ type: "RECUR_WHILE", op })
+
+const build = <R,E,A>(fn: (r: R) => Promise<A>) => {
     const base = baseObject({})
-    const val = S.setValue(a);
     const typ = S.setType(AsyncT);
     const van = S.setVariant("Async");
-    const env = S.setEnvironment((x: any) => x);
-    const emp = S.setErrorMap((x: E) => x);
-    const rec = S.setRecovery(undefined);
+    const val = S.setValue([makeHead(fn)] as Unit<A>[]);
+    const env = S.setEnvironment([(x: any) => x]);
     return base
         ["|>"](val)
         ["|>"](typ)
         ["|>"](van)
-        ["|>"](env)
-        ["|>"](emp)
-        ["|>"](rec) as Async<R,E,A>
+        ["|>"](env) as Async<R,E,A>;
 }
 
 const copy = <R,E,A>(self: Async<R,E,A>) => {
-    const next = build(async x => x);
-    const val = S.setValue(S.getValue(self))
-    const env = S.setEnvironment(S.getEnvironment(self))
-    const emp = S.setErrorMap(S.getErrorMap(self))
-    const rec = S.setRecovery(S.getRecovery(self))
-    return next
+    const base = baseObject({});
+    const typ = S.setType(AsyncT);
+    const van = S.setVariant("Async");
+    const val = S.setValue([...S.getValue(self)]);
+    const env = S.setEnvironment([...S.getEnvironment(self)]);
+    return base
         ["|>"](val)
-        ["|>"](env)
-        ["|>"](emp)
-        ["|>"](rec) as Async<R,E,A>
+        ["|>"](typ)
+        ["|>"](van)
+        ["|>"](env) as Async<R,E,A>;
 }
+
+const queueTask = <R,E,A>(task: Unit<unknown>, self: Async<unknown, unknown, unknown>) => {
+    return S.setValue([...S.getValue(self), task])(copy(self)) as Async<R,E,A>
+}
+
+const queueProvision = <R,E,A>(pTask: EnvUnit<R>, self: Async<unknown, unknown, unknown>) => {
+    return S.setEnvironment([...S.getEnvironment(self), pTask])(copy(self)) as Async<R,E,A>
+}
+
+export const Succeed = <A>(a: A) => build<unknown, never, A>(async () => await Promise.resolve(a))
 
 export const succeedWith = <A>(fn: () => A) => build<unknown, never, A>(async () => fn())
 
-export const Succeed = <A>(a: A) => build<unknown, never, A>(async () => a);
+export const Fail = <E>(e: E) => build<unknown, E, never>(async () => await Promise.reject(e))
 
 export const failWith = <E>(e: () => E) => build<unknown, E, never>(async () => { throw e() });
-
-export const Fail = <E>(e: E) => build<unknown, E, never>(async () => { throw e });
 
 export const of = Succeed
 
 export const from = <R,A>(fn: (r: R) => Promise<A>) => build(fn);
 
-export const fromCondition = <A>(fn: (a: A) => boolean) => (a: A) => from(async () => {
+export const fromCondition = <A>(fn: (a: A) => boolean) => (a: A) => from(() => {
     if( fn(a) ){
-        return a
+        return Promise.resolve(a);
     }
     throw a
 }) as AsyncIO<A,A>
 
-export const fromPredicate = <A, B extends A>(pred: (a: A) => a is B) => (a: A) => from(async () => {
+export const fromPredicate = <A, B extends A>(pred: (a: A) => a is B) => (a: A) => from(() => {
     if( pred(a) ){
-        return a
+        return Promise.resolve(a)
     } else {
         throw a
     }
@@ -114,81 +146,32 @@ export const fromEither = <L,R>(e: E.Either<L,R>) => e["|>"](E.fold(
     Succeed
 )) as AsyncIO<L,R>
 
-const _require = <R>(): AsyncRIO<R,R> => build(async (r: R) => r);
+const _require = <R>(): AsyncRIO<R,R> => build(async (r: R) => await Promise.resolve(r));
 
 export { _require as require }
 
 export const map = <A,B>(fn: (a: A) => B) => <R,E>(self: Async<R,E,A>) => {
-    const next = copy(self);
-    const composed = async (r: R) => {
-        const a = await runWith(r as R)(self);
-        return await fn(a as A);
-    };
-    const val = S.setValue(composed);
-    return val(next) as unknown as Async<R,E,B>;
+    return queueTask<R,E,B>(makeMap(fn), self);
 }
 
-export const mapError = <E,E0>(fn: (e: E) => E0) => <R,A>(self: Async<R,E,A>) => {
-    const next = copy(self);
-    const m = S.setErrorMap((e: unknown) => fn(S.getErrorMap(self)(e)))
-    return m(next) as Async<R,E0,A>;
+export const mapError = <E,B>(fn: (a: E) => B) => <R,A>(self: Async<R,E,A>) => {
+    return queueTask<R,B,A>(makeMapError(fn), self);
 }
 
-export const recover = <E,B>(fn: (e: E) => AsyncUIO<B>) => <R,A>(self: Async<R,E,A>) => {
-    const next = copy(self);
-    const r = S.setRecovery((e: unknown) => {
-        const other = fn(e as E);
-        
-        const recovered = build(async () => {
-            return await run(other);
-        })
-
-        return recovered;
-    })
-    return r(next) as unknown as Async<R, never, A | B>
+export const chain = <A,R0,E0,B>(fn: (a: A) => Async<R0, E0, B>) => <R,E>(self: Async<R,E,A>) => {
+    return queueTask<R & R0, E | E0, B>(makeChain(fn), self);
 }
 
-export const chain = <R0,E0,A0,A>(fn: (a: A) => Async<R0, E0, A0>) => <R,E>(self: Async<R,E,A>) => {
-    const next = copy(self);
-    const composed = async (r: R & R0) => {
-        const a = await runWith(r as R)(self);
-        return await runWith(r as R0)(fn(a as A));
-    };
-    const val = S.setValue(composed);
-    return val(next) as unknown as Async<R0 & R, E0 | E, A0>;
+export const recover = <E,A0>(fn: (e: E) => AsyncUIO<A0>) => <R,A>(self: Async<R,E,A>) => {
+    return queueTask<R, never, A0 | A>(makeRecover(fn), self)
 }
 
-export const recurIf = <A>(pred: (a: A) => AsyncUIO<boolean>) => <R,E>(self: Async<R,E,A>) => {
-    const fn = S.getValue(self);
-    async function recurring(r: R): Promise<A> {
-        const a = await fn(r);
-        const should = await S.getValue(pred(a))(undefined);
-        if( should ){
-            return await recurring(r);
-        }
-        return a
-    }
-    const next = build(recurring);
-    const r = S.setRecovery(S.getRecovery(self))
-    const e = S.setEnvironment(S.getEnvironment(self))
-    const m = S.setErrorMap(S.getErrorMap(self))
-    return m(r(e(next)))
+export const recurIf = <A>(fn: (a: A) => AsyncUIO<boolean>) => <R,E>(self: Async<R,E,A>) => {
+    return queueTask<R,E,A>(makeRecurIf(fn), self)
 }
 
-export const recurWhile = <A>(pred: (a: A) => boolean) => <R,E>(self: Async<R,E,A>) => {
-    const fn = S.getValue(self);
-    async function recurring(r: R): Promise<A> {
-        const a = await fn(r);
-        if( pred(a) ){
-            return await recurring(r);
-        }
-        return a
-    }
-    const next = build(recurring);
-    const r = S.setRecovery(S.getRecovery(self))
-    const e = S.setEnvironment(S.getEnvironment(self))
-    const m = S.setErrorMap(S.getErrorMap(self))
-    return m(r(e(next)))
+export const recurWhile = <A>(fn: (a: A) => boolean) => <R,E>(self: Async<R,E,A>) => {
+    return queueTask<R,E,A>(makeRecurWhile(fn), self)
 }
 
 export const recurN = (n: number) => <R,E,A>(self: Async<R,E,A>) => {
@@ -221,9 +204,7 @@ export const zipRight = <R0,E0,B>(right: Async<R0,E0,B>) => <R,E,A>(self: Async<
 }
 
 export const provide = <R>(r: R) => <E,A>(self: Async<R,E,A>) => {
-    const next = copy(self)
-    const env = S.setEnvironment(() => r);
-    return env(next) as Async<unknown, E, A>;
+    return queueProvision<unknown, E, A>(() => r, self)
 }
 
 export const access = <A,K extends keyof A>(key: K) => <R,E>(self: Async<R,E,A>) => {
@@ -247,20 +228,112 @@ export const tapEffect = <R0,E0,A0,A>(fn: (a: A) => Async<R0,E0,A0>) => <R,E>(se
     return self["|>"](chain(a => fn(a)["|>"](map(() => a))))
 }
 
-export const runWith = <R>(env: R) => async <E,A>(self: Async<R,E,A>): Promise<A> => { 
-    const inner = S.getValue(self);
-    const provision = S.getEnvironment(self);
-    try {
-        return await inner(provision(env));
-    } catch(e: unknown){
-        const recovery = S.getRecovery(self) 
-        const mapError = S.getErrorMap(self)
-        const err = mapError(e);
-        if( recovery ){
-            return await run(recovery(err))
+export const run = <E,A>(self: AsyncIO<E,A>) => self["|>"](runWith())
+
+export const runWith = <R>(...args: RemoveUnknown<R>) => async <E,A>(self: Async<R,E,A>) => {
+    const env = S.getEnvironment(self).reduce((acc, next) => next(acc), args[0]);
+    const tasks = S.getValue(self);
+
+    type Context = {
+        state: "Success" | "Failure",
+        value: any
+    } 
+
+    const context: Context = {
+        state: "Success",
+        value: undefined
+    };
+
+    for( const task of tasks ){
+        switch(task.type){
+            case "HEAD":
+                try {
+                    context.value = await task.op(env)
+                } catch(e) {
+                    context.state = "Failure";
+                    context.value = e;
+                }
+                break;
+            case "CHAIN":
+                if( context.state === "Success" ){
+                    try {
+                        const next = task.op(context.value)
+                        context.value = await next["|>"](runWith(...args as any))
+                    } catch(e) {
+                        context.state = "Failure"
+                        context.value = e
+                    }
+                }
+                break;
+            case "MAP":
+                if( context.state === "Success" ){
+                    try {
+                        context.value = task.op(context.value);
+                    } catch(e) {
+                        context.state = "Failure"
+                        context.value = e;
+                    }
+                }
+                break;
+            case "MAP_ERROR":
+                if( context.state === "Failure" ){
+                    try {
+                        context.value = task.op(context.value);
+                    } catch(e) {
+                        context.state = "Failure";
+                        context.value = e;
+                    }
+                }
+                break;
+            case "RECOVER":
+                if( context.state === "Failure" ){
+                    try {
+                        const next = task.op(context.value);
+                        const value = await next["|>"](runWith())
+                        context.state = "Success";
+                        context.value = value;
+                    } catch(e) {
+                        context.state = "Failure"
+                        context.value = e
+                    }
+                }
+                break;
+            case "RECUR_IF":
+                if( context.state === "Success" ){
+                    try {
+                        const shouldRecur = await task.op(context.value)["|>"](runWith());
+                        if( shouldRecur ){
+                            const next = await self["|>"](runWith(...args))
+                            context.state = "Success"
+                            context.value = next
+                        }
+                    } catch(e){
+                        context.state = "Failure"
+                        context.value = e;
+                    }
+                }
+                break;
+            case "RECUR_WHILE":
+                if( context.state === "Success" ){
+                    try {
+                        const shouldRecur = task.op(context.value);
+                        if( shouldRecur ){
+                            const next = await self["|>"](runWith(...args))
+                            context.state = "Success"
+                            context.value = next
+                        }
+                    } catch(e){
+                        context.state = "Failure"
+                        context.value = e;
+                    }
+                }
+                break
         }
-        throw err;
+    }
+
+    if( context.state === "Success"){
+        return context.value as A
+    } else {
+        throw context.value
     }
 }
-
-export const run = async <E,A>(self: AsyncIO<E,A>): Promise<A> => self["|>"](runWith<unknown>(undefined))
