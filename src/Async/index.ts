@@ -96,7 +96,13 @@ export const fromPredicate = <A, B extends A>(pred: (a: A) => a is B) => (a: A) 
     }
 }) as AsyncIO<Exclude<A,B>, B>
 
-export const fromNullish = fromPredicate(<A>(x: A | Nil): x is A => !isNil(x))
+export const fromNullish = <A>(a: A | Nil) => {
+    if( isNil(a) ){
+        return Fail(a) as unknown as AsyncIO<Nil, A>
+    } else {
+        return Succeed(a) as AsyncIO<Nil, A>
+    }
+}
 
 export const fromMaybe = <A>(m: M.Maybe<A>) => m["|>"](M.fold(
     () => Fail(undefined),

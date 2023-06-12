@@ -1,4 +1,5 @@
-import { Maybe } from "../Maybe/fluent"
+import { Maybe } from "../Maybe"
+import { AsyncIO } from "../Async"
 import { ThenableOf } from "../_internals/types"
 import * as E from "./"
 import { getVariant } from "../_internals/symbols"
@@ -26,12 +27,14 @@ export interface Either<L,R> {
     toPromise(): Promise<R>
     toThenable(): ThenableOf<R,L>
     toMaybe(): Maybe<R>
+    toAsync(): AsyncIO<L,R>
     unwrap(): E.Either<L,R>
 }
 
 const NullaryOperators = [
     "isRight","isLeft","get","swap","show",
-    "toPromise","toThenable","toMaybe","toAsync","unwrap",
+    "toPromise","toThenable","unwrap",
+    "toMaybe", "toAsync"
 ]
 
 const Operators = [
@@ -98,6 +101,9 @@ const fluent = <L,R>(m: E.Either<L,R>) => {
     return proxy;
 }
 
+export function wrap<L,R>(e: E.Either<L,R>){
+    return fluent(e);
+}
 export function Left<L>(l: L){
     return fluent(E.Left(l))
 }

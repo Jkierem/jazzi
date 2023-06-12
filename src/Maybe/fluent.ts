@@ -1,11 +1,13 @@
+import { Async } from "../Async"
+import { Either } from "../Either"
 import { getVariant } from "../_internals/symbols"
 import { ThenableOf } from "../_internals/types"
 import * as M from "./index"
 
 const NullaryOperators = [
     "isJust", "isNone", "get", "show",
-    "toThenable", "toPromise", "toAsync", 
-    "toEither"
+    "toThenable", "toPromise",
+    "toAsync","toEither"
 ]
 
 const Operators = [
@@ -35,14 +37,13 @@ export interface Maybe<A> {
 
     toPromise(): Promise<Awaited<A>>
     toThenable(): ThenableOf<A, undefined>
+    toEither(): Either<undefined, A>
+    toAsync(): Async<unknown, undefined, A>
 
     /**
      * Returns the internal Maybe instance
      */
     unwrap(): M.Maybe<A>
-
-    /** TODO implement */
-    toAsync(): any
 }
 
 const fluent = <T>(m: M.Maybe<T>) => {
@@ -99,6 +100,10 @@ const fluent = <T>(m: M.Maybe<T>) => {
         }
     });
     return proxy;
+}
+
+export function wrap<A>(m: M.Maybe<A>){
+    return fluent(m);
 }
 
 export function Just<A>(a: A){

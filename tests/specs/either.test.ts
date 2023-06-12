@@ -506,8 +506,8 @@ describe("Either", () => {
 
         describe("Fluent", () => {
             sharedTests(
-                F.Left,
-                F.Right,
+                <L,R>(l: L) => F.Left<L>(l) as unknown as Either<L,R>,
+                <L,R>(r: R) => F.Right<R>(r) as unknown as Either<L,R>,
                 (op: any, ...args: any[]) => (self: any) => self[op](...args)
             )
         })

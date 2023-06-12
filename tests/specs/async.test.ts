@@ -8,6 +8,11 @@ describe("Async", () => {
             const a = await A.Succeed(42)["|>"](A.run)
             expect(a).toBe(42);
         })
+
+        it("require should be identity", async () => {
+            const a = await A.require<number>()["|>"](A.provide(42))["|>"](A.run);
+            expect(a).toBe(42)
+        })
     })
 
     type Async<R,E,A> = A.Async<R,E,A> | F.Async<R,E,A>
@@ -484,8 +489,8 @@ describe("Async", () => {
 
     describe("Pipeable", () => {
         sharedTests(
-            A.failWith,
-            A.succeedWith,
+            A.failWith as any,
+            A.succeedWith as any,
             (op: string, ...args: any[]) => (self: any) => {
                 if( args.length === 0 ){
                     return self['|>']((A as any)[op]);
@@ -496,6 +501,14 @@ describe("Async", () => {
                 }
                 return self['|>']((A as any)[op](...args))
             }
+        )
+    })
+
+    describe("Fluent", () => {
+        sharedTests(
+            F.failWith as any,
+            F.succeedWith as any,
+            (op: string, ...args: any[]) => (self: any) => self[op](...args)
         )
     })
 })
