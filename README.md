@@ -127,39 +127,8 @@ await s42.zip(s42).run() // resolves to [42,42]
 await s42.zipRight(Async.Success("right")).run() // resolves to "right"
 await Async.Success("left").zipLeft(s42).run() // resolves to "left"
 
-// Similar to Promise.all
-await Async.all([s42,s42,s42]).run() // resolves to [42,42,42]
-
 // The only way to recover from a Fail
 await f42.recover((e) => Async.Success(e)).run() // resolves to 42
 
 await Async.from(() => Promise.resolve(42)).run() // resolves to 42
 ```
-
-
-AutoTypes are NewTypes with a predefined definition for typeclasses. The definition is generated assuming the trivial cases for the passed typeclasses. The function `createAutoDefinition` generates the definition used for the typeclasses based on the name of the type.
-
-```javascript
-const createAutoDefinition = (name) => ({
-    trivials: [name],
-    pure: [name],
-    resolve: [name],
-    order: [name],
-    first: name,
-    config: { noHelpers: true },
-    overrides: {
-        fold: {
-            [name](fn){ return fn(this.get()) }
-        }
-    }
-})
-```
-
-```javascript
-// Simple Auto functor
-const Boxed = AutoType("Boxed",[Functor])
-
-Boxed.of(42).fmap(x => x + 1) // Boxed 43
-```
-
-More on this on API.md
