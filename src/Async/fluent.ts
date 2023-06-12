@@ -37,7 +37,7 @@ export interface Async<R,E,A> {
     alias<K extends keyof A, K0 extends string>(original: K, aliased: K0): Async<R, E, A & { [P in K0]: A[K]; }>
     rename<K extends keyof A, K0 extends string>(original: K, aliased: K0): Async<R, E, Omit<A, K> & { [P in K0]: A[K]; }>
     tapEffect<R0,E0,A0>(fn: (a: A) => Async<R0,E0,A0>): Async<R & R0, E | E0, A>
-    runWith(...args: A.RemoveUnknown<R>): Promise<A>
+    runWith(env: R): Promise<A>
     run(): Promise<A>
     unwrap(): A.Async<R,E,A>
 }
