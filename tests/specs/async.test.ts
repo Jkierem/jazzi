@@ -71,6 +71,16 @@ describe("Async", () => {
 
                 expect(result).toBe(42)
             })
+
+            it("should have access to recovered effect", async () => {
+                const f41 = buildFailure(() => 41);
+                const s42 = call("recover", (x: number) => buildSuccess(() => x + 1))(f41)
+                const s43 = call("map", (x: number) => x + 1)(s42);
+
+                const result = await call("run")(s43);
+
+                expect(result).toBe(43)
+            })
         })
 
         describe("chain", () => {
