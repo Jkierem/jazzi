@@ -1,314 +1,266 @@
-import { Applicative, Functor, Monad, Runnable, Show, Tap, Thenable, Traversable } from "../Union/mod.ts";
+// deno-lint-ignore-file no-explicit-any
+import * as S from "../_internals/symbols.ts";
 
-import Union from "../Union/union.ts";
+import { Nil, Pipeable } from "../_internals/types.ts";
 
-import { identity, isFunction, isPrimitive, makeTuple, pass } from "../_internals/functions.ts";
+import { isNil } from "../_internals/functions.ts";
 
-import { getInnerValue, setInnerValue } from "../_internals/symbols.ts";
+import { baseObject } from "../_internals/mod.ts";
 
-import { AnyConstRec } from "../_internals/types.ts";
+import * as E from "../Either/mod.ts";
 
-import { 
-    Async,
-    AsyncIO, 
-    AsyncPartialRep, 
-    AsyncRep,
-    getCritical,
-    getEnv,
-    getFailure,
-    getIgnore,
-    getSuccess, 
-    makeWrapper,
-    setCritical,
-    setEnv,
-    setIgnore
-} from "./types.ts";
+import * as M from "../Maybe/mod.ts";
 
 
-const thenableOf = (thenImpl: (res: any, rej: any) => void) => ({
-    then: thenImpl,
-    catch(rej: any){
-        this.then(undefined, rej)
-    }
-})
+export type isNever<T> = [T] extends [never] ? true : false
 
-const AsyncType = () => (cases: AnyConstRec, globals: any) => {
-    cases.Success.prototype.zipWith = function<R,R0,E,E0,A,A0,C>(
-        this: Async<R,E,A>, 
-        right: Async<R0,E0,A0>, 
-        fn: (a: A, a0: A0) => C
-    ){
-        return this.chain(a => right.map(b => fn(a,b)))
-    }
-    cases.Success.prototype.zip = function<R,R0,E,E0,A,A0>(
-        this: Async<R,E,A>, 
-        right: Async<R0,E0,A0>, 
-    ){
-        return this.zipWith(right, makeTuple)
-    }
-    cases.Success.prototype.zipLeft = function<R,R0,E,E0,A,A0>(
-        this: Async<R,E,A>, 
-        right: Async<R0,E0,A0>, 
-    ){
-        return this.chain((a) => right.mapTo(a))
-    }
-    cases.Success.prototype.zipRight = function<R,R0,E,E0,A,A0>(
-        this: Async<R,E,A>, 
-        right: Async<R0,E0,A0>, 
-    ){
-        return this.chain(() => right)
-    }
-    cases.Success.prototype.provide = function<R,E,A>(
-        this: Async<R,E,A>,
-        p: R
-    ){
-        const ret = new cases.Success(() => {})
-        const cpy = { ...this.get() }
-        let inner = undefined
-        if( isPrimitive(p) ){
-            inner = setEnv(() => p)(cpy)
-        } else {
-            const currentEnv = getEnv(cpy)
-            inner = setEnv((e: any) => {
-                const prev = currentEnv(e)
-                if( isPrimitive(prev) ){
-                    return p
-                }
-                return {
-                    ...prev,
-                    ...p
-                }
-            })(cpy)
-        }
-        return setInnerValue(inner)(ret)
-    }
-    cases.Success.prototype.providePartial = function<R,E,A>(
-        this: Async<R,E,A>,
-        p: Partial<R>
-    ){
-        return this.provide(p as any)
-    }
-    cases.Success.prototype.provideSlice = function<R,E,A>(
-        this: Async<R,E,A>,
-        p: Partial<R>
-    ){
-        return this.provide(p as any)
-    }
-    cases.Success.prototype.recover = function(this: Async<any,any,any>, fn: any){
-        const cpy = this.map(identity)
-        return setInnerValue(setCritical(fn)(cpy.get()))(cpy)
-    }
-    cases.Success.prototype.ignore = function(this: Async<any,any,any>){
-        const a = this.mapTo(undefined);
-        return setInnerValue(setIgnore(true)(getInnerValue(a)))(a)
-    }
-    cases.Success.prototype.provideTo = function<R,E,E0,A,B>(this: Async<R,E,A>, other: Async<A,E0,B>){
-        return this.chain(a => other.provide(a))
-    }
-    cases.Success.prototype.provideSliceTo = function<R,A,E,E0,A0,B>(this: Async<R,E,A>, other: Async<A0,E0,B>){
-        return this.chain(a => other.provideSlice(a))
-    }
-    cases.Success.prototype.providePartialTo = function<R,A,E,E0,A0,B>(this: Async<R,E,A>, other: Async<A0,E0,B>){
-        return this.chain(a => other.providePartial(a))
-    }
-    cases.Success.prototype.access = function<R,E,A,K extends keyof A>(this: Async<R,E,A>, key: K){
-        return this.map(({ [key]: attr }) => attr)
-    }
-    cases.Success.prototype.alias = function<R,E,A,K extends keyof A,K0 extends string>(this: Async<R,E,A>, og: K, aliased: K0){
-        return this.map((data) => ({ ...data, [aliased]: data[og] }))
-    }
-    cases.Success.prototype.rename = function<R,E,A,K extends keyof A,K0 extends string>(this: Async<R,E,A>, og: K, aliased: K0){
-        /* istanbul ignore next */
-        return this.map(({ [og]: val, ...rest}) => ({ ...rest, [aliased]: val }))
-    }
-    cases.Success.prototype.tapEffect = function<R,E,A,R0,E0,A0>(this: Async<R,E,A>, fn: (a: A) => Async<R0,E0,A0>){
-        return this.chain((a) => fn(a).mapTo(a))
-    }
-    cases.Success.prototype.continueIf = function<R,E,A>(this: Async<R,E,A>, fn: (a: A) => boolean){
-        return this.tapEffect((a) => fn(a) ? new cases.Success(undefined) : new cases.Fail(a))
-    }
+export type isUnknown<T> = isNever<T> extends false 
+    ? unknown extends T
+        ? true
+        : false
+    : false
 
+const AsyncT: unique symbol = Symbol("Async")
 
-    cases.Fail.prototype.recover = function<R,E,A,E0,A0>(
-        this: Async<R,E,A>,
-        fn: (e: E0) => Async<unknown,Exclude<E,E0>, A0>
-    ) {
-        return new cases.Success(getFailure(getInnerValue(this))).chain(fn)
+type Type = typeof AsyncT;
+type Variant = "Async";
+
+type Base<R, E, A> = 
+    & S.WithValue<(r: R) => Promise<A>>
+    & S.WithVariant<Variant>
+    & S.WithType<Type>
+    & S.WithEnv<(...args: any) => R>
+    & S.WithErrorMap<(e: unknown) => E>
+    & S.WithRecovery<((e: E) => AsyncUIO<any>) | undefined>
+    & Pipeable
+
+export type Async<R,E,A> = Base<R, E, A>
+export type AsyncIO<E,A> = Async<unknown,E,A>
+export type AsyncRIO<R,A> = Async<R,unknown,A>
+export type AsyncUIO<A> = Async<unknown,never,A>
+
+const build = <R,E,A>(a: (r: R) => Promise<A>) => {
+    const base = baseObject({})
+    const val = S.setValue(a);
+    const typ = S.setType(AsyncT);
+    const van = S.setVariant("Async");
+    const env = S.setEnvironment((x: any) => x);
+    const emp = S.setErrorMap((x: E) => x);
+    const rec = S.setRecovery(undefined);
+    return base
+        ["|>"](val)
+        ["|>"](typ)
+        ["|>"](van)
+        ["|>"](env)
+        ["|>"](emp)
+        ["|>"](rec) as Async<R,E,A>
+}
+
+const copy = <R,E,A>(self: Async<R,E,A>) => {
+    const next = build(async x => x);
+    const val = S.setValue(S.getValue(self))
+    const env = S.setEnvironment(S.getEnvironment(self))
+    const emp = S.setErrorMap(S.getErrorMap(self))
+    const rec = S.setRecovery(S.getRecovery(self))
+    return next
+        ["|>"](val)
+        ["|>"](env)
+        ["|>"](emp)
+        ["|>"](rec) as Async<R,E,A>
+}
+
+export const succeedWith = <A>(fn: () => A) => build<unknown, never, A>(async () => fn())
+
+export const Succeed = <A>(a: A) => build<unknown, never, A>(async () => a);
+
+export const failWith = <E>(e: () => E) => build<unknown, E, never>(async () => { throw e() });
+
+export const Fail = <E>(e: E) => build<unknown, E, never>(async () => { throw e });
+
+export const of = Succeed
+
+export const from = <R,A>(fn: (r: R) => Promise<A>) => build(fn);
+
+export const fromCondition = <A>(fn: (a: A) => boolean) => (a: A) => from(async () => {
+    if( fn(a) ){
+        return a
     }
-    cases.Fail.prototype.ignore = function(){
-        return new cases.Success(undefined)
+    throw a
+}) as AsyncIO<A,A>
+
+export const fromPredicate = <A, B extends A>(pred: (a: A) => a is B) => (a: A) => from(async () => {
+    if( pred(a) ){
+        return a
+    } else {
+        throw a
     }
+}) as AsyncIO<Exclude<A,B>, B>
 
-    cases.Fail.prototype.zipWith = pass
-    cases.Fail.prototype.zip = pass
-    cases.Fail.prototype.zipLeft = pass
-    cases.Fail.prototype.zipRight = pass
-    cases.Fail.prototype.provide = pass
-    cases.Fail.prototype.providePartial = pass
-    cases.Fail.prototype.provideSlice = pass
-    cases.Fail.prototype.provideTo = pass
-    cases.Fail.prototype.providePartialTo = pass
-    cases.Fail.prototype.provideSliceTo = pass
-    cases.Fail.prototype.access = pass
-    cases.Fail.prototype.alias = pass
-    cases.Fail.prototype.tapEffect = pass
-    cases.Fail.prototype.continueIf = pass
-
-    globals.all = function(actions: AsyncIO<any,any>[]){
-        return new cases.Success(() => [])
-            .chain((data: any[]) => {
-                return actions
-                    .map(x => x.tap(x => data.push(x)))
-                    .reduce((acc,next) => acc.chain(() => next))
-                    .map(() => data)
-            })
+export const fromNullish = <A>(a: A | Nil) => {
+    if( isNil(a) ){
+        return Fail(a) as unknown as AsyncIO<Nil, A>
+    } else {
+        return Succeed(a) as AsyncIO<Nil, A>
     }
 }
 
-const AsyncDefs: any = {
-    trivials: ["Success"],
-    identities: ["Fail"],
-    pure: "Success",
-    lazy: true,
-    overrides: {
-      fmap: {
-        Success<R,E,A,B>(this: Async<R,E,A>, fn: (a: A) => B) {
-            return Async.Success((env: R) => getSuccess(this.get())(env).then(fn))
-        },
-      },
-      apply: {
-        Success<E,A,B>(this: AsyncIO<E,A>, asyncFn: AsyncIO<E,(a:A) => B>){
-            return this.chain(a => asyncFn.map(fn => fn(a))) 
-        }
-      },
-      chain: {
-        Success<R,E,A,R0,E0,B>(this: Async<R,E,A>, fn: (a: A) => Async<R0,E0,B>) {
-            return Async.Success((env: any) => this.run(env).then(a => fn(a).run(env)))
-        },
-      },
-      join: {
-        Success<R,E,A,R0,E0>(this: Async<R,E,Async<R0,E0,A>>){
-            return this.chain(identity)
-        }
-      },
-      show: {
-        Success() {
-            return `[Async => Success => (R -> _)]`;
-        },
-        Fail() {
-            return `[Async => Fail => (R -> _)]`;
-        },
-      },
-      run: {
-        async Success<R,E,A>(this: Async<R,E,A>, env: R = {} as R) {
-            const inner = this.get();
-            const provision = getEnv(inner)
-            const success = getSuccess(inner)
-            const critical = getCritical(inner)
-            const ignore = getIgnore(inner)
-            try {
-                return await success(provision(env))
-            } catch(e) {
-                if( ignore ) {
-                    return undefined
-                }
-                if( critical ){
-                    return critical(e).run()
-                }
-                return await Promise.reject(e)
-            }
-        },
-        Fail<R,E,A>(this: Async<R,E,A>){
-            return Promise.reject(getFailure(this.get()))
-        }
-      },
-      traverse(data: any[], fn: (a: any) => AsyncIO<any,any>){
-        const res: any[] = []
-        return data
-            .map(x => fn(x).tap(x => res.push(x)))
-            .reduce((acc,next) => acc.chain(() => next))
-            .fmap(() => res)
-      },
-      toPromise: {
-          Success(this: Async<any,any,any>, ...args: any[]){ return this.run(...args) },
-          Fail(this: Async<any,any,any>, ...args: any[]){ return this.run(...args) },
-      },
-      toThenable: {
-          Success(this: Async<any,any,any>, ...args: any[]){
-            return thenableOf((res, rej=identity) => this.run(...args).then(res,rej))
-          },
-          Fail(this: Async<any,any,any>,...args: any[]){
-            return thenableOf((res, rej) => this.run(...args).then(res,rej))
-          }
-      }
-    },
-};
+export const fromMaybe = <A>(m: M.Maybe<A>) => m["|>"](M.fold(
+    () => Fail(undefined),
+    Succeed
+)) as AsyncIO<undefined, A>
 
-const wrapSuccess = <R,A>(x: A | ((r: R) => A)) => (env: R) => Promise.resolve(env).then(isFunction(x) ? x : () => x);
+export const fromEither = <L,R>(e: E.Either<L,R>) => e["|>"](E.fold(
+    Fail,
+    Succeed
+)) as AsyncIO<L,R>
 
-const Async = Union(
-    "Async",
-    {
-        Success: x => makeWrapper(wrapSuccess(x), undefined),
-        Fail: x => makeWrapper(identity, x),
-    },
-    [
-        Functor(AsyncDefs),
-        Applicative(AsyncDefs),
-        Monad(AsyncDefs),
-        Tap(AsyncDefs),
-        Runnable(AsyncDefs),
-        Show(AsyncDefs),
-        Traversable(AsyncDefs),
-        Thenable(AsyncDefs),
-        AsyncType()
-    ]
-).constructors({
-    of<R=unknown,E=unknown,A=any>(this: AsyncPartialRep, fn: (env: R) => A): Async<R,E,A> {
-        return this.Success((r: R) => Promise.resolve().then(() => fn(r)))
-    },
-    from<R=never,E=unknown,A=any>(this: AsyncPartialRep, fn: (env: R) => Promise<A>): Async<R,E,A> {
-        return this.Success(fn)
-    },
-    fromPromise<A>(this: AsyncPartialRep, p: Promise<A>): Async<unknown,unknown,A> {
-        return this.Success(() => p)
-    },
-    unary<A,B,E=unknown>(this: AsyncPartialRep ,fn: (a: A) => B): (a: A) => Async<unknown,E,B> {
-        return (a: A) => this.Success(() => Promise.resolve(fn(a)))
-    },
-    identity<A>(this: AsyncPartialRep){
-        return this.Success((a: A) => Promise.resolve(a))
-    },
-    through<A,B,E=unknown>(this: AsyncPartialRep, fn: (...a: A[]) => B): (...a: A[]) => Async<unknown,E,B> {
-        return (...a: A[]) => this.Success(() => Promise.resolve(fn(...a)))
-    },
-    require<Env>(this: AsyncPartialRep): Async<Env,never,Env> {
-        return this.Success((env: Env) => Promise.resolve(env))
-    },
-    unit(this: AsyncPartialRep): Async<unknown,never,undefined> {
-        return this.Success(() => Promise.resolve(undefined))
-    },
-    fromMaybe(this: AsyncPartialRep, m: any): Async<any,undefined,any> {
-        return m.match({
-            Just: this.Success,
-            None: this.Fail
+const _require = <R>(): AsyncRIO<R,R> => build(async (r: R) => r);
+
+export { _require as require }
+
+export const map = <A,B>(fn: (a: A) => B) => <R,E>(self: Async<R,E,A>) => {
+    const next = copy(self);
+    const composed = async (r: R) => {
+        const a = await runWith(r as R)(self);
+        return await fn(a as A);
+    };
+    const val = S.setValue(composed);
+    return val(next) as unknown as Async<R,E,B>;
+}
+
+export const mapError = <E,E0>(fn: (e: E) => E0) => <R,A>(self: Async<R,E,A>) => {
+    const next = copy(self);
+    const m = S.setErrorMap((e: unknown) => fn(S.getErrorMap(self)(e)))
+    return m(next) as Async<R,E0,A>;
+}
+
+export const recover = <E,B>(fn: (e: E) => AsyncUIO<B>) => <R,A>(self: Async<R,E,A>) => {
+    const next = copy(self);
+    const r = S.setRecovery((e: unknown) => {
+        const other = fn(e as E);
+        
+        const recovered = build(async () => {
+            return await run(other);
         })
-    },
-    fromEither(this: AsyncPartialRep, e: any): Async<any,any,any> {
-        return e.match({
-            Right: this.Success,
-            Left: this.Fail
-        })
-    },
-    fromPredicate<A>(this: AsyncPartialRep, fn: (a?: A) => boolean, a?: A){
-        return fn(a) ? this.Success(() => Promise.resolve(a)) : this.Fail(a)
-    },
-    fromCondition<A>(this: AsyncPartialRep, fn: (a?: A) => boolean, a?: A){
-        return fn(a) ? this.Success(() => Promise.resolve(a)) : this.Fail(a)
-    },
-    fromCallback(this: AsyncRep, fn: (res: <T>(t: T) => void, rej: (t: any) => void) => void){
-        return this.Success(() => new Promise(fn))
+
+        return recovered;
+    })
+    return r(next) as unknown as Async<R, never, A | B>
+}
+
+export const chain = <R0,E0,A0,A>(fn: (a: A) => Async<R0, E0, A0>) => <R,E>(self: Async<R,E,A>) => {
+    const next = copy(self);
+    const composed = async (r: R & R0) => {
+        const a = await runWith(r as R)(self);
+        return await runWith(r as R0)(fn(a as A));
+    };
+    const val = S.setValue(composed);
+    return val(next) as unknown as Async<R0 & R, E0 | E, A0>;
+}
+
+export const recurIf = <A>(pred: (a: A) => AsyncUIO<boolean>) => <R,E>(self: Async<R,E,A>) => {
+    const fn = S.getValue(self);
+    async function recurring(r: R): Promise<A> {
+        const a = await fn(r);
+        const should = await S.getValue(pred(a))(undefined);
+        if( should ){
+            return await recurring(r);
+        }
+        return a
     }
-}) as unknown as AsyncRep
+    const next = build(recurring);
+    const r = S.setRecovery(S.getRecovery(self))
+    const e = S.setEnvironment(S.getEnvironment(self))
+    const m = S.setErrorMap(S.getErrorMap(self))
+    return m(r(e(next)))
+}
 
-export default Async;
+export const recurWhile = <A>(pred: (a: A) => boolean) => <R,E>(self: Async<R,E,A>) => {
+    const fn = S.getValue(self);
+    async function recurring(r: R): Promise<A> {
+        const a = await fn(r);
+        if( pred(a) ){
+            return await recurring(r);
+        }
+        return a
+    }
+    const next = build(recurring);
+    const r = S.setRecovery(S.getRecovery(self))
+    const e = S.setEnvironment(S.getEnvironment(self))
+    const m = S.setErrorMap(S.getErrorMap(self))
+    return m(r(e(next)))
+}
+
+export const recurN = (n: number) => <R,E,A>(self: Async<R,E,A>) => {
+    let recur = n;
+    return self
+        ["|>"](chain(x => {
+            recur--;
+            return Succeed(x)
+        }))
+        ["|>"](recurWhile(() => recur > 0))
+}
+
+export const zipWith = <A,B,C>(fn: (a: A, b: B) => C) => 
+    <R0, E0>(right: Async<R0,E0,B>) => 
+    <R,E>(self: Async<R,E,A>) => 
+    {
+        return self
+            ["|>"](chain(a => right["|>"](map(b => fn(a,b))))) 
+    }
+
+export const zip = <R0,E0,B>(right: Async<R0,E0,B>) => <R,E,A>(self: Async<R,E,A>) => 
+    self["|>"](zipWith((a: A, b: B) => [a,b] as [A,B])(right))
+
+export const zipLeft = <R0,E0,B>(right: Async<R0,E0,B>) => <R,E,A>(self: Async<R,E,A>) => {
+    return self["|>"](zip(right))["|>"](map<[A,B], A>(([a]) => a))
+}
+
+export const zipRight = <R0,E0,B>(right: Async<R0,E0,B>) => <R,E,A>(self: Async<R,E,A>) => {
+    return self["|>"](zip(right))["|>"](map<[A,B], B>(([_,b]) => b))
+}
+
+export const provide = <R>(r: R) => <E,A>(self: Async<R,E,A>) => {
+    const next = copy(self)
+    const env = S.setEnvironment(() => r);
+    return env(next) as Async<unknown, E, A>;
+}
+
+export const access = <A,K extends keyof A>(key: K) => <R,E>(self: Async<R,E,A>) => {
+    return self["|>"](map(a => a[key]))
+}
+
+export const alias = <A, K extends keyof A, K0 extends string>(original: K, aliased: K0) => 
+    <R,E>(self: Async<R,E,A>): Async<R, E, A & {[P in K0]: A[K]}> => {
+        return self["|>"](map(data => ({ ...data, [aliased]: data[original] } as A & { [P in K0]: A[K] })))
+    }
+
+export const rename = <A, K extends keyof A, K0 extends string>(original: K, aliased: K0) => 
+    <R,E>(self: Async<R,E,A>): Async<R, E, Omit<A,K> & {[P in K0]: A[K]}> => {
+        return self["|>"](map(({ [original]: val, ...other }) => ({
+            ...other,
+            [aliased]: val
+        } as Omit<A,K> & {[P in K0]: A[K]})))
+    }
+
+export const tapEffect = <R0,E0,A0,A>(fn: (a: A) => Async<R0,E0,A0>) => <R,E>(self: Async<R,E,A>) => {
+    return self["|>"](chain(a => fn(a)["|>"](map(() => a))))
+}
+
+export const runWith = <R>(env: R) => async <E,A>(self: Async<R,E,A>): Promise<A> => { 
+    const inner = S.getValue(self);
+    const provision = S.getEnvironment(self);
+    try {
+        return await inner(provision(env));
+    } catch(e: unknown){
+        const recovery = S.getRecovery(self) 
+        const mapError = S.getErrorMap(self)
+        const err = mapError(e);
+        if( recovery ){
+            return await run(recovery(err))
+        }
+        throw err;
+    }
+}
+
+export const run = async <E,A>(self: AsyncIO<E,A>): Promise<A> => self["|>"](runWith<unknown>(undefined))

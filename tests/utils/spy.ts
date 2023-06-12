@@ -43,6 +43,7 @@ export interface Spy<Args extends any[], Ret> {
     calledWith(...args: Args): boolean,
     getNthCall(n: number): Call<Args,Ret>,
     findCall(fn: (call: Call<Args,Ret>) => boolean): Call<Args,Ret> | undefined,
+    filterCalls(fn: (call: Call<Args,Ret>) => boolean): Call<Args, Ret>[],
     setImplementation(impl: (...args: Args[]) => Ret): Spy<Args,Ret>,
     reset(): Spy<Args,Ret>,
 }
@@ -108,6 +109,7 @@ export const Spy = <Args extends any[],Ret>(fn: (...args: Args) => Ret = identit
     sp.calledWith = (...args: Args) => calls.some(call => call.args.every((a,idx) => equals(a,args[idx])))
     sp.getNthCall = (n: number) => calls[n]
     sp.findCall = (fn: (call: Call<Args,Ret>) => boolean): Call<Args,Ret> | undefined => calls.find(fn)
+    sp.filterCalls = (fn: (call: Call<Args,Ret>) => boolean): Call<Args,Ret>[] => calls.filter(fn)
     sp.setImplementation = (fn: (...args: Args) => Ret) => {
         impl = fn
         return sp

@@ -1,43 +1,38 @@
-import Maybe from '../../src/Maybe'
-import Merge from '../../src/Merge'
-import type { Maybe as M } from "../../src/Maybe/types"
-import { isEmpty } from '../../src/_internals';
-import { Spy } from "../utils/spy";
+import * as M from "../../src/Maybe/index"
+import * as Fluent from "../../src/Maybe/fluent"
+import { run } from "../../src/Async"
 
-type AnyMaybe = M<any>
-type Maybe<A> = M<A>
+import { Spy } from "../utils/spy";
 
 describe("Maybe", () => {
     describe("Constructors", () => {
         [
-            ["from"       , "false"       , false    , "none" ],
-            ["from"       , "undefined"   , undefined, "none" ],
-            ["from"       , "0"           , 0        , "none" ],
-            ["from"       , "empty string", ""       , "none" ],
-            ["from"       , "null"        , null     , "none" ],
-            ["fromFalsy"  , "false"       , false    , "none" ],
-            ["fromFalsy"  , "undefined"   , undefined, "none" ],
-            ["fromFalsy"  , "0"           , 0        , "none" ],
-            ["fromFalsy"  , "empty string", ""       , "none" ],
-            ["fromFalsy"  , "null"        , null     , "none" ],
-            ["fromNullish", "null"        , null     , "none" ],
-            ["fromNullish", "undefined"   , undefined, "none" ],
-            ["fromArray"  , "empty array" , []       , "none" ],
-            ["fromEmpty"  , "empty object", {}       , "none" ],
-            ["fromEmpty"  , "empty string", ""       , "none" ],
-            ["fromEmpty"  , "empty array" , []       , "none" ],
-            ["fromEmpty"  , "empty of a type", Maybe.None(), "none" ],
-            ["of"       , "truthy value"   , true  , "just" ],
-            ["from"       , "truthy value"   , true  , "just" ],
-            ["fromFalsy"  , "truthy value"   , true  , "just" ],
-            ["fromArray"  , "non empty array", [ 1 ] , "just" ],
-            ["fromNullish", "neither null or undefined", 42 , "just" ],
-            ["fromEmpty"  , "non-empty object",{ a: 42 }, "just" ],
-            ["fromEmpty"  , "non-empty array", [ 42 ]   , "just" ],
-            ["fromEmpty"  , "something else" , 42       , "just" ],
+            ["from"       , "false"       , false    , "None" ],
+            ["from"       , "undefined"   , undefined, "None" ],
+            ["from"       , "0"           , 0        , "None" ],
+            ["from"       , "empty string", ""       , "None" ],
+            ["from"       , "null"        , null     , "None" ],
+            ["fromFalsy"  , "false"       , false    , "None" ],
+            ["fromFalsy"  , "undefined"   , undefined, "None" ],
+            ["fromFalsy"  , "0"           , 0        , "None" ],
+            ["fromFalsy"  , "empty string", ""       , "None" ],
+            ["fromFalsy"  , "null"        , null     , "None" ],
+            ["fromNullish", "null"        , null     , "None" ],
+            ["fromNullish", "undefined"   , undefined, "None" ],
+            ["fromEmpty"  , "empty object", {}       , "None" ],
+            ["fromEmpty"  , "empty string", ""       , "None" ],
+            ["fromEmpty"  , "empty array" , []       , "None" ],
+            ["of"         , "truthy value"   , true  , "Just" ],
+            ["from"       , "truthy value"   , true  , "Just" ],
+            ["fromFalsy"  , "truthy value"   , true  , "Just" ],
+            ["fromNullish", "not null or undefined", 42 , "Just" ],
+            ["fromEmpty"  , "non-empty object",{ a: 42 }, "Just" ],
+            ["fromEmpty"  , "non-empty array", [ 42 ]   , "Just" ],
+            ["fromEmpty"  , "something else" , 42       , "Just" ],
         ].forEach(([cons,label,val,type]: any[]) => {
             it(`${cons} should create a ${type} with ${label}`,() => {
-                expect((Maybe as any)[cons](val)).toTypeMatch(type);
+                expect((M as any)[cons](val)).toTypeMatch(type);
+                expect((Fluent as any)[cons](val)).toTypeMatch(type);
             })
         })
 
@@ -46,263 +41,371 @@ describe("Maybe", () => {
         const False = () => false;
 
         it("fromCondition should create a just with a predicate that returns true", () => {
-            expect(Maybe.fromCondition(is42,42)).toTypeMatch("Just")
-            expect(Maybe.fromCondition(True)).toTypeMatch("Just")
+            expect(Fluent.fromCondition(is42)(42)).toTypeMatch("Just")
+            expect(M.fromCondition(is42)(42)).toTypeMatch("Just")
+            expect(Fluent.fromCondition(True)(2)).toTypeMatch("Just")
+            expect(M.fromCondition(True)(2)).toTypeMatch("Just")
         })
 
         it("fromCondition should create a none with a predicate that returns false", () => {
-            expect(Maybe.fromCondition(is42,2)).toTypeMatch("None")
-            expect(Maybe.fromCondition(False)).toTypeMatch("None")
-        })
-
-        it("fromPredicate should create a just with a predicate that returns true", () => {
-            expect(Maybe.fromPredicate((x): x is 42 => is42(x),42)).toTypeMatch("Just")
-        })
-
-        it("fromPredicate should create a none with a predicate that returns false", () => {
-            expect(Maybe.fromPredicate((x): x is 42 => is42(x),2)).toTypeMatch("None")
+            expect(Fluent.fromCondition(is42)(2)).toTypeMatch("None")
+            expect(M.fromCondition(is42)(2)).toTypeMatch("None")
+            expect(Fluent.fromCondition(False)(2)).toTypeMatch("None")
+            expect(M.fromCondition(False)(2)).toTypeMatch("None")
         })
     })
 
-    describe("Type Representatives", () => {
-        describe("Eq Rep", () => {
-            it("should perform equality check by means of type rep", () => {
-                const just42 = Maybe.Just(42)
-                const none = Maybe.None()
+    describe("Operators", () => {
+        const sharedTests = (
+            buildJust: <A>(data: A) => M.Maybe<A> | Fluent.Maybe<A>,
+            buildNone: <A>() => M.Maybe<A> | Fluent.Maybe<A>,
+            call: (what: string, ...args: any[]) => (self: M.Maybe<any> | Fluent.Maybe<any>) => any
+        ) => {
 
-                expect(Maybe.equals(just42,Maybe.Just(42))).toBeTruthy();
-                expect(Maybe.equals(just42,Maybe.Just(43))).toBeFalsy();
-                expect(Maybe.equals(just42,just42)).toBeTruthy()
-                expect(Maybe.equals(none,Maybe.None())).toBeTruthy()
-            })
-        })
-
-        describe("Monad Rep", () => {
-            it("pure should return Just", () => {
-                expect(Maybe.pure(42)).toTypeMatch("Just")
-            })
-        })
-    
-        describe("Monoid Rep", () => {
-            it("empty should be none", () => {
-                expect(Maybe.empty()).toTypeMatch("None")
-            })
-            it("isEmpty should be true if none", () => {
-                expect(Maybe.isEmpty(Maybe.None())).toBeTruthy()
-            })
-            it("isEmpty should be false if not none", () => {
-                expect(Maybe.isEmpty(Maybe.Just(42))).toBeFalsy()
-                expect(Maybe.isEmpty(42)).toBeFalsy()
-            })
-        })
-    })
-
-    describe("Typeclass Instances", () => {
-        const just42 = Maybe.Just(42)
-        const none = Maybe.None()
-        const justInc = Maybe.Just((x: number) => x + 1)
-        const justArr1 = Maybe.Just([1])
-        const justArr2 = Maybe.Just([2])
-
-        describe("Boxed Maybe", () => {
-            it("should call fn if type matches the function", () => {
-                const spy = Spy(() => Maybe.Just(42));
-                expect(just42.ifNone(Maybe.None)).toTypeMatch("Just")
-                expect(just42.ifJust(spy).get()).toBe(42);
-                expect(spy).toHaveBeenCalled()
-                spy.reset()
-                expect(none.ifJust(spy)).toTypeMatch("None")
-                expect(none.ifNone(spy)).toTypeMatch("Just")
-                expect(spy).toHaveBeenCalled()
+            describe("get", () => {
+                it("should return inner value", () => {
+                    expect(call("get")(buildJust(42))).toBe(42);
+                    expect(call("get")(buildNone(  ))).toBeUndefined;
+                })
             })
 
-            it("should return inner value", () => {
-                expect(just42.get()).toBe(42)
-                expect(none.get()).toBeUndefined();
+            describe("isJust", () => {
+                const doTest = call("isJust");
+                it("should return true on Just", () => {
+                    expect(doTest(buildJust(42))).toBeTruthy();
+                    expect(doTest(buildNone(  ))).toBeFalsy();
+                })
             })
 
-            it("onNone should return inner value on Just, extract argument otherwise", () => {
-                expect(just42.onNone(1)).toBe(42)
-                expect(none.onNone(() => 43)).toBe(43)
-                expect(none.onNone(43)).toBe(43)
+            describe("isNone", () => {
+                const doTest = call("isNone");
+                it("should return true on None", () => {
+                    expect(doTest(buildJust(42))).toBeFalsy();
+                    expect(doTest(buildNone(  ))).toBeTruthy();
+                })
             })
 
-            it("should allow to check if Just or None", () => {
-                expect(just42.isJust()).toBeTruthy()
-                expect(just42.isNone()).toBeFalsy()
-                expect(none.isJust()).toBeFalsy()
-                expect(none.isNone()).toBeTruthy()
-            })
-        })
-
-        describe("Matcher Maybe", () => {
-            it("should match", () => {
-                expect(just42).toTypeMatch("Just");
-                expect(none).toTypeMatch("None");
-                expect(Maybe.match(just42,{ Just: () => true, _ : () => false })).toBeTruthy()
-                expect(Maybe.match(none,{ None: () => true, _ : () => false })).toBeTruthy()
-                expect(Maybe.match(42,({ Just: () => false, None: () => false, _: x => x }))).toBe(42)
-            })
-        })
-    
-        describe("Tap Maybe", () => {
-            it("should not call tap when none and tap should leave inner value as is", () => {
-                const fn = Spy()
-                none.tap(fn)
-                const val = just42.tap(fn).get();
-                expect(val).toBe(42)
-                expect(fn.callCount).toBe(1);
-            })
-        })
-
-        describe("Show Maybe", () => {
-            it("show -> should return string representation", () => {
-                expect(just42.toString()).toBe("[Maybe => Just 42]")
-                expect(none.toString()).toBe("[Maybe => None]")
-            })
-        })
-
-        describe("Eq Maybe", () => {
-            it("should handle equality by inner value", () => {
-                expect(just42.equals(Maybe.Just(42))).toBeTruthy();
-                expect(just42.equals(Maybe.Just(43))).toBeFalsy();
-                expect(just42.equals(just42)).toBeTruthy()
-                expect(just42.equals(42)).toBeFalsy()
-                expect(none.equals(Maybe.None())).toBeTruthy()
-                expect(none.equals(42)).toBeFalsy()
-                expect(none.equals(just42)).toBeFalsy()
-            })
-        })
-
-        describe("Functor Maybe", () => {
-            it("should not call map when is none", () => {
-                const fn = Spy();
-                none.map(fn)
-                expect(fn.called).toBeFalsy();
-            })
-
-            it("should return new object on map", () => {
-                const mapped = just42.map(x => x);
-                expect(mapped).not.toBe(just42)
-                expect(mapped.equals(just42)).toBeTruthy();
-            })
-        })
-
-        describe("Applicative Maybe", () => {
-            it("should apply inner function", () => {
-                expect(just42.apply(justInc).get()).toBe(43)
-                expect(justInc.apply(none as AnyMaybe)).toTypeMatch("None")
-                expect(none.apply(justInc as AnyMaybe)).toTypeMatch("None")
-    
-                expect(justInc.applyLeft(just42).get()).toBe(43)
-                expect(justInc.applyLeft(none as AnyMaybe)).toTypeMatch("None")
-                expect((none as AnyMaybe).applyLeft(justInc)).toTypeMatch("None")
-            })
-        })
-
-        describe("Monad Maybe", () => {
-            it("should chain", () => {
-                const fn = Spy(Maybe.Just);
-                expect(just42.chain(Maybe.Just)).toHaveValueOf(42);
-                expect(none.chain(fn)).toTypeMatch("None");
-                expect(fn.called).toBe(false);
-            })
-        })
-
-        describe("Semigroup Maybe", () => {
-            it("should concat inner values", () => {
-                expect(justArr1.concat(just42 as any)).toHaveValueOf([1,42])
-                expect(justArr1.concat(justArr2)).toHaveValueOf([1,2])
-                expect(justArr1.concat(none as any)).toHaveValueOf([1])
-                expect(none.concat(just42)).toHaveValueOf(42)
-                expect(none.concat(none)).toTypeMatch("None")
-            })
-        })
-
-        describe("Monoid Maybe", () => {
-            it("should append inner values",() => {
-                expect(justArr1.append(just42 as any)).toHaveValueOf([1,42])
-                expect(justArr1.append(justArr2)).toHaveValueOf([1,2])
-                expect(justArr1.append(none as any)).toHaveValueOf([1])
-                expect(none.append(just42)).toHaveValueOf(42)
-                expect(none.append(none)).toTypeMatch("None")
-            })
-    
-            it("empty (Just x) is Just (empty x). None if isNil(empty x)", () => {
-                const emptyJust = Maybe.Just(Merge.from({ a: 42 })).empty()
-                expect(emptyJust).toTypeMatch("Just")
-                expect(emptyJust.get()).toTypeMatch("Empty")
-                expect(emptyJust.unwrap()).toStrictEqual({})
-    
-                const emptyPrim = just42.empty()
-                expect(emptyPrim).toTypeMatch("None");
-                expect(emptyPrim.get()).toBe(undefined);
+            describe("fold", () => {
+                const onJustSpy = Spy();
+                const onNoneSpy = Spy();
                 
-                const emptyArr = Maybe.Just([42]).empty()
-                expect(emptyArr).toTypeMatch("Just")
-                expect(emptyArr.get()).toStrictEqual([])
-                
-                const emptyObj = Maybe.Just({}).empty()
-                expect(emptyObj).toTypeMatch("Just")
-                expect(emptyObj.get()).toStrictEqual({})
+                beforeEach(() => {
+                    onJustSpy.reset();
+                    onNoneSpy.reset();
+                })
+
+                const doTest = call("fold", onNoneSpy, onJustSpy)
     
-                const emptyStr = Maybe.Just("Hi").empty()
-                expect(emptyStr).toTypeMatch("Just")
-                expect(emptyStr.get()).toStrictEqual("")
+                it("should call the first argument on Just", () => {
+                    doTest(buildJust(42))
+                    expect(onJustSpy).toHaveBeenCalledWith(42);
+                    expect(onNoneSpy).not.toHaveBeenCalled();
+                })
+                
+                it("should call the second argument on None", () => {
+                    doTest(buildNone())
+                    expect(onNoneSpy).toHaveBeenCalled();
+                    expect(onJustSpy).not.toHaveBeenCalled();
+                })
+            })
+    
+            describe("match", () => {
+                const pattern = {
+                    Just: () => "just",
+                    None: () => "none"
+                }
+
+                const doTest = call("match", pattern);
+
+                it("should return value based on pattern", () => {
+                    expect(doTest(buildJust(42))).toBe("just")
+                    expect(doTest(buildNone())).toBe("none")
+                })
+            })
+    
+            describe("show", () => {
+
+                const doTest = call("show")
+
+                it("should return a proper string", () => {
+                    expect(doTest(buildJust(42))).toBe("[Maybe => Just => 42]")
+                    expect(doTest(buildNone(  ))).toBe("[Maybe => None]")
+                })
             })
 
-            it("isEmpty should return true if None and isEmpty (Just x ) === isEmpty x", () => {
-                expect(isEmpty(just42)).toBeFalsy()
-                expect(isEmpty(Maybe.Just(""))).toBeTruthy()
-                expect(isEmpty(none)).toBeTruthy()
-                expect(Maybe.isEmpty(just42)).toBeFalsy()
-                expect(Maybe.isEmpty(none)).toBeTruthy()
+            describe("map", () => {
+                const mapSpy = Spy(x => x + 1);
+                const doTest = call("map", mapSpy);
+
+                it("should call function with inner value, creating a new Maybe, if Just", () => {
+                    doTest(buildNone())
+                    const just = buildJust(42)
+                    const result = doTest(just);
+
+                    expect(mapSpy).toHaveBeenCalledOnce()
+                    expect(mapSpy).toHaveBeenCalledWith(42)
+                    expect(result).toTypeMatch("Just")
+                    expect(result).not.toBe(just);
+                    expect(result).toHaveValueOf(43);
+                })
             })
-        })
 
-        describe("Filterable Maybe", () => {
-            it("should return None on false predicate", () => {
-                expect(Maybe.Just(42).filter(x => x !== 42)).toTypeMatch("None")
-                const spy = Spy<any, boolean>()
-                none.filter(spy)
-                expect(spy.called).toBeFalsy()
+            describe("chain", () => {
+                const chainSpy = Spy(x => buildJust(x + 1));
+                const doTest = call("chain", chainSpy);
+
+                it("should call function with inner value, creating a new Maybe, if Just", () => {
+                    doTest(buildNone())
+                    const just = buildJust(42)
+                    const result = doTest(just);
+
+                    expect(chainSpy).toHaveBeenCalledOnce()
+                    expect(chainSpy).toHaveBeenCalledWith(42)
+                    expect(result).toTypeMatch("Just")
+                    expect(result).not.toBe(just);
+                    expect(result).toHaveValueOf(43);
+                })
             })
-        })
 
+            describe("tap", () => {
+                const tapSpy = Spy(x => x + 1);
+                const doTest = call("tap", tapSpy);
 
-        describe("Thenable Maybe", () => {
-            it("should resolve on Just", () => {
+                it("should call function with inner value, creating a new Maybe with the same value, if Just", () => {
+                    doTest(buildNone())
+                    const just = buildJust(42)
+                    const result = doTest(just);
+
+                    expect(tapSpy).toHaveBeenCalledOnce()
+                    expect(tapSpy).toHaveBeenCalledWith(42)
+                    expect(result).toTypeMatch("Just")
+                    expect(result).not.toBe(just);
+                    expect(result).toHaveValueOf(42);
+                })
+            })
+
+            describe("mapTo", () => {
+                it("should be a shorthand for map(() => a)", () => {
+                    const contant = { ref: undefined };
+                    const doTest = call("mapTo", contant);
+
+                    expect(doTest(buildJust(42))).toHaveValueOf(contant);
+                    expect(doTest(buildNone(  ))).toTypeMatch("None");
+                })
+            })
+
+            describe("zipWith", () => {
+                it("should join two maybes with provided function if both are Just", () => {
+                    const just41 = buildJust(41)
+                    const just42 = buildJust(42)
+                    const fnSpy  = Spy((x, y) => x + y);
+                    const doTest = call("zipWith", just42, fnSpy)
+                    const result = doTest(just41);
+                    
+                    expect(result).toTypeMatch("Just")
+                    expect(result).toHaveValueOf(83);
+                    expect(fnSpy).toHaveBeenCalledOnce();
+                    expect(fnSpy).toHaveBeenCalledWith(41, 42);
+                })
+
+                it("should return None if any Maybe is None", () => {
+                    const just  = buildJust(41)
+                    const none  = buildNone(  )
+                    const fnSpy = Spy((x, y) => x + y);
+                    const doTestLeft  = call("zipWith", just, fnSpy)
+                    const doTestRight = call("zipWith", none, fnSpy)
+                    const doTestBoth  = call("zipWith", none, fnSpy)
+                    const result1 = doTestLeft(none);
+                    const result2 = doTestRight(just);
+                    const result3 = doTestBoth(none);
+
+                    expect(result1).toTypeMatch("None")
+                    expect(result2).toTypeMatch("None")
+                    expect(result3).toTypeMatch("None")
+                    expect(fnSpy).not.toHaveBeenCalled();
+                })
+            })
+
+            describe("zip", () => {
+                it("should collect both inner values in a tuple", () => {
+                    const just41 = buildJust(41)
+                    const just42 = buildJust(42)
+                    const doTest = call("zip", just42)
+                    const result = doTest(just41);
+                    
+                    expect(result).toTypeMatch("Just")
+                    expect(result).toHaveStrictValueOf([41,42]);
+                })
+
+                it("should return None if any Maybe is None", () => {
+                    const just  = buildJust(41)
+                    const none  = buildNone(  )
+                    const doTestLeft  = call("zip", just)
+                    const doTestRight = call("zip", none)
+                    const doTestBoth  = call("zip", none)
+                    const result1 = doTestLeft(none);
+                    const result2 = doTestRight(just);
+                    const result3 = doTestBoth(none);
+
+                    expect(result1).toTypeMatch("None")
+                    expect(result2).toTypeMatch("None")
+                    expect(result3).toTypeMatch("None")
+                })
+            })
+
+            describe("zipLeft", () => {
+                it("should return left inner value if both are Just", () => {
+                    const just41 = buildJust(41)
+                    const just42 = buildJust(42)
+                    const doTest = call("zipLeft", just42)
+                    // This is read as: just41 zipLeft just42
+                    const result = doTest(just41);
+                    
+                    expect(result).toTypeMatch("Just")
+                    expect(result).toHaveValueOf(41);
+                })
+
+                it("should return None if any Maybe is None", () => {
+                    const just  = buildJust(41)
+                    const none  = buildNone(  )
+                    const doTestLeft  = call("zipLeft", just)
+                    const doTestRight = call("zipLeft", none)
+                    const doTestBoth  = call("zipLeft", none)
+                    const result1 = doTestLeft(none);
+                    const result2 = doTestRight(just);
+                    const result3 = doTestBoth(none);
+
+                    expect(result1).toTypeMatch("None")
+                    expect(result2).toTypeMatch("None")
+                    expect(result3).toTypeMatch("None")
+                })
+            })
+
+            describe("zipRight", () => {
+                it("should return right inner value if both are Just", () => {
+                    const just41 = buildJust(41)
+                    const just42 = buildJust(42)
+                    const doTest = call("zipRight", just42)
+                    // This is read as: just41 zipRight just42
+                    const result = doTest(just41);
+                    
+                    expect(result).toTypeMatch("Just")
+                    expect(result).toHaveValueOf(42);
+                })
+
+                it("should return None if any Maybe is None", () => {
+                    const just  = buildJust(41)
+                    const none  = buildNone(  )
+                    const doTestLeft  = call("zipRight", just)
+                    const doTestRight = call("zipRight", none)
+                    const doTestBoth  = call("zipRight", none)
+                    const result1 = doTestLeft(none);
+                    const result2 = doTestRight(just);
+                    const result3 = doTestBoth(none);
+
+                    expect(result1).toTypeMatch("None")
+                    expect(result2).toTypeMatch("None")
+                    expect(result3).toTypeMatch("None")
+                })
+            })
+
+            describe("toThenable", () => {
                 const thenSpy = Spy()
                 const catchSpy = Spy()
-                Maybe.Just(42).toThenable().then(thenSpy,catchSpy)
-                expect(thenSpy.calledWith(42)).toBeTruthy()
-                expect(catchSpy.called).toBeFalsy()
+                const doTest = call("toThenable")
+
+                it("should resolve on Just", () => {
+                    return expect(doTest(buildJust(42))).resolves.toBe(42);
+                })
+
+                it("should reject on None", () => {
+                    return expect(doTest(buildNone(  ))).rejects.toBeUndefined();
+                })
+
+                it("should call first argument if Just, second if None", () => {
+                    doTest(buildNone()).then(thenSpy, catchSpy)
+
+                    expect(thenSpy).not.toHaveBeenCalled()
+                    expect(catchSpy).toHaveBeenCalled()
+
+                    catchSpy.reset();
+
+                    doTest(buildJust(42)).then(thenSpy, catchSpy)
+                    doTest(buildJust(42)).catch(catchSpy)
+
+                    expect(thenSpy).toHaveBeenCalledWith(42);
+                    expect(catchSpy).not.toHaveBeenCalled();
+
+                    doTest(buildNone()).catch(catchSpy)
+
+                    expect(catchSpy).toHaveBeenCalled()
+                })
             })
-            it("should reject on None", () => {
-                const thenSpy = Spy()
-                const catchSpy = Spy()
-                Maybe.None().toThenable().then(thenSpy,catchSpy)
-                expect(catchSpy.calledWith(undefined)).toBeTruthy()
-                expect(thenSpy.called).toBeFalsy()
+
+            describe("toPromise", () => {
+                const doTest = call("toPromise")
+
+                it("should resolve on Just", () => {
+                    return expect(doTest(buildJust(42))).resolves.toBe(42);
+                })
+
+                it("should reject on None", () => {
+                    return expect(doTest(buildNone(  ))).rejects.toBeUndefined();
+                })
             })
+
+            describe("toEither", () => {
+                const cast = call("toEither");
+
+                it("should return Right<A> if Just<A>", () => {
+                    const e = cast(buildJust(42))
+                    expect(e).toTypeMatch("Right")
+                    expect(e).toHaveValueOf(42)
+                })
+
+                it("should return Left<undefined> if None", () => {
+                    const e = cast(buildNone())
+                    expect(e).toTypeMatch("Left")
+                    expect(e).toHaveValueOf(undefined)
+                })
+            })
+
+            describe("toAsync", () => {
+                it("should succeed if Just", async () => {
+                    const result = await run(call("toAsync")(buildJust(42)))
+
+                    expect(result).toBe(42);
+                })
+
+                it("should fail if None", async () => {
+                    const result = run(call("toAsync")(buildNone()));
+
+                    await expect(result).rejects.toBeUndefined();
+                })
+            })
+        }
+
+        describe("Pipeable", () => {
+            sharedTests(
+                M.Just, M.None, 
+                (op: string, ...args: any[]) => (self: any) => {
+                    if( args.length === 0 ){
+                        return self['|>']((M as any)[op]);
+                    }
+                    if( op === "zipWith" ){
+                        const [m, fn] = args
+                        return self['|>'](M.zipWith(fn)(m))
+                    }
+                    return self['|>']((M as any)[op](...args))
+                }
+            )
         })
 
-        describe("Foldable Maybe", () => {
-            it("should call left on None", () => {
-                const [left, right] = [Spy(() => 42), Spy()]
-                const ret = Maybe.None().fold(left,right)
-                expect(ret).toBe(42)
-                expect(left).toHaveBeenCalled()
-                expect(right).not.toHaveBeenCalled()
-            })
-            it("should call right on Just", () => {
-                const [left, right] = [Spy(), Spy(() => 42)]
-                const ret = Maybe.Just(41).fold(left,right)
-                expect(ret).toBe(42)
-                expect(right).toHaveBeenCalled()
-                expect(right).toHaveBeenCalledWith(41)
-                expect(left).not.toHaveBeenCalled()
-            })
+        describe("Fluent", () => {
+            sharedTests(
+                Fluent.Just, Fluent.None, 
+                (op: string, ...args: any[]) => (self: any) => self[op](...args)
+            );
         })
     })
 })
