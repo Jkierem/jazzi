@@ -1,5 +1,5 @@
-import { Maybe } from "../Maybe"
-import { AsyncIO } from "../Async"
+import { Maybe, wrap as wrapM } from "../Maybe/fluent"
+import { AsyncIO, wrap as wrapA } from "../Async/fluent"
 import { ThenableOf } from "../_internals/types"
 import * as E from "./"
 import { getVariant } from "../_internals/symbols"
@@ -31,14 +31,17 @@ export interface Either<L,R> {
     unwrap(): E.Either<L,R>
 }
 
+const Conversions = [
+    "toAsync", "toMaybe"
+]
+
 const NullaryOperators = [
     "isRight","isLeft","get","swap","show",
-    "toPromise","toThenable","unwrap",
-    "toMaybe", "toAsync"
+    "toPromise","toThenable","unwrap"
 ]
 
 const Operators = [
-    ...NullaryOperators,
+    ...NullaryOperators, ...Conversions,
     "getOr","getLeftOr","fold",
    "map","chain","mapLeft","mapTo","mapLeftTo",
     "match","tap","zipWith","zip","zipLeft",
@@ -76,6 +79,15 @@ const fluent = <L,R>(m: E.Either<L,R>) => {
                 if( ["zip", "zipLeft", "zipRight"].includes(p) ){
                     return <L0,R0>(other: Either<L0,R0>) => {
                         return fluent(target['|>']((E as any)[p](other.unwrap())));
+                    }
+                }
+
+                if( Conversions.includes(p) ){
+                    if( p === "toAsync" ){
+                        return () => wrapA(E.toAsync(target))
+                    }
+                    if( p === "toMaybe" ){
+                        return () => wrapM(E.toMaybe(target))
                     }
                 }
 
