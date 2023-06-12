@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { Maybe, wrap as wrapM } from "../Maybe/fluent"
 import { AsyncIO, wrap as wrapA } from "../Async/fluent"
 import { ThenableOf } from "../_internals/types"
@@ -87,7 +88,7 @@ const fluent = <L,R>(m: E.Either<L,R>) => {
                         return () => wrapA(E.toAsync(target))
                     }
                     if( p === "toMaybe" ){
-                        return () => wrapM(E.toMaybe(target))
+                        return () => wrapM(E.toMaybe(target) as any)
                     }
                 }
 

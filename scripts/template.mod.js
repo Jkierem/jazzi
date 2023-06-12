@@ -25,7 +25,10 @@ const loadSymbols = (symbolPath) => {
 const fixImports = (data) => {
   return data.replaceAll(/from ["'].*["'];?\s?/gm,(str) => {
     const path = last(str.trim().replaceAll(/["';]/g,"").split("from "));
-    const isFile = Boolean(path.match(/(\/[a-z][^\/]*)$/))
+    if( path === "./" ){
+      return 'from "./mod.ts";'
+    }
+    const isFile = Boolean(path.match(/(\/[a-z][^\/]*)$/));
     const isFolder = Boolean(path.match(/(\/[A-Z_][^\/]*)$/))
     const isUrl = Boolean(path.startsWith("https"))
     if( isUrl ){

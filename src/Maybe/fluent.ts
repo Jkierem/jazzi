@@ -2,7 +2,7 @@ import { Async, wrap as wrapA } from "../Async/fluent"
 import { Either, wrap as wrapE } from "../Either/fluent"
 import { getVariant } from "../_internals/symbols"
 import { ThenableOf } from "../_internals/types"
-import * as M from "./index"
+import * as M from "./"
 
 const Conversions = [
     "toAsync", "toEither"

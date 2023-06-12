@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import * as S from "../_internals/symbols"
 import { Nil, Pipeable } from "../_internals/types";
 import { isNil } from "../_internals/functions";
@@ -13,8 +14,6 @@ export type isUnknown<T> = isNever<T> extends false
         : false
     : false
 
-export type RemoveUnknown<A> = isUnknown<A> extends true ? [env?: never] : [env: A];
-
 const AsyncT: unique symbol = Symbol("Async")
 
 type Type = typeof AsyncT;
@@ -27,7 +26,6 @@ type Base<R, E, A> =
     & S.WithEnv<(...args: any) => R>
     & S.WithErrorMap<(e: unknown) => E>
     & S.WithRecovery<((e: E) => AsyncUIO<any>) | undefined>
-    & S.WithValueMap<(a: A) => A>
     & Pipeable
 
 export type Async<R,E,A> = Base<R, E, A>
@@ -41,7 +39,6 @@ const build = <R,E,A>(a: (r: R) => Promise<A>) => {
     const typ = S.setType(AsyncT);
     const van = S.setVariant("Async");
     const env = S.setEnvironment((x: any) => x);
-    const vmp = S.setValueMap((x: A) => x)
     const emp = S.setErrorMap((x: E) => x);
     const rec = S.setRecovery(undefined);
     return base
@@ -49,7 +46,6 @@ const build = <R,E,A>(a: (r: R) => Promise<A>) => {
         ["|>"](typ)
         ["|>"](van)
         ["|>"](env)
-        ["|>"](vmp)
         ["|>"](emp)
         ["|>"](rec) as Async<R,E,A>
 }
@@ -58,13 +54,11 @@ const copy = <R,E,A>(self: Async<R,E,A>) => {
     const next = build(async x => x);
     const val = S.setValue(S.getValue(self))
     const env = S.setEnvironment(S.getEnvironment(self))
-    const vmp = S.setValueMap(S.getValueMap(self))
     const emp = S.setErrorMap(S.getErrorMap(self))
     const rec = S.setRecovery(S.getRecovery(self))
     return next
         ["|>"](val)
         ["|>"](env)
-        ["|>"](vmp)
         ["|>"](emp)
         ["|>"](rec) as Async<R,E,A>
 }
@@ -120,8 +114,12 @@ export { _require as require }
 
 export const map = <A,B>(fn: (a: A) => B) => <R,E>(self: Async<R,E,A>) => {
     const next = copy(self);
-    const vmp = S.setValueMap((x: A) => fn(S.getValueMap(self)(x)))
-    return vmp(next) as unknown as Async<R,E,B>;
+    const composed = async (r: R) => {
+        const a = await runWith(r as R)(self);
+        return await fn(a as A);
+    };
+    const val = S.setValue(composed);
+    return val(next) as unknown as Async<R,E,B>;
 }
 
 export const mapError = <E,E0>(fn: (e: E) => E0) => <R,A>(self: Async<R,E,A>) => {
@@ -139,7 +137,7 @@ export const recover = <E,B>(fn: (e: E) => AsyncUIO<B>) => <R,A>(self: Async<R,E
             return await run(other);
         })
 
-        return S.setValueMap(S.getValueMap(next))(recovered)
+        return recovered;
     })
     return r(next) as unknown as Async<R, never, A | B>
 }
@@ -148,7 +146,7 @@ export const chain = <R0,E0,A0,A>(fn: (a: A) => Async<R0, E0, A0>) => <R,E>(self
     const next = copy(self);
     const composed = async (r: R & R0) => {
         const a = await runWith(r as R)(self);
-        return await runWith(r as R0)(fn(a));
+        return await runWith(r as R0)(fn(a as A));
     };
     const val = S.setValue(composed);
     return val(next) as unknown as Async<R0 & R, E0 | E, A0>;
@@ -209,11 +207,11 @@ export const zip = <R0,E0,B>(right: Async<R0,E0,B>) => <R,E,A>(self: Async<R,E,A
     self["|>"](zipWith((a: A, b: B) => [a,b] as [A,B])(right))
 
 export const zipLeft = <R0,E0,B>(right: Async<R0,E0,B>) => <R,E,A>(self: Async<R,E,A>) => {
-    return self["|>"](zip(right))["|>"](map(([a]) => a))
+    return self["|>"](zip(right))["|>"](map<[A,B], A>(([a]) => a))
 }
 
 export const zipRight = <R0,E0,B>(right: Async<R0,E0,B>) => <R,E,A>(self: Async<R,E,A>) => {
-    return self["|>"](zip(right))["|>"](map(([_,b]) => b))
+    return self["|>"](zip(right))["|>"](map<[A,B], B>(([_,b]) => b))
 }
 
 export const provide = <R>(r: R) => <E,A>(self: Async<R,E,A>) => {
@@ -243,22 +241,20 @@ export const tapEffect = <R0,E0,A0,A>(fn: (a: A) => Async<R0,E0,A0>) => <R,E>(se
     return self["|>"](chain(a => fn(a)["|>"](map(() => a))))
 }
 
-export const runWith = <R>(...args: RemoveUnknown<R>) => async <E,A>(self: Async<R,E,A>): Promise<A> => { 
+export const runWith = <R>(env: R) => async <E,A>(self: Async<R,E,A>): Promise<A> => { 
     const inner = S.getValue(self);
     const provision = S.getEnvironment(self);
-    const valueMap = S.getValueMap(self);
     try {
-        const val = await inner(provision(...args));
-        return valueMap(val);
+        return await inner(provision(env));
     } catch(e: unknown){
         const recovery = S.getRecovery(self) 
         const mapError = S.getErrorMap(self)
         const err = mapError(e);
         if( recovery ){
-            return await runWith()(recovery(err))
+            return await run(recovery(err))
         }
         throw err;
     }
 }
 
-export const run = async <E,A>(self: AsyncIO<E,A>): Promise<A> => self["|>"](runWith())
+export const run = async <E,A>(self: AsyncIO<E,A>): Promise<A> => self["|>"](runWith<unknown>(undefined))
