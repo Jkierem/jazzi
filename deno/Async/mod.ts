@@ -26,16 +26,18 @@ const AsyncT: unique symbol = Symbol("Async")
 type Type = typeof AsyncT;
 type Variant = "Async";
 
+type NullUnitOf<K extends string> = { type: K }
 type UnitOf<K extends string, A> = { type: K, op: (prev: any) => A }
 
 type Head<A> = UnitOf<"HEAD", Promise<A>>
 type Map<A> = UnitOf<"MAP", A>
 type MapError<A> = UnitOf<"MAP_ERROR", A>
-type Recover<A> = UnitOf<"RECOVER", AsyncUIO<A>>
+type Recover<A> = UnitOf<"RECOVER", AsyncIO<unknown,A>>
 type Chain<A> = UnitOf<"CHAIN", Async<unknown,unknown,A>>
 type RecurIf = UnitOf<"RECUR_IF", AsyncUIO<boolean>>
 type RecurWhile = UnitOf<"RECUR_WHILE", boolean>
-type Unit<A> = 
+type Swap = NullUnitOf<"SWAP">
+type Task<A> = 
  | Head<A>
  | Map<A>
  | Chain<A>
@@ -43,35 +45,37 @@ type Unit<A> =
  | Recover<A>
  | RecurIf
  | RecurWhile
+ | Swap
 
-type EnvUnit<R> = ((arg: any) => R)
+type Env<R> = ((arg: any) => R)
 
-type Base<R,E,A> = 
-    & S.WithType<Type>
-    & S.WithVariant<Variant>
-    & S.WithEnv<EnvUnit<R>[]>
-    & S.WithValue<Unit<A>[]>
-    & S.WithErrorMap<E>
-    & Pipeable
+type Base<R,E,A> = {
+    [S.Type]: Type;
+    [S.Variant]: Variant;
+    [S.Env]: Env<R>[];
+    [S.Value]: Task<A>[];
+    [S.ErrorMap]: E;
+} & Pipeable
 
-export type Async<R,E,A> = Base<R, E, A>
+export interface Async<R,E,A> extends Base<R, E, A> {}
 export type AsyncIO<E,A> = Async<unknown,E,A>
-export type AsyncRIO<R,A> = Async<R,unknown,A>
+export type AsyncRIO<R,A> = Async<R,never,A>
 export type AsyncUIO<A> = Async<unknown,never,A>
 
 const makeHead = <R,A>(op: (r: R) => Promise<A>):  Head<A> => ({ type: "HEAD", op })
 const makeMap = <A,B>(op: (a: A) => B): Map<B> => ({ type: "MAP", op })
 const makeMapError = <A,B>(op: (a: A) => B): MapError<B> => ({ type: "MAP_ERROR", op })
 const makeChain = <A,R,E,B>(op: (a: A) => Async<R,E,B>): Chain<B> => ({ type: "CHAIN", op })
-const makeRecover = <A,B>(op: (a: A) => AsyncUIO<B>): Recover<B> => ({ type: "RECOVER", op })
+const makeRecover = <A,E,B>(op: (a: A) => AsyncIO<E,B>): Recover<B> => ({ type: "RECOVER", op })
 const makeRecurIf = <A>(op: (a: A) => AsyncUIO<boolean>): RecurIf => ({ type: "RECUR_IF", op })
 const makeRecurWhile = <A>(op: (a: A) => boolean): RecurWhile => ({ type: "RECUR_WHILE", op })
+const makeSwap = (): Swap => ({ type: "SWAP" })
 
-const build = <R,E,A>(fn: (r: R) => Promise<A>) => {
+const build = <R,E=never,A=unknown>(fn: (r: R) => Promise<A>) => {
     const base = baseObject({})
     const typ = S.setType(AsyncT);
     const van = S.setVariant("Async");
-    const val = S.setValue([makeHead(fn)] as Unit<A>[]);
+    const val = S.setValue([makeHead(fn)] as Task<A>[]);
     const env = S.setEnvironment([(x: any) => x]);
     return base
         ["|>"](val)
@@ -93,11 +97,11 @@ const copy = <R,E,A>(self: Async<R,E,A>) => {
         ["|>"](env) as Async<R,E,A>;
 }
 
-const queueTask = <R,E,A>(task: Unit<unknown>, self: Async<unknown, unknown, unknown>) => {
+const queueTask = <R,E,A>(task: Task<unknown>, self: Async<unknown, unknown, unknown>) => {
     return S.setValue([...S.getValue(self), task])(copy(self)) as Async<R,E,A>
 }
 
-const queueProvision = <R,E,A>(pTask: EnvUnit<R>, self: Async<unknown, unknown, unknown>) => {
+const queueProvision = <R,E,A>(pTask: Env<R>, self: Async<unknown, unknown, unknown>) => {
     return S.setEnvironment([...S.getEnvironment(self), pTask])(copy(self)) as Async<R,E,A>
 }
 
@@ -109,9 +113,9 @@ export const Fail = <E>(e: E) => build<unknown, E, never>(async () => await Prom
 
 export const failWith = <E>(e: () => E) => build<unknown, E, never>(async () => { throw e() });
 
-export const of = Succeed
+export const of = <R,E=never,A=unknown>(fn: (r: R) => A) => from<R,E,A>(async (r: R) => await Promise.resolve(fn(r)));
 
-export const from = <R,A>(fn: (r: R) => Promise<A>) => build(fn);
+export const from = <R,E=never,A=unknown>(fn: (r: R) => Promise<A>) => build<R,E,A>(fn);
 
 export const fromCondition = <A>(fn: (a: A) => boolean) => (a: A) => from(() => {
     if( fn(a) ){
@@ -148,7 +152,9 @@ export const fromEither = <L,R>(e: E.Either<L,R>) => e["|>"](E.fold(
 
 const _require = <R>(): AsyncRIO<R,R> => build(async (r: R) => await Promise.resolve(r));
 
-export { _require as require }
+const _do = () => Succeed({});
+
+export { _require as require, _do as do };
 
 export const map = <A,B>(fn: (a: A) => B) => <R,E>(self: Async<R,E,A>) => {
     return queueTask<R,E,B>(makeMap(fn), self);
@@ -162,8 +168,12 @@ export const chain = <A,R0,E0,B>(fn: (a: A) => Async<R0, E0, B>) => <R,E>(self: 
     return queueTask<R & R0, E | E0, B>(makeChain(fn), self);
 }
 
-export const recover = <E,A0>(fn: (e: E) => AsyncUIO<A0>) => <R,A>(self: Async<R,E,A>) => {
-    return queueTask<R, never, A0 | A>(makeRecover(fn), self)
+export const recover = <E,E0,A0>(fn: (e: E) => AsyncIO<E0,A0>) => <R,A>(self: Async<R,E,A>) => {
+    return queueTask<R, E0, A0 | A>(makeRecover(fn), self)
+}
+
+export const swap = <R,E,A>(self: Async<R,E,A>) => {
+    return queueTask<R,A,E>(makeSwap(), self);
 }
 
 export const recurIf = <A>(fn: (a: A) => AsyncUIO<boolean>) => <R,E>(self: Async<R,E,A>) => {
@@ -211,22 +221,32 @@ export const access = <A,K extends keyof A>(key: K) => <R,E>(self: Async<R,E,A>)
     return self["|>"](map(a => a[key]))
 }
 
-export const alias = <A, K extends keyof A, K0 extends string>(original: K, aliased: K0) => 
-    <R,E>(self: Async<R,E,A>): Async<R, E, A & {[P in K0]: A[K]}> => {
-        return self["|>"](map(data => ({ ...data, [aliased]: data[original] } as A & { [P in K0]: A[K] })))
+export const alias = <A, K extends keyof A, K0 extends string>(original: K, aliased: Exclude<K0, keyof A>) => 
+    <R,E>(self: Async<R,E,A>): Async<R, E, { [P in K0 | keyof A]: P extends keyof A ? A[P] : A[K] }> => {
+        return self
+            ["|>"](map(data => ({ ...data, [aliased]: data[original] } as { [P in K0 | keyof A]: P extends keyof A ? A[P] : A[K] })))    
     }
 
-export const rename = <A, K extends keyof A, K0 extends string>(original: K, aliased: K0) => 
-    <R,E>(self: Async<R,E,A>): Async<R, E, Omit<A,K> & {[P in K0]: A[K]}> => {
+export const rename = <A, K extends keyof A, K0 extends string>(original: K, aliased: Exclude<K0, keyof A>) => 
+    <R,E>(self: Async<R,E,A>): Async<R, E, { [P in K0 | Exclude<keyof A, K>]: P extends Exclude<keyof A, K> ? A[P] : A[K]}> => {
         return self["|>"](map(({ [original]: val, ...other }) => ({
             ...other,
             [aliased]: val
-        } as Omit<A,K> & {[P in K0]: A[K]})))
+        } as { [P in K0 | Exclude<keyof A, K>]: P extends Exclude<keyof A, K> ? A[P] : A[K]})))
     }
 
 export const tapEffect = <R0,E0,A0,A>(fn: (a: A) => Async<R0,E0,A0>) => <R,E>(self: Async<R,E,A>) => {
     return self["|>"](chain(a => fn(a)["|>"](map(() => a))))
 }
+
+export const bind = <K extends string, A, R0, E0, A0>(key: Exclude<K, keyof A>, fn: (a: A) => Async<R0,E0,A0>) => <R,E>(self: Async<R,E,A>) => 
+    self['|>'](chain(val => fn(val)['|>'](map(bound => ({ ...val, [key]: bound } as { [P in K | keyof A]: P extends keyof A ? A[P]: A0 })))))
+
+export const provideTo = <A,E0,A0>(other: Async<A, E0, A0>) => <R,E>(self: Async<R,E,A>) => self["|>"](chain(r => other["|>"](provide(r))))
+
+export const mapTo = <T>(a: T) => map(() => a)
+
+export const ignore = <R,E,A>(self: Async<R,E,A>) => self["|>"](mapTo(undefined))["|>"](recover(() => Succeed(undefined)))
 
 export const run = <E,A>(self: AsyncIO<E,A>) => self["|>"](runWith())
 
@@ -327,7 +347,10 @@ export const runWith = <R>(...args: RemoveUnknown<R>) => async <E,A>(self: Async
                         context.value = e;
                     }
                 }
-                break
+                break;
+            case "SWAP":
+                context.state = context.state === "Success" ? "Failure" : "Success"
+                break;
         }
     }
 
