@@ -4,26 +4,32 @@ import { getVariant } from "../_internals/symbols"
 import { Nil } from "../_internals/types"
 import * as A from "./"
 
+const NullaryEffect = [
+    "swap","ignore"
+]
+
 const NullaryOperators = [
     "run","unwrap"
 ]
 
 const Operators = [
+    ...NullaryEffect,
     ...NullaryOperators,
     "map","mapError","recover","chain","recurIf",
     "recurWhile","recurN","zipWith","zip","zipLeft",
     "zipRight","provide","access","alias","rename",
-    "tapEffect","runWith","|>"
+    "mapTo", "bind", "provideTo",
+    "tapEffect","runWith", "|>"
 ]
 
 export type AsyncIO<E,A> = Async<unknown,E,A>
-export type AsyncRIO<R,A> = Async<R,unknown,A>
+export type AsyncRIO<R,A> = Async<R,never,A>
 export type AsyncUIO<A> = Async<unknown,never,A>
 
 export interface Async<R,E,A> {
     map<B>(fn: (a: A) => B): Async<R,E,A>
     mapError<B>(fn: (e: E) => B): Async<R,B,A>
-    recover<B>(fn: (e: E) => AsyncUIO<B>): Async<R, never, A | B>
+    recover<E0,B>(fn: (e: E) => AsyncIO<E0,B>): Async<R, E0, A | B>
     chain<R0,E0,A0>(fn: (a: A) => Async<R0,E0,A0>): Async<R & R0, E | E0, A0>
     recurIf(pred: (a: A) => AsyncUIO<boolean>): Async<R,E,A>
     recurWhile(pred: (a: A) => boolean): Async<R,E,A>
@@ -34,10 +40,18 @@ export interface Async<R,E,A> {
     zipRight<R0,E0,B>(right: Async<R0,E0,B>): Async<R & R0, E | E0, B>
     provide(r: R): Async<unknown, E, A>
     access<K extends keyof A>(k: K): Async<R, E, A[K]>
-    alias<K extends keyof A, K0 extends string>(original: K, aliased: K0): Async<R, E, A & { [P in K0]: A[K]; }>
-    rename<K extends keyof A, K0 extends string>(original: K, aliased: K0): Async<R, E, Omit<A, K> & { [P in K0]: A[K]; }>
-    tapEffect<R0,E0,A0>(fn: (a: A) => Async<R0,E0,A0>): Async<R & R0, E | E0, A>
     runWith(...args: A.RemoveUnknown<R>): Promise<A>
+    tapEffect<R0,E0,A0>(fn: (a: A) => Async<R0,E0,A0>): Async<R & R0, E | E0, A>
+    alias<K extends keyof A, K0 extends string>(original: K, aliased: Exclude<K0, keyof A>): 
+        Async<R, E, { [P in K0 | keyof A]: P extends keyof A ? A[P] : A[K] }>
+    rename<K extends keyof A, K0 extends string>(original: K, aliased: Exclude<K0, keyof A>): 
+        Async<R, E, { [P in K0 | Exclude<keyof A, K>]: P extends Exclude<keyof A, K> ? A[P] : A[K]}>
+    bind<K extends string, R0, E0, A0>(key: Exclude<K, keyof A>, fn: (a: A) => Async<R0,E0,A0>): 
+        Async<R & R0, E0 | E, { [P in keyof (A & { [P in K]: A0; })]: (A & { [P in K]: A0; })[P]; }>
+    mapTo<B>(b: B): Async<R,E,B>
+    provideTo<E0,A0>(other: Async<A, E0, A0>): Async<R, E0 | E, A0>
+    swap(): Async<R,A,E>
+    ignore(): Async<R, never, undefined>
     run(): Promise<A>
     unwrap(): A.Async<R,E,A>
 }
@@ -73,6 +87,12 @@ const fluent = <R,E,A>(m: A.Async<R,E,A>) => {
                 if( ["zip", "zipLeft", "zipRight"].includes(p) ){
                     return <R0,E0,A0>(other: Async<R0,E0,A0>) => {
                         return fluent(target['|>']((A as any)[p](other.unwrap())));
+                    }
+                }
+
+                if( NullaryEffect.includes(p) ){
+                    return () => {
+                        return fluent((A as any)[p](target));
                     }
                 }
 
@@ -128,8 +148,8 @@ export function Fail<E>(e: E){
     return fluent(A.Fail(e));
 }
 
-export function of<A>(a: A){
-    return fluent(A.of(a))
+export function of<R,E=never,A=unknown>(fn: (r: R) => A){
+    return fluent(A.of(fn))
 }
 
 export function from<R,A>(fn: (r: R) => Promise<A>){
@@ -160,4 +180,8 @@ function _require<R>(){
     return fluent(A.require<R>())
 }
 
-export { _require as require }
+function _do(){
+    return fluent(A.do());
+}
+
+export { _require as require, _do as do }

@@ -20,6 +20,7 @@ describe("Async", () => {
     const sharedTests = (
         buildFailure: <R,E,A>(a: () => E) => Async<R,E,A>,
         buildSuccess: <R,E,A>(a: () => A) => Async<R,E,A>,
+        environment: <R>() => Async<R,never,R>,
         call: (what: string, ...args: any[]) => (self: Async<any,any,any>) => any
     ) => {
         describe("map", () => {
@@ -495,12 +496,76 @@ describe("Async", () => {
                 expect(rightSpy).toHaveBeenCalledOnce()
             })
         })
+
+        describe("bind", () => {
+            it("should bind effects to keys", async () => {
+                const bound = buildSuccess(() => ({}))
+
+                const bind1 = call("bind", "a", () => buildSuccess(() => 1))
+                const bind2 = call("bind", "b", () => buildSuccess(() => 2))
+                const bind3 = call("bind", "c", ({ a }: { a: number }) => buildSuccess(() => a + 2))
+
+                const result = await call("run")(bind3(bind2(bind1(bound))))
+
+                expect(result).toStrictEqual({ a: 1, b: 2, c: 3 })
+            })
+        })
+
+        describe("provideTo", () => {
+            it("should provide a different effect using this effect", async () => {
+                const provisioner = buildSuccess(() => 41)
+                const provisioned = environment<number>()
+
+                const effect = call("map", (x: number) => x + 1)(call("provideTo", provisioned)(provisioner))
+
+                const result = await call("run")(effect)
+
+                expect(result).toBe(42)
+            })
+        })
+
+        describe("swap", () => {
+            it("should change success to fail", async () => {
+                const s42 = buildSuccess(() => 42)
+
+                const result = call("run")(call("swap")(s42));
+
+                await expect(result).rejects.toBe(42);
+            })
+
+            it("should change fail to success", async () => {
+                const f42 = buildFailure(() => 42)
+
+                const result = call("run")(call("swap")(f42));
+
+                await expect(result).resolves.toBe(42);
+            })
+        })
+
+        describe("ignore", () => {
+            it("should ignore success", async () => {
+                const s42 = buildSuccess(() => 42)
+
+                const result = call("run")(call("ignore")(s42));
+
+                await expect(result).resolves.toBeUndefined();
+            })
+
+            it("should ignore failures", async () => {
+                const f42 = buildFailure(() => 42)
+
+                const result = call("run")(call("ignore")(f42));
+
+                await expect(result).resolves.toBeUndefined();
+            })
+        })
     }
 
     describe("Pipeable", () => {
         sharedTests(
             A.failWith as any,
             A.succeedWith as any,
+            <R>() => A.require<R>(),
             (op: string, ...args: any[]) => (self: any) => {
                 if( args.length === 0 ){
                     return self['|>']((A as any)[op]);
@@ -518,6 +583,7 @@ describe("Async", () => {
         sharedTests(
             F.failWith as any,
             F.succeedWith as any,
+            <R>() => F.require<R>(),
             (op: string, ...args: any[]) => (self: any) => self[op](...args)
         )
     })
