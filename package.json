@@ -1,7 +1,7 @@
 {
     "name": "jazzi",
     "version": "4.1.0",
-    "main": "./dist/index.js",
+    "main": "./index.js",
     "license": "MIT",
     "publishConfig": {
         "access": "public"
@@ -11,7 +11,12 @@
         "url": "https://github.com/Jkierem/jazzi"
     },
     "files": [
-        "dist"
+        "_internals",
+        "Async",
+        "Either",
+        "Maybe",
+        "index.d.ts",
+        "index.js"
     ],
     "scripts": {
         "build": "yarn build:ts && yarn build:deno",

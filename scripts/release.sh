@@ -1,0 +1,1 @@
+deno run --allow-read --allow-write ./release.deno.ts
