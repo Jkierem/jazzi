@@ -32,7 +32,7 @@ const runCmd = (cmd: string, args: string[]) => A.from(async ({ deno }: Runtime)
     } else {
         return Promise.reject(decodeOrEmpty(stderr)+`\nProcess exited with non-zero code ${code}`)
     }
-})
+})["|>"](A.tapEffect(printLn))
 
 const read = (file: string) => A.from(({ deno }: Runtime) => deno.readFile(file).then(decode))
 
@@ -125,7 +125,7 @@ const program = A.do()
     ["|>"](A.bind("release", ({ version }) => A.Succeed(`release-${version}`)))
     ["|>"](A.tapEffect(({ release }) => branch(release)))
     ["|>"](A.tapEffect(({ release }) => checkout(release)))
-    ["|>"](A.tapEffect(({ release }) => doPrompt(release)))
+    ["|>"](A.chain(({ release }) => doPrompt(`Released ${release} prepted`)))
     ["|>"](A.zipLeft(yarn("build")))
     ["|>"](A.zipLeft(move("dist/*", "./*")))
     ["|>"](A.zipRight(status))
