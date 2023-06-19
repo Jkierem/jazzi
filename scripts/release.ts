@@ -15,8 +15,6 @@ const usingRuntime = A.require<Runtime>()
 const runCmd = (cmd: string, args: string[]) => A.from(async ({ deno }: Runtime) => {
     const command = new deno.Command(cmd, { args })
 
-    console.log(cmd, args)
-
     const { code, stdout, stderr } = await command.output();
 
     const fromTyped = M.fromCondition((x: Uint8Array) => Boolean(x.length))
@@ -26,9 +24,13 @@ const runCmd = (cmd: string, args: string[]) => A.from(async ({ deno }: Runtime)
         ['|>'](M.fold(() => "", x => x))
 
     if( code === 0 ){
-        return decodeOrEmpty(stdout)
+        const a = decodeOrEmpty(stdout)
+        console.log(a);
+        return a;
     } else {
-        return Promise.reject(decodeOrEmpty(stderr)+`\nProcess exited with non-zero code ${code}`)
+        const err = decodeOrEmpty(stderr)
+        console.error(err);
+        return Promise.reject(err)
     }
 })
 
