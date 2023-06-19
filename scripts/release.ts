@@ -19,6 +19,8 @@ const runCmd = (cmd: string, args: string[]) => A.from(async ({ deno }: Runtime)
         stdout: "piped"
     })
 
+    console.log(cmd, args)
+
     const { code, stdout, stderr } = await command.output();
 
     const fromTyped = M.fromCondition((x: Uint8Array) => Boolean(x.length))
