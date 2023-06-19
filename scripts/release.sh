@@ -1,1 +1,0 @@
-deno run --allow-read --allow-write ./scripts/release.deno.ts $1

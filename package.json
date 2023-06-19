@@ -22,6 +22,7 @@
         "build": "yarn build:ts && yarn build:deno",
         "build:ts": "tsc",
         "build:deno": "deno run --unstable --allow-read --allow-write scripts/build.js",
+        "release": "deno run --unstable --allow-read --allow-write --allow-run scripts/release.ts",
         "clean": "rm -rf ./dist && rm -rf ./deno && rm -rf ./coverage",
         "test": "rm -rf ./coverage && jest --coverage --verbose",
         "test:silent": "rm -rf ./coverage && jest --silent",
