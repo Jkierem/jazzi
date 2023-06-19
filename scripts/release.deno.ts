@@ -6,8 +6,8 @@ const decode = (x: Uint8Array) => Decoder.decode(x)
 
 type DenoServices = Pick<typeof Deno, "readFile" | "Command" | "args" | "writeTextFile">
 type Runtime = { 
-    console: Console, 
-    prompt: typeof prompt,
+    print: Console, 
+    ask: typeof prompt,
     deno: DenoServices
 };
 const usingRuntime = A.require<Runtime>()
@@ -38,9 +38,9 @@ const read = (file: string) => A.from(({ deno }: Runtime) => deno.readFile(file)
 
 const write = (file: string) => (content: string) => A.from(({ deno }: Runtime) => deno.writeTextFile(file, content))
 
-const printLn = (str: string) => usingRuntime["|>"](A.map(({ console }) => console.log(str)))
+const printLn = (str: string) => usingRuntime["|>"](A.map(({ print }) => print.log(str)))
 
-const doPrompt = (msg: string) => usingRuntime["|>"](A.map(({ prompt }) => prompt(msg)))
+const doPrompt = (msg: string) => usingRuntime["|>"](A.map(({ ask }) => ask(msg,"")))
 
 type DeclineError = { kind: "declinedPrompt" }
 type NonInteractiveError = { kind: "notInteractive" }
@@ -48,7 +48,7 @@ const confirmation = (msg: string) => printLn(msg)
     ["|>"](A.zipRight(doPrompt("Do you want to continue? [y/N]")))
     ["|>"](A.chain(res => res && ["y", "yes"].includes(res.toLowerCase()) 
         ? A.Succeed(void 0)
-        : A.Fail(res 
+        : A.Fail(res !== null 
             ? { kind: "declinedPrompt" } as DeclineError
             : { kind: "notInteractive" } as NonInteractiveError
         )
@@ -125,6 +125,7 @@ const program = A.do()
     ["|>"](A.bind("release", ({ version }) => A.Succeed(`release-${version}`)))
     ["|>"](A.tapEffect(({ release }) => branch(release)))
     ["|>"](A.tapEffect(({ release }) => checkout(release)))
+    ["|>"](A.tapEffect(({ release }) => doPrompt(release)))
     ["|>"](A.zipLeft(yarn("build")))
     ["|>"](A.zipLeft(move("dist/*", "./*")))
     ["|>"](A.zipRight(status))
@@ -136,8 +137,8 @@ const env: Runtime = {
         args: Deno.args,
         Command: Deno.Command,
     },
-    prompt,
-    console
+    ask: prompt,
+    print: console
 }
 
 program["|>"](A.runWith(env))

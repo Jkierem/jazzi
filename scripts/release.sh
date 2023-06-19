@@ -1,1 +1,1 @@
-deno run --allow-read --allow-write ./release.deno.ts
+deno run --allow-read --allow-write ./scripts/release.deno.ts $1
