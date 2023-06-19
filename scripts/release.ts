@@ -13,11 +13,7 @@ type Runtime = {
 const usingRuntime = A.require<Runtime>()
 
 const runCmd = (cmd: string, args: string[]) => A.from(async ({ deno }: Runtime) => {
-    const command = new deno.Command(cmd, {
-        args,
-        stderr: "piped", 
-        stdout: "piped"
-    })
+    const command = new deno.Command(cmd, { args })
 
     console.log(cmd, args)
 
@@ -34,7 +30,7 @@ const runCmd = (cmd: string, args: string[]) => A.from(async ({ deno }: Runtime)
     } else {
         return Promise.reject(decodeOrEmpty(stderr)+`\nProcess exited with non-zero code ${code}`)
     }
-})["|>"](A.tapEffect(printLn))
+})
 
 const read = (file: string) => A.from(({ deno }: Runtime) => deno.readFile(file).then(decode))
 
@@ -77,7 +73,7 @@ const checkout = (branch: string) => runCmd("git", ["checkout", branch])
 
 const status = runCmd("git", ["status"])
 
-const yarn = (cmd: string) => runCmd("yarn", [cmd])
+const yarn = (cmd: string) => runCmd("/c/Program Files (x86)/Yarn/bin/yarn", [cmd])
 
 const move = (src: string, dst: string) => runCmd("mv", [src, dst])
 
