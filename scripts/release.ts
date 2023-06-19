@@ -65,7 +65,7 @@ const parsePackage = (str: string): A.AsyncIO<ParsingError, Package> => {
     const pack = JSON.parse(str) as RawPackage;
     if( pack.version ){
         const version = pack.version.split(".").map(Number) as [number, number, number]
-        return A.Succeed({ version });
+        return A.Succeed({ ...pack, version });
     } else {
         return A.Fail({ kind: "parsingError" } as ParsingError)
     }
@@ -118,7 +118,7 @@ const updateVersion = A.do()
     ["|>"](A.bind("bump", () => bumbVersion))
     ["|>"](A.bind("version", ({ pck, bump }) => A.Succeed(bump(pck.version).join(".") as RawVersion)))
     ["|>"](A.tapEffect(({ pck, version }) => confirmation(`About to change version from ${pck.version.join(".")} to ${version}`)))
-    ["|>"](A.bind("packageContent", ({ pck, version }) => A.Succeed(JSON.stringify({ ...pck, version }))))
+    ["|>"](A.bind("packageContent", ({ pck, version }) => A.Succeed(JSON.stringify({ ...pck, version }, null, 3))))
     ["|>"](A.bind("_", ({ packageContent }) => write("./package.json")(packageContent)))
     ["|>"](A.access("version"))
 
