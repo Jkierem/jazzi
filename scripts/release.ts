@@ -75,7 +75,7 @@ const checkout = (branch: string) => runCmd("git", ["checkout", branch])
 
 const status = runCmd("git", ["status"])
 
-const yarn = (cmd: string) => runCmd("/c/Program Files (x86)/Yarn/bin/yarn", [cmd])
+const yarn = (cmd: string) => runCmd("yarn", [cmd])
 
 const move = (src: string, dst: string) => runCmd("mv", [src, dst])
 
