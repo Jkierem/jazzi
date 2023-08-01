@@ -262,7 +262,7 @@ export const bind = <K extends string, A, R0, E0, A0>(key: Exclude<K, keyof A>, 
 export const bindTo = <K extends string, A, R0, E0, A0>(key: Exclude<K, keyof A>, other: Async<R0,E0,A0>) => <R,E>(self: Async<R,E,A>) => 
     self['|>'](chain(val => other['|>'](map(bound => ({ ...val, [key]: bound } as { [P in K | keyof A]: P extends keyof A ? A[P]: A0 })))))
 
-export const _let = <K extends string, A, B>(key: Exclude<K, keyof A>, fn: (a: A) => B) => <R,E>(self: Async<R,E,A>) => 
+const _let = <K extends string, A, B>(key: Exclude<K, keyof A>, fn: (a: A) => B) => <R,E>(self: Async<R,E,A>) => 
     self['|>'](map((val) => ({ ...val, [key]: fn(val) } as { [P in K | keyof A]: P extends keyof A ? A[P]: B })))
 
 export { _let as let };
@@ -273,7 +273,7 @@ export const mapTo = <T>(a: T) => map(() => a)
 
 export const ignore = <R,E,A>(self: Async<R,E,A>) => self["|>"](mapTo(undefined))["|>"](recover(() => Succeed(undefined)))
 
-export const run = <E,A,Self extends Async<unknown,E,A>>(self: EnvOf<unknown,Self>) => self["|>"](runWith())
+export const run = <E,A>(self: Async<unknown, E, A>) => self["|>"](runWith()) as Promise<A>
 
 export const runWith = <R>(...args: RemoveUnknown<R>) => async <E,A, Self extends Async<R,E,A>>(self: EnvOf<R,Self>) => {
     const env = S.getEnvironment(self).reduce((acc, next) => next(acc), args[0]);

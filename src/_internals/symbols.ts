@@ -5,6 +5,8 @@ export const Type     = Symbol("@@type");
 export const Variant  = Symbol("@@variant");
 export const Env      = Symbol("@@env");
 export const ErrorMap = Symbol("@@errormap");
+export const Producer = Symbol("@@producer");
+export const Scheduler = Symbol("@@scheduler");
 
 export type WithSymbol<T extends symbol,U> = { [P in T]: U }
 
@@ -20,6 +22,8 @@ export const getValue = getSymbol(Value)
 export const getType = getSymbol(Type)
 export const getVariant = getSymbol(Variant)
 export const getEnvironment = getSymbol(Env)
+export const getProducer = getSymbol(Producer)
+export const getScheduler = getSymbol(Scheduler)
 
 export const setSymbol = <Sym extends symbol>(sym: Sym) => <T>(value: T) => <U>( withSym: U): U & WithSymbol<Sym,T> => {
     (withSym as any)[sym] = value
@@ -30,3 +34,5 @@ export const setValue = setSymbol(Value)
 export const setType = setSymbol(Type)
 export const setVariant = setSymbol(Variant)
 export const setEnvironment = setSymbol(Env)
+export const setProducer = setSymbol(Producer)
+export const setScheduler = setSymbol(Scheduler)
