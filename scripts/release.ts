@@ -4,11 +4,11 @@ import * as M from "https://deno.land/x/jazzi@v4.1.0/Maybe/mod.ts"
 const Decoder = new TextDecoder()
 const decode = (x: Uint8Array) => Decoder.decode(x)
 
-type DenoServices = Pick<typeof Deno, "readFile" | "Command" | "args" | "writeTextFile">
+type DenoServices = Pick<typeof Deno, "readFile" | "Command" | "args" | "writeTextFile" | "rename">
 type Runtime = { 
     print: Console, 
     ask: typeof prompt,
-    deno: DenoServices
+    deno: DenoServices,
 };
 const usingRuntime = A.require<Runtime>()
 
@@ -77,7 +77,11 @@ const status = runCmd("git", ["status"])
 
 const yarn = (cmd: string) => runCmd("yarn", [cmd])
 
-const move = (src: string, dst: string) => runCmd("mv", [src, dst])
+const move = (src: string, dst: string) => usingRuntime["|>"](A.chain((runtime) => {
+    return A.succeedWith(() => {
+        runtime.deno.rename(src, dst);
+    })
+}))
 
 type BumpKind = "major" | "minor" | "patch"
 const bump = (kind: BumpKind) => ([ma, mi, pa]: ParsedVersion): ParsedVersion => {
@@ -127,7 +131,7 @@ const program = A.do()
     ["|>"](A.tapEffect(({ release }) => checkout(release)))
     ["|>"](A.chain(({ release }) => confirmation(`Released ${release} prepted`)))
     ["|>"](A.zipLeft(yarn("build")))
-    ["|>"](A.zipLeft(move("../dist/*", "../")))
+    ["|>"](A.zipLeft(move("./dist/*", "./")))
     ["|>"](A.zipRight(status))
 
 const env: Runtime = {
@@ -136,6 +140,7 @@ const env: Runtime = {
         writeTextFile: Deno.writeTextFile,
         args: Deno.args,
         Command: Deno.Command,
+        rename: Deno.rename
     },
     ask: prompt,
     print: console
