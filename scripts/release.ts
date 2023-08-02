@@ -83,6 +83,16 @@ const move = (src: string, dst: string) => usingRuntime["|>"](A.chain((runtime) 
     })
 }))
 
+const fromDistToRoot = (str: string) => move(`./dist/${str}`, `./${str}`);
+
+const moveBuild = fromDistToRoot("_internals")
+    ["|>"](A.zipRight(fromDistToRoot("Async")))
+    ["|>"](A.zipRight(fromDistToRoot("Either")))
+    ["|>"](A.zipRight(fromDistToRoot("Maybe")))
+    ["|>"](A.zipRight(fromDistToRoot("Observable")))
+    ["|>"](A.zipRight(fromDistToRoot("index.d.ts")))
+    ["|>"](A.zipRight(fromDistToRoot("index.js")))
+
 type BumpKind = "major" | "minor" | "patch"
 const bump = (kind: BumpKind) => ([ma, mi, pa]: ParsedVersion): ParsedVersion => {
     switch(kind){
@@ -131,7 +141,7 @@ const program = A.do()
     ["|>"](A.tapEffect(({ release }) => checkout(release)))
     ["|>"](A.chain(({ release }) => confirmation(`Released ${release} prepted`)))
     ["|>"](A.zipLeft(yarn("build")))
-    ["|>"](A.zipLeft(move("./dist/*", "./")))
+    ["|>"](A.zipLeft(moveBuild))
     ["|>"](A.zipRight(status))
 
 const env: Runtime = {
