@@ -1,11 +1,7 @@
 import * as S from "../_internals/symbols.ts";
-
 import { Key, Pipeable } from "../_internals/types.ts";
-
 import { isNil } from "../_internals/functions.ts";
-
 import { baseObject } from "../_internals/mod.ts";
-
 
 const EitherT: unique symbol = Symbol("Either")
 const LeftV = "Left"

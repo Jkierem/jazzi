@@ -1,20 +1,17 @@
 // deno-lint-ignore-file no-explicit-any
 import { fromMaybe } from "../Async/mod.ts";
-
 import { Either, Left, Right } from "../Either/constructors.ts";
-
 import * as S from "../_internals/symbols.ts";
-
 import { ThenableOf } from "../_internals/types.ts";
-
 import { Just, Maybe, None } from "./constructors.ts";
-
 
 export const isJust = <A>(self: Maybe<A>): self is Just<A> => S.getVariant(self) === "Just"
 
 export const isNone = <A>(self: Maybe<A>): self is None => S.getVariant(self) === "None"
 
 export const get = <M extends Maybe<any>>(self: M): M extends Just<infer A> ? A : undefined => S.getValue(self as Maybe<any>);
+
+export const getOrElse = <B>(onNone: () => B) => <A>(self: Maybe<A>) => isJust(self) ? get(self) : onNone()
 
 export const fold = <A,L,R>(onNone: () => L, onJust: (data: A) => R) => (self: Maybe<A>) => {
     if( isJust(self) ){

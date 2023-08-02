@@ -1,6 +1,5 @@
 import type { Nil } from "./types.ts";
 
-
 export const equals = (a: any, b: any): boolean => {
     const typeA = typeof a
     const typeB = typeof b

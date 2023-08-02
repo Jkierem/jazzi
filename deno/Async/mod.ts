@@ -1,15 +1,9 @@
 import * as S from "../_internals/symbols.ts";
-
 import { Nil, Pipeable } from "../_internals/types.ts";
-
 import { isNil } from "../_internals/functions.ts";
-
 import { baseObject } from "../_internals/mod.ts";
-
 import * as E from "../Either/mod.ts";
-
 import * as M from "../Maybe/mod.ts";
-
 
 type isNever<T> = [T] extends [never] ? true : false
 
@@ -20,6 +14,13 @@ type isUnknown<T> = isNever<T> extends false
     : false
 
 export type RemoveUnknown<A> = isUnknown<A> extends true ? [env?: never] : [env: A];
+
+type _R<A> = A extends Async<infer R,any,any> ? R : never
+type Equals<T, S> =
+    [T] extends [S] 
+    ? ([S] extends [T] ? true : false) 
+    : false
+type EnvOf<R,A> = Equals<R,_R<A>> extends true ? A : never
 
 const AsyncT: unique symbol = Symbol("Async")
 
@@ -221,6 +222,22 @@ export const access = <A,K extends keyof A>(key: K) => <R,E>(self: Async<R,E,A>)
     return self["|>"](map(a => a[key]))
 }
 
+export const pick = <A, K extends keyof A>(keys: K[]) => <R,E>(self: Async<R,E,A>) => {
+    return self["|>"](map(a => 
+        Object.fromEntries(Object
+        .entries(a as Record<keyof A, A[keyof A]>)
+        .filter(([key]) => keys.includes(key as any))) as { [P in K]: A[P] }
+    ))
+}
+
+export const omit = <A, K extends keyof A>(keys: K[]) => <R,E>(self: Async<R,E,A>) => {
+    return self["|>"](map(a => 
+        Object.fromEntries(Object
+        .entries(a as Record<keyof A, A[keyof A]>)
+        .filter(([key]) => !keys.includes(key as any))) as { [P in Exclude<keyof A, K>]: A[P] }
+    ))
+}
+
 export const alias = <A, K extends keyof A, K0 extends string>(original: K, aliased: Exclude<K0, keyof A>) => 
     <R,E>(self: Async<R,E,A>): Async<R, E, { [P in K0 | keyof A]: P extends keyof A ? A[P] : A[K] }> => {
         return self
@@ -242,15 +259,23 @@ export const tapEffect = <R0,E0,A0,A>(fn: (a: A) => Async<R0,E0,A0>) => <R,E>(se
 export const bind = <K extends string, A, R0, E0, A0>(key: Exclude<K, keyof A>, fn: (a: A) => Async<R0,E0,A0>) => <R,E>(self: Async<R,E,A>) => 
     self['|>'](chain(val => fn(val)['|>'](map(bound => ({ ...val, [key]: bound } as { [P in K | keyof A]: P extends keyof A ? A[P]: A0 })))))
 
+export const bindTo = <K extends string, A, R0, E0, A0>(key: Exclude<K, keyof A>, other: Async<R0,E0,A0>) => <R,E>(self: Async<R,E,A>) => 
+    self['|>'](chain(val => other['|>'](map(bound => ({ ...val, [key]: bound } as { [P in K | keyof A]: P extends keyof A ? A[P]: A0 })))))
+
+const _let = <K extends string, A, B>(key: Exclude<K, keyof A>, fn: (a: A) => B) => <R,E>(self: Async<R,E,A>) => 
+    self['|>'](map((val) => ({ ...val, [key]: fn(val) } as { [P in K | keyof A]: P extends keyof A ? A[P]: B })))
+
+export { _let as let };
+
 export const provideTo = <A,E0,A0>(other: Async<A, E0, A0>) => <R,E>(self: Async<R,E,A>) => self["|>"](chain(r => other["|>"](provide(r))))
 
 export const mapTo = <T>(a: T) => map(() => a)
 
 export const ignore = <R,E,A>(self: Async<R,E,A>) => self["|>"](mapTo(undefined))["|>"](recover(() => Succeed(undefined)))
 
-export const run = <E,A>(self: AsyncIO<E,A>) => self["|>"](runWith())
+export const run = <E,A>(self: Async<unknown, E, A>) => self["|>"](runWith()) as Promise<A>
 
-export const runWith = <R>(...args: RemoveUnknown<R>) => async <E,A>(self: Async<R,E,A>) => {
+export const runWith = <R>(...args: RemoveUnknown<R>) => async <E,A, Self extends Async<R,E,A>>(self: EnvOf<R,Self>) => {
     const env = S.getEnvironment(self).reduce((acc, next) => next(acc), args[0]);
     const tasks = S.getValue(self);
 

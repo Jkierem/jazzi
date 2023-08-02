@@ -1,13 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
 import { Maybe, wrap as wrapM } from "../Maybe/fluent.ts";
-
 import { AsyncIO, wrap as wrapA } from "../Async/fluent.ts";
-
 import { ThenableOf } from "../_internals/types.ts";
-
-import * as E from "./mod.ts";
-import { getVariant } from "../_internals/symbols.ts";
-
+import * as E from "./mod.ts";import { getVariant } from "../_internals/symbols.ts";
 
 export interface Either<L,R> {
     isRight(): boolean,

@@ -18,8 +18,8 @@ const Operators = [
     "map","mapError","recover","chain","recurIf",
     "recurWhile","recurN","zipWith","zip","zipLeft",
     "zipRight","provide","access","alias","rename",
-    "mapTo", "bind", "provideTo",
-    "tapEffect","runWith", "|>"
+    "mapTo", "bind", "provideTo", "bindTo", "let",
+    "tapEffect","runWith", "pick", "omit", "|>"
 ]
 
 export type AsyncIO<E,A> = Async<unknown,E,A>
@@ -27,7 +27,7 @@ export type AsyncRIO<R,A> = Async<R,never,A>
 export type AsyncUIO<A> = Async<unknown,never,A>
 
 export interface Async<R,E,A> {
-    map<B>(fn: (a: A) => B): Async<R,E,A>
+    map<B>(fn: (a: A) => B): Async<R,E,B>
     mapError<B>(fn: (e: E) => B): Async<R,B,A>
     recover<E0,B>(fn: (e: E) => AsyncIO<E0,B>): Async<R, E0, A | B>
     chain<R0,E0,A0>(fn: (a: A) => Async<R0,E0,A0>): Async<R & R0, E | E0, A0>
@@ -47,7 +47,13 @@ export interface Async<R,E,A> {
     rename<K extends keyof A, K0 extends string>(original: K, aliased: Exclude<K0, keyof A>): 
         Async<R, E, { [P in K0 | Exclude<keyof A, K>]: P extends Exclude<keyof A, K> ? A[P] : A[K]}>
     bind<K extends string, R0, E0, A0>(key: Exclude<K, keyof A>, fn: (a: A) => Async<R0,E0,A0>): 
-        Async<R & R0, E0 | E, { [P in keyof (A & { [P in K]: A0; })]: (A & { [P in K]: A0; })[P]; }>
+        Async<R & R0, E0 | E, { [P in K | keyof A]: P extends keyof A ? A[P]: A0 }>
+    bindTo<K extends string, R0, E0, A0>(key: Exclude<K, keyof A>, other: Async<R0,E0,A0>): 
+        Async<R & R0, E0 | E, { [P in K | keyof A]: P extends keyof A ? A[P]: A0 }>
+    let<K extends string, B>(key: Exclude<K, keyof A>, fn: (a: A) => B): 
+        Async<R, E, { [P in K | keyof A]: P extends keyof A ? A[P]: B }>
+    pick<K extends keyof A>(keys: K[]): Async<R,E,{ [P in K]: A[P] }>
+    omit<K extends keyof A>(keys: K[]): Async<R,E,{ [P in Exclude<keyof A, K>]: A[P] }>
     mapTo<B>(b: B): Async<R,E,B>
     provideTo<E0,A0>(other: Async<A, E0, A0>): Async<R, E0 | E, A0>
     swap(): Async<R,A,E>
