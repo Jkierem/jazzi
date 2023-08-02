@@ -4,7 +4,7 @@ import * as M from "https://deno.land/x/jazzi@v4.1.0/Maybe/mod.ts"
 const Decoder = new TextDecoder()
 const decode = (x: Uint8Array) => Decoder.decode(x)
 
-type DenoServices = Pick<typeof Deno, "readFile" | "Command" | "args" | "writeTextFile" | "rename">
+type DenoServices = Pick<typeof Deno, "readFile" | "Command" | "args" | "writeTextFile">
 type Runtime = { 
     print: Console, 
     ask: typeof prompt,
@@ -77,22 +77,6 @@ const status = runCmd("git", ["status"])
 
 const yarn = (cmd: string) => runCmd("yarn", [cmd])
 
-const move = (src: string, dst: string) => usingRuntime["|>"](A.chain((runtime) => {
-    return A.succeedWith(() => {
-        runtime.deno.rename(src, dst);
-    })
-}))
-
-const fromDistToRoot = (str: string) => move(`./dist/${str}`, `./${str}`);
-
-const moveBuild = fromDistToRoot("_internals")
-    ["|>"](A.zipRight(fromDistToRoot("Async")))
-    ["|>"](A.zipRight(fromDistToRoot("Either")))
-    ["|>"](A.zipRight(fromDistToRoot("Maybe")))
-    ["|>"](A.zipRight(fromDistToRoot("Observable")))
-    ["|>"](A.zipRight(fromDistToRoot("index.d.ts")))
-    ["|>"](A.zipRight(fromDistToRoot("index.js")))
-
 type BumpKind = "major" | "minor" | "patch"
 const bump = (kind: BumpKind) => ([ma, mi, pa]: ParsedVersion): ParsedVersion => {
     switch(kind){
@@ -141,7 +125,6 @@ const program = A.do()
     ["|>"](A.tapEffect(({ release }) => checkout(release)))
     ["|>"](A.chain(({ release }) => confirmation(`Released ${release} prepted`)))
     ["|>"](A.zipLeft(yarn("build")))
-    ["|>"](A.zipLeft(moveBuild))
     ["|>"](A.zipRight(status))
 
 const env: Runtime = {
@@ -149,8 +132,7 @@ const env: Runtime = {
         readFile: Deno.readFile,
         writeTextFile: Deno.writeTextFile,
         args: Deno.args,
-        Command: Deno.Command,
-        rename: Deno.rename
+        Command: Deno.Command
     },
     ask: prompt,
     print: console
