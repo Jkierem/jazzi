@@ -1,14 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
 import { fromMaybe } from "../Async/mod.ts";
-
 import { Either, Left, Right } from "../Either/constructors.ts";
-
 import * as S from "../_internals/symbols.ts";
-
 import { ThenableOf } from "../_internals/types.ts";
-
 import { Just, Maybe, None } from "./constructors.ts";
-
 
 export const isJust = <A>(self: Maybe<A>): self is Just<A> => S.getVariant(self) === "Just"
 

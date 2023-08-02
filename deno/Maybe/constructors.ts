@@ -1,11 +1,7 @@
 import * as S from "../_internals/symbols.ts";
-
 import { Key, Pipeable } from "../_internals/types.ts";
-
 import { isEmpty, isNil } from "../_internals/functions.ts";
-
 import { baseObject } from "../_internals/mod.ts";
-
 
 const MaybeT: unique symbol = Symbol("Maybe")
 const JustV = "Just"

@@ -1,6 +1,5 @@
 import { Pipeable, ThenableOf } from "./types.ts";
 
-
 export const fromPairs = <T>(pairs: [string,T][]) => pairs.reduce((acc,[key,val]) => {
     (acc as any)[key] = val;
     return acc;

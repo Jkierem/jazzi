@@ -1,13 +1,8 @@
 import { Either } from "../Either/fluent.ts";
-
 import { Maybe } from "../Maybe/fluent.ts";
-
 import { getVariant } from "../_internals/symbols.ts";
-
 import { Nil } from "../_internals/types.ts";
-
 import * as A from "./mod.ts";
-
 const NullaryEffect = [
     "swap","ignore"
 ]

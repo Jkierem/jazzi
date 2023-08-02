@@ -1,5 +1,4 @@
 import * as O undefined
-
 const ClosedOps = [
     "map", "chain", "sequence", "filter",
     "reduce", "collect", "takeWhile", "bufferEvery",

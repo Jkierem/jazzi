@@ -1,13 +1,8 @@
 import { Async, wrap as wrapA } from "../Async/fluent.ts";
-
 import { Either, wrap as wrapE } from "../Either/fluent.ts";
-
 import { getVariant } from "../_internals/symbols.ts";
-
 import { ThenableOf } from "../_internals/types.ts";
-
 import * as M from "./mod.ts";
-
 const Conversions = [
     "toAsync", "toEither"
 ]

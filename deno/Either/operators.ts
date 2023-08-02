@@ -1,13 +1,8 @@
 import { fromEither } from "../Async/mod.ts";
-
 import { Just, None } from "../Maybe/constructors.ts";
-
 import * as S from "../_internals/symbols.ts";
-
 import { ThenableOf } from "../_internals/types.ts";
-
 import { Either, Right, Left } from "./constructors.ts";
-
 
 export const isRight = <L,R>(self: Either<L,R>): self is Right<R> => S.getVariant(self) === "Right";
 

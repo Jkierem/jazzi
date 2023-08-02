@@ -1,15 +1,9 @@
 import * as S from "../_internals/symbols.ts";
-
 import { Nil, Pipeable } from "../_internals/types.ts";
-
 import { isNil } from "../_internals/functions.ts";
-
 import { baseObject } from "../_internals/mod.ts";
-
 import * as E from "../Either/mod.ts";
-
 import * as M from "../Maybe/mod.ts";
-
 
 type isNever<T> = [T] extends [never] ? true : false
 
