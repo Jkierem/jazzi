@@ -21,13 +21,14 @@ const Operators = [
     ...NullaryOperators, ...Conversions,
     "fold", "match", "map", "chain", "tap", "mapTo", 
     "zipWith", "zip", "zipLeft", "zipRight",
-    "unwrap"
+    "unwrap", "getOrElse"
 ]
 
 export interface Maybe<A> {
     isJust(): boolean
     isNone(): boolean
     get(): A | undefined
+    getOrElse<B>(onNone: () => B): A | B
     fold<L,R>(onNone: () => L, onJust: (data: A) => R): L | R
     match<B,C>(pattern: M.Pattern<A,B,C>): B | C
     show(): string

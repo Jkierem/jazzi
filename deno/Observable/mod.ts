@@ -1,7 +1,11 @@
-import * as T from "../Async/index"
-import { baseObject } from "../_internals"
-import * as S from "../_internals/symbols"
-import { Pipeable } from "../_internals/types"
+import * as T from "../Async/index.ts";
+
+import { baseObject } from "../_internals/mod.ts";
+
+import * as S from "../_internals/symbols.ts";
+
+import { Pipeable } from "../_internals/types.ts";
+
 
 export interface EventTarget<Event> {
     addEventListener(eventName: string, handler: (event: Event) => void): void,

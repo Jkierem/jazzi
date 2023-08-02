@@ -3,7 +3,7 @@ import * as F from "../../src/Async/fluent"
 import { Spy } from "../utils/spy"
 
 describe("Async", () => {
-    describe("constructors", () => {
+    describe("Constructors", () => {
         it("Succeed<A> should return Promise<A> on run", async () => {
             const a = await A.Succeed(42)["|>"](A.run)
             expect(a).toBe(42);
@@ -561,30 +561,33 @@ describe("Async", () => {
         })
     }
 
-    describe("Pipeable", () => {
-        sharedTests(
-            A.failWith as any,
-            A.succeedWith as any,
-            <R>() => A.require<R>(),
-            (op: string, ...args: any[]) => (self: any) => {
-                if( args.length === 0 ){
-                    return self['|>']((A as any)[op]);
+    describe("Operators", () => {
+        describe("Pipeable", () => {
+            sharedTests(
+                A.failWith as any,
+                A.succeedWith as any,
+                <R>() => A.require<R>(),
+                (op: string, ...args: any[]) => (self: any) => {
+                    if( args.length === 0 ){
+                        return self['|>']((A as any)[op]);
+                    }
+                    if( op === "zipWith" ){
+                        const [m, fn] = args
+                        return self['|>'](A.zipWith(fn)(m))
+                    }
+                    return self['|>']((A as any)[op](...args))
                 }
-                if( op === "zipWith" ){
-                    const [m, fn] = args
-                    return self['|>'](A.zipWith(fn)(m))
-                }
-                return self['|>']((A as any)[op](...args))
-            }
-        )
+            )
+        })
+    
+        describe("Fluent", () => {
+            sharedTests(
+                F.failWith as any,
+                F.succeedWith as any,
+                <R>() => F.require<R>(),
+                (op: string, ...args: any[]) => (self: any) => self[op](...args)
+            )
+        })
     })
 
-    describe("Fluent", () => {
-        sharedTests(
-            F.failWith as any,
-            F.succeedWith as any,
-            <R>() => F.require<R>(),
-            (op: string, ...args: any[]) => (self: any) => self[op](...args)
-        )
-    })
 })

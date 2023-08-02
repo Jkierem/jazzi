@@ -16,6 +16,8 @@ export const isNone = <A>(self: Maybe<A>): self is None => S.getVariant(self) ==
 
 export const get = <M extends Maybe<any>>(self: M): M extends Just<infer A> ? A : undefined => S.getValue(self as Maybe<any>);
 
+export const getOrElse = <B>(onNone: () => B) => <A>(self: Maybe<A>) => isJust(self) ? get(self) : onNone()
+
 export const fold = <A,L,R>(onNone: () => L, onJust: (data: A) => R) => (self: Maybe<A>) => {
     if( isJust(self) ){
         return onJust(get(self) as A);
