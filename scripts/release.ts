@@ -127,7 +127,7 @@ const program = A.do()
     ["|>"](A.tapEffect(({ release }) => checkout(release)))
     ["|>"](A.chain(({ release }) => confirmation(`Released ${release} prepted`)))
     ["|>"](A.zipLeft(yarn("build")))
-    ["|>"](A.zipLeft(move("./dist/*", "./")))
+    ["|>"](A.zipLeft(move("../dist/*", "../")))
     ["|>"](A.zipRight(status))
 
 const env: Runtime = {
